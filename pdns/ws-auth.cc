@@ -41,6 +41,7 @@
 #include "version.hh"
 #include "dnsseckeeper.hh"
 #include <iomanip>
+#include "zoneparser-tng.hh"
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -548,6 +549,65 @@ static void apiZoneCryptokeys(HttpRequest* req, HttpResponse* resp) {
   }
 
   resp->setBody(doc);
+}
+
+static void apiServerZoneImport(HttpRequest* req, HttpResponse* resp) {
+  string zonename = apiZoneIdToName(req->parameters["id"]);
+
+  if(req->method != "PUT")
+    throw HttpMethodNotAllowedException();
+
+  UeberBackend B;
+  DomainInfo di;
+  if(B.getDomainInfo(zonename, di))
+    throw ApiException("Zone '"+zonename+"' already exists!");
+
+  Document document;
+  req->json(document);
+  vector<string> zonedata;
+
+  stringtok(zonedata, stringFromJson(document, "zone"), "\r\n");
+
+  ZoneParserTNG zpt(zonedata, zonename);
+
+  DNSResourceRecord rr;
+  bool seenSOA=false;
+
+  string comment = "Imported via the API";
+
+  vector<DNSResourceRecord> new_records;
+  try {
+    while(zpt.get(rr, &comment)) {
+      if(seenSOA && rr.qtype.getCode() == QType::SOA)
+        continue;
+      if(rr.qtype.getCode() == QType::SOA)
+        seenSOA=true;
+
+      rr.qname = stripDot(rr.qname);
+      rr.domain_id = di.id;
+      new_records.push_back(rr);
+    }
+  }
+  catch(std::exception &ae) {
+    throw ApiException("An error occured while parsing the zonedata: "+ae.what())
+  }
+
+  if(!B.createDomain(zonename))
+    throw ApiException("Creating domain '"+zonename+"' failed");
+
+  if(!B.getDomainInfo(zonename, di))
+    throw ApiException("Creating domain '"+zonename+"' failed: lookup of domain ID failed");
+
+  di.backend->startTransaction(zonename, di.id);
+  BOOST_FOREACH(rr, new_records) {
+    di.backend->feedRecord(rr);
+  }
+
+  di.backend->commitTransaction();
+
+  fillZone(zonename, resp);
+  resp->status = 201;
+  return;
 }
 
 static void apiServerZones(HttpRequest* req, HttpResponse* resp) {
@@ -1190,6 +1250,7 @@ void AuthWebServer::webThread()
       d_ws->registerApiHandler("/servers/localhost/zones/<id>/cryptokeys/<key_id>", &apiZoneCryptokeys);
       d_ws->registerApiHandler("/servers/localhost/zones/<id>/cryptokeys", &apiZoneCryptokeys);
       d_ws->registerApiHandler("/servers/localhost/zones/<id>/export", &apiServerZoneExport);
+      d_ws->registerApiHandler("/servers/localhost/zones/<id>/import", &apiServerZoneImport);
       d_ws->registerApiHandler("/servers/localhost/zones/<id>", &apiServerZoneDetail);
       d_ws->registerApiHandler("/servers/localhost/zones", &apiServerZones);
       d_ws->registerApiHandler("/servers/localhost", &apiServerDetail);

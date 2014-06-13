@@ -41,6 +41,16 @@ ZoneParserTNG::ZoneParserTNG(const string& fname, const string& zname, const str
   stackFile(fname);
 }
 
+ZoneParserTNG::ZoneParserTNG(const vector<string> zonedata, const string& zname):
+                                                                        d_zonename(zname), d_defaultttl(3600), 
+                                                                        d_havedollarttl(false)
+{
+  d_zonename = toCanonic("", d_zonename);
+  d_zonedata = zonedata;
+  d_zonedataline = d_zonedata.begin();
+  d_fromfile = false;
+}
+
 void ZoneParserTNG::stackFile(const std::string& fname)
 {
   FILE *fp=fopen(fname.c_str(), "r");
@@ -49,6 +59,7 @@ void ZoneParserTNG::stackFile(const std::string& fname)
 
   filestate fs(fp, fname);
   d_filestates.push(fs);
+  d_fromfile = true;
 }
 
 ZoneParserTNG::~ZoneParserTNG()
@@ -256,7 +267,7 @@ bool ZoneParserTNG::get(DNSResourceRecord& rr, std::string* comment)
       d_defaultttl=makeTTLFromZone(trim_right_copy_if(makeString(d_line, parts[1]), is_any_of(";")));
       d_havedollarttl=true;
     }
-    else if(pdns_iequals(command,"$INCLUDE") && parts.size() > 1) {
+    else if(pdns_iequals(command,"$INCLUDE") && parts.size() > 1 && d_fromfile) {
       string fname=unquotify(makeString(d_line, parts[1]));
       if(!fname.empty() && fname[0]!='/' && !d_reldir.empty())
         fname=d_reldir+"/"+fname;
@@ -442,6 +453,14 @@ bool ZoneParserTNG::get(DNSResourceRecord& rr, std::string* comment)
 
 bool ZoneParserTNG::getLine()
 {
+  if (d_zonedata.size() > 0) {
+    if (d_zonedataline != d_zonedata.end()) {
+      d_line = *d_zonedataline;
+      d_zonedataline++;
+      return true;
+    }
+    return false;
+  }
   while(!d_filestates.empty()) {
     if(stringfgets(d_filestates.top().d_fp, d_line)) {
       d_filestates.top().d_lineno++;

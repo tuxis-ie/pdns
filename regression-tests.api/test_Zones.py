@@ -202,6 +202,60 @@ class AuthZones(ApiTestCase):
             self.assertIn(k, data)
         self.assertEquals(data['name'], 'example.com')
 
+    def test_import_zone_json(self):
+        payload = {}
+        payload['zone'] = """
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 58571
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1680
+;; QUESTION SECTION:
+;powerdns.com.                  IN      SOA
+
+;; ANSWER SECTION:
+powerdns.com.           86400   IN      SOA     powerdnssec1.ds9a.nl. ahu.ds9a.nl. 1343746984 10800 3600 604800 10800
+powerdns.com.           3600    IN      NS      powerdnssec2.ds9a.nl.
+powerdns.com.           3600    IN      AAAA    2001:888:2000:1d::2
+powerdns.com.           86400   IN      A       82.94.213.34
+powerdns.com.           3600    IN      MX      0 xs.powerdns.com.
+powerdns.com.           3600    IN      NS      powerdnssec1.ds9a.nl.
+powerdns.com.           86400   IN      SOA     powerdnssec1.ds9a.nl. ahu.ds9a.nl. 1343746984 10800 3600 604800 10800
+"""
+        name = 'powerdns.com'
+        r = self.session.put(
+            self.url("/servers/localhost/zones/"+name+"./import"),
+            data=json.dumps(payload),
+            headers={'content-type': 'application/json'})
+        self.assert_success_json(r)
+        data = r.json()
+        self.assertIn('name', data)
+        self.assertIn('records', data)
+
+        expected = {}
+        expected['NS'] = []
+        expected['NS'].append('powerdnssec1.ds9a.nl.')
+        expected['NS'].append('powerdnssec2.ds9a.nl.')
+        expected['SOA'] = []
+        expected['SOA'].append('powerdnssec1.ds9a.nl. ahu.ds9a.nl. 1343746984 10800 3600 604800 10800')
+        expected['MX'] = []
+        expected['MX'].append('0 xs.powerdns.com.')
+        expected['A'] = []
+        expected['A'].append('82.94.213.34')
+        expected['AAAA'] = []
+        expected['AAAA'].append('2001:888:2000:1d::2')
+
+        counter = {}
+        for et in expected.keys():
+            counter[et] = len(expected[et])
+            found = False
+            for ev in expected[et]:
+                for ret in data['records']:
+                    if ret['content'] == ev.rstrip('.'):
+                        counter[et] = counter[et]-1
+            self.assertEquals(counter[et], 0)
+
     def test_export_zone_json(self):
         payload, zone = self.create_zone(nameservers=['ns1.foo.com', 'ns2.foo.com'])
         name = payload['name']
