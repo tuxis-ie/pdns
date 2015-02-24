@@ -15,7 +15,7 @@ void printAndClearWords(words_t& words)
       if(iter->find('(') != string::npos)
         noparen=false;
 
-      if(iter != words.begin()) 
+      if(iter != words.begin())
         cout<<" ";
       else if((*iter)[0]=='(') {
         iter->assign(iter->c_str()+1);
@@ -49,8 +49,7 @@ int main()
 
         if(word=="van" || word=="der" || word =="den" || (word.size() > 1 +offset  && isupper(word[offset]) && islower(word[offset+1]))) {
           words.push_back(word);
-        }
-        else
+        } else
           printAndClearWords(words);
 
         if(ispunct(c))
@@ -58,12 +57,11 @@ int main()
 
         word.clear();
         inword=false;
-      }
-      else 
+      } else
         word.append(1, (char)c);
       continue;
     }
-    
+
     if(!isspace(c)) {
       word.append(1, (char) c);
       inword=true;

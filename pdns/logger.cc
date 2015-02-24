@@ -3,7 +3,7 @@
     Copyright (C) 2005  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -62,7 +62,7 @@ void Logger::setLoglevel( Urgency u )
 {
   d_loglevel = u;
 }
-  
+
 
 void Logger::toConsole(Urgency u)
 {
@@ -113,7 +113,7 @@ Logger& Logger::operator<<(const string &s)
     d_outputurgencies[pthread_self()]=Info;
 
   //  if(d_outputurgencies[pthread_self()]<=(unsigned int)consoleUrgency) // prevent building strings we won't ever print
-      d_strings[pthread_self()].append(s);
+  d_strings[pthread_self()].append(s);
 
   pthread_mutex_unlock(&lock);
   return *this;
@@ -184,7 +184,7 @@ Logger& Logger::operator<<(ostream & (&)(ostream &))
   pthread_mutex_lock(&lock);
 
   log(d_strings[pthread_self()], d_outputurgencies[pthread_self()]);
-  d_strings.erase(pthread_self());  
+  d_strings.erase(pthread_self());
   d_outputurgencies.erase(pthread_self());
 
   pthread_mutex_unlock(&lock);

@@ -32,7 +32,7 @@ class RecursorControlParser
 {
 public:
   RecursorControlParser();
-  static void nop(void){}
+  static void nop(void) {}
   typedef void func_t(void);
   std::string getAnswer(const std::string& question, func_t** func);
 private:
@@ -41,4 +41,4 @@ private:
 
 std::map<std::string, std::string> getAllStatsMap();
 extern pthread_mutex_t g_carbon_config_lock;
-#endif 
+#endif

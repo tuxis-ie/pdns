@@ -39,7 +39,8 @@ string compilerVersion()
 }
 
 // Human-readable product name
-string productName() {
+string productName()
+{
   switch (productType) {
   case ProductAuthoritative:
     return "PowerDNS Authoritative Server";
@@ -50,7 +51,8 @@ string productName() {
 }
 
 // REST API product type
-string productTypeApiType() {
+string productTypeApiType()
+{
   switch (productType) {
   case ProductAuthoritative:
     return "authoritative";
@@ -63,39 +65,39 @@ string productTypeApiType() {
 void showProductVersion()
 {
   theL()<<Logger::Warning<<productName()<<" "<< PDNS_VERSION <<" (" DIST_HOST ") "
-    "(C) 2001-2014 PowerDNS.COM BV" << endl;
+        "(C) 2001-2014 PowerDNS.COM BV" << endl;
   theL()<<Logger::Warning<<"Using "<<(sizeof(unsigned long)*8)<<"-bits mode. "
-    "Built on " BUILD_DATE " by " BUILD_HOST ", "<<compilerVersion()<<"."<<endl;
+        "Built on " BUILD_DATE " by " BUILD_HOST ", "<<compilerVersion()<<"."<<endl;
   theL()<<Logger::Warning<<"PowerDNS comes with ABSOLUTELY NO WARRANTY. "
-    "This is free software, and you are welcome to redistribute it "
-    "according to the terms of the GPL version 2." << endl;
+        "This is free software, and you are welcome to redistribute it "
+        "according to the terms of the GPL version 2." << endl;
 }
 
 void showBuildConfiguration()
 {
   theL()<<Logger::Warning<<"Features: "<<
 #ifdef HAVE_BOTAN110
-    "botan1.10 " <<
+        "botan1.10 " <<
 #endif
 #ifdef HAVE_BOTAN18
-    "botan1.8" <<
+        "botan1.8" <<
 #endif
 #ifdef HAVE_CRYPTOPP
-    "cryptopp " <<
+        "cryptopp " <<
 #endif
 #ifdef HAVE_LIBDL
-    "libdl " <<
+        "libdl " <<
 #endif
 #ifdef HAVE_LUA
-    "lua " <<
+        "lua " <<
 #endif
 #ifdef REMOTEBACKEND_ZEROMQ
-    "remotebackend-zeromq" <<
+        "remotebackend-zeromq" <<
 #endif
 #ifdef VERBOSELOG
-    "verboselog" <<
+        "verboselog" <<
 #endif
-    endl;
+        endl;
 #ifdef PDNS_MODULES
   // Auth only
   theL()<<Logger::Warning<<"Built-in modules: "<<PDNS_MODULES<<endl;

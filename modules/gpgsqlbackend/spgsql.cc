@@ -1,4 +1,4 @@
-/* Copyright 2003 - 2005 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE 
+/* Copyright 2003 - 2005 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE
    for more information. */
 #include <string>
 #include "spgsql.hh"
@@ -10,7 +10,7 @@
 
 bool SPgSQL::s_dolog;
 
-SPgSQL::SPgSQL(const string &database, const string &host, const string& port, const string &user, 
+SPgSQL::SPgSQL(const string &database, const string &host, const string& port, const string &user,
                const string &password)
 {
   d_db=0;
@@ -34,7 +34,7 @@ SPgSQL::SPgSQL(const string &database, const string &host, const string& port, c
     d_connectlogstr+=" password=<HIDDEN>";
     d_connectstr+=" password="+password;
   }
-  
+
   ensureConnect();
 }
 
@@ -62,8 +62,7 @@ void SPgSQL::ensureConnect()
   if (!d_db || PQstatus(d_db)==CONNECTION_BAD) {
     try {
       throw sPerrorException("Unable to connect to database, connect string: "+d_connectlogstr);
-    }
-    catch(...) {
+    } catch(...) {
       if(d_db)
         PQfinish(d_db);
       d_db = 0;
@@ -79,15 +78,15 @@ int SPgSQL::doCommand(const string &query)
 
   bool first = true;
 
-  retry:
-  
-  if(!(d_result=PQexec(d_db,query.c_str())) || PQresultStatus(d_result)!=PGRES_COMMAND_OK) { 
+retry:
+
+  if(!(d_result=PQexec(d_db,query.c_str())) || PQresultStatus(d_result)!=PGRES_COMMAND_OK) {
     string error("unknown reason");
     if(d_result) {
       error=PQresultErrorMessage(d_result);
       PQclear(d_result);
     }
-    
+
     if(PQstatus(d_db)==CONNECTION_BAD) {
       ensureConnect();
       if(first) {
@@ -95,8 +94,8 @@ int SPgSQL::doCommand(const string &query)
         goto retry;
       }
     }
-    
-    throw SSqlException("PostgreSQL failed to execute command: "+error); 
+
+    throw SSqlException("PostgreSQL failed to execute command: "+error);
   }
   if(d_result)
     PQclear(d_result);
@@ -126,7 +125,7 @@ retry:
       }
     }
 
-    throw SSqlException("PostgreSQL failed to execute command: "+error); 
+    throw SSqlException("PostgreSQL failed to execute command: "+error);
   }
 
   d_count=0;
@@ -145,7 +144,7 @@ int SPgSQL::doQuery(const string &query, result_t &result)
       error=PQresultErrorMessage(d_result);
       PQclear(d_result);
     }
-    throw SSqlException("PostgreSQL failed to execute command: "+error); 
+    throw SSqlException("PostgreSQL failed to execute command: "+error);
   }
 
   d_count=0;
@@ -165,8 +164,8 @@ bool SPgSQL::getRow(row_t &row)
     PQclear(d_result);
     return false;
   }
-  
-  for(int i=0;i<PQnfields(d_result);i++)
+
+  for(int i=0; i<PQnfields(d_result); i++)
     row.push_back(PQgetvalue(d_result,d_count,i) ?: "");
   d_count++;
   return true;
@@ -176,7 +175,7 @@ string SPgSQL::escape(const string &name)
 {
   string a;
 
-  for(string::const_iterator i=name.begin();i!=name.end();++i) {
+  for(string::const_iterator i=name.begin(); i!=name.end(); ++i) {
     if(*i=='\'' || *i=='\\')
       a+='\\';
     a+=*i;

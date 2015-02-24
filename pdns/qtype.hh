@@ -29,16 +29,16 @@
 #include "namespaces.hh"
 
 /** The QType class is meant to deal easily with the different kind of resource types, like 'A', 'NS',
- *  'CNAME' etcetera. These types have both a name and a number. This class can seamlessly move between
- *   them. Use it like this:
+    'CNAME' etcetera. These types have both a name and a number. This class can seamlessly move between
+     them. Use it like this:
 
-\code
+  \code
    QType t;
    t="CNAME";
    cout<<t.getCode()<<endl; // prints '5'
    t=6;
    cout<<t.getName()<<endl; // prints 'SOA'
-\endcode
+  \endcode
 
 */
 
@@ -61,7 +61,7 @@ public:
     return *this;
   }
 
-  bool operator<(const QType& rhs) const 
+  bool operator<(const QType& rhs) const
   {
     return code < rhs.code;
   }
@@ -81,39 +81,47 @@ public:
 // more solaris fun
 #undef DS
   enum typeenum {A=1, NS=2, CNAME=5, SOA=6, MR=9, WKS=11, PTR=12, HINFO=13, MINFO=14, MX=15, TXT=16, RP=17, AFSDB=18, SIG=24, KEY=25, AAAA=28, LOC=29, SRV=33, NAPTR=35, KX=36,
-		 CERT=37, A6=38, DNAME=39, OPT=41, DS=43, SSHFP=44, IPSECKEY=45, RRSIG=46, NSEC=47, DNSKEY=48, DHCID=49, NSEC3=50, NSEC3PARAM=51,
-		 TLSA=52, SPF=99, EUI48=108, EUI64=109, TSIG=250, IXFR=251, AXFR=252, MAILB=253, MAILA=254, ANY=255, URL=256, MBOXFW=257, CURL=258, ADDR=259, ALIAS=260, DLV=32769} types;
+                 CERT=37, A6=38, DNAME=39, OPT=41, DS=43, SSHFP=44, IPSECKEY=45, RRSIG=46, NSEC=47, DNSKEY=48, DHCID=49, NSEC3=50, NSEC3PARAM=51,
+                 TLSA=52, SPF=99, EUI48=108, EUI64=109, TSIG=250, IXFR=251, AXFR=252, MAILB=253, MAILA=254, ANY=255, URL=256, MBOXFW=257, CURL=258, ADDR=259, ALIAS=260, DLV=32769
+                } types;
   typedef pair<string,uint16_t> namenum;
   static vector<namenum> names;
 
-  inline bool operator==(const QType &comp) const {
+  inline bool operator==(const QType &comp) const
+  {
     return(comp.code==code);
   }
 
-  inline bool operator!=(const QType &comp) const {
+  inline bool operator!=(const QType &comp) const
+  {
     return(comp.code!=code);
   }
 
-  inline bool operator==(QType::typeenum comp) const {
+  inline bool operator==(QType::typeenum comp) const
+  {
     return(comp==code);
   }
 
-  inline bool operator!=(QType::typeenum comp) const {
+  inline bool operator!=(QType::typeenum comp) const
+  {
     return(comp!=code);
   }
 
-  inline bool operator==(uint16_t comp) const {
+  inline bool operator==(uint16_t comp) const
+  {
     return(comp==code);
   }
 
-  inline bool operator!=(uint16_t comp) const {
+  inline bool operator!=(uint16_t comp) const
+  {
     return(comp!=code);
   }
 
 private:
-  static class init {
-    public:
-    void qtype_insert(const char* a, uint16_t num) 
+  static class init
+  {
+  public:
+    void qtype_insert(const char* a, uint16_t num)
     {
       names.push_back(make_pair(string(a), num));
     }
@@ -174,8 +182,7 @@ private:
   uint16_t code;
 };
 
-struct QClass
-{
+struct QClass {
   enum QClassEnum {IN=1, CHAOS=3, NONE=254, ANY=255};
 };
 #endif

@@ -42,8 +42,7 @@ using namespace boost::multi_index;
 
 #include "namespaces.hh"
 
-struct SuckRequest
-{
+struct SuckRequest {
   string domain;
   string master;
   bool operator<(const SuckRequest& b) const
@@ -52,14 +51,14 @@ struct SuckRequest
   }
 };
 
-struct IDTag{};
+struct IDTag {};
 
 typedef multi_index_container<
-  SuckRequest,
-  indexed_by<
-    sequenced<>,
-    ordered_unique<tag<IDTag>, identity<SuckRequest> >
-  >
+SuckRequest,
+indexed_by<
+sequenced<>,
+ordered_unique<tag<IDTag>, identity<SuckRequest> >
+>
 > UniQueue;
 typedef UniQueue::index<IDTag>::type domains_by_name_t;
 
@@ -97,7 +96,7 @@ public:
 
   bool getOne(string &domain, string &ip, uint16_t *id, bool &purged)
   {
-    for(d_nqueue_t::iterator i=d_nqueue.begin();i!=d_nqueue.end();++i) 
+    for(d_nqueue_t::iterator i=d_nqueue.begin(); i!=d_nqueue.end(); ++i)
       if(i->next <= time(0)) {
         i->attempts++;
         purged=false;
@@ -117,8 +116,8 @@ public:
 
   time_t earliest()
   {
-    time_t early=std::numeric_limits<time_t>::max() - 1; 
-    for(d_nqueue_t::const_iterator i=d_nqueue.begin();i!=d_nqueue.end();++i) 
+    time_t early=std::numeric_limits<time_t>::max() - 1;
+    for(d_nqueue_t::const_iterator i=d_nqueue.begin(); i!=d_nqueue.end(); ++i)
       early=min(early,i->next);
     return early-time(0);
   }
@@ -126,8 +125,7 @@ public:
   void dump();
 
 private:
-  struct NotificationRequest
-  {
+  struct NotificationRequest {
     string domain;
     string ip;
     int attempts;
@@ -146,7 +144,7 @@ private:
 class CommunicatorClass
 {
 public:
-  CommunicatorClass() 
+  CommunicatorClass()
   {
     pthread_mutex_init(&d_lock,0);
     pthread_mutex_init(&d_holelock,0);
@@ -154,10 +152,10 @@ public:
     d_tickinterval=60;
     d_masterschanged=d_slaveschanged=true;
   }
-  time_t doNotifications();    
+  time_t doNotifications();
   void go();
-  
-  
+
+
   void drillHole(const string &domain, const string &ip);
   bool justNotified(const string &domain, const string &ip);
   void addSuckRequest(const string &domain, const string &master);
@@ -190,9 +188,9 @@ private:
   void slaveRefresh(PacketHandler *P);
   void masterUpdateCheck(PacketHandler *P);
   pthread_mutex_t d_lock;
-  
+
   UniQueue d_suckdomains;
-  
+
   bool d_havepriosuckrequest;
   Semaphore d_suck_sem;
   Semaphore d_any_sem;

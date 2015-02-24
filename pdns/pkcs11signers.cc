@@ -22,16 +22,16 @@
   - Physical token testing?
   - module-slot locking (as they do not support parallel)
 
-NB! If you do use this, here is a simple way to get softhsm working
+  NB! If you do use this, here is a simple way to get softhsm working
 
-create /etc/pkcs11/modules/softhsm.module
+  create /etc/pkcs11/modules/softhsm.module
 
-put 
+  put
 
-module: /usr/lib/softhsm/libsofthsm.so
-managed: yes
+  module: /usr/lib/softhsm/libsofthsm.so
+  managed: yes
 
-in it. you need to use softhsm tools to manage this all.
+  in it. you need to use softhsm tools to manage this all.
 
 */
 
@@ -39,21 +39,21 @@ in it. you need to use softhsm tools to manage this all.
 
 // map for signing algorithms
 static std::map<unsigned int,CK_MECHANISM_TYPE> dnssec2smech = boost::assign::map_list_of
-(5, CKM_SHA1_RSA_PKCS)
-(7, CKM_SHA1_RSA_PKCS)
-(8, CKM_SHA256_RSA_PKCS)
-(10, CKM_SHA512_RSA_PKCS)
-(13, CKM_ECDSA)
-(14, CKM_ECDSA);
+    (5, CKM_SHA1_RSA_PKCS)
+    (7, CKM_SHA1_RSA_PKCS)
+    (8, CKM_SHA256_RSA_PKCS)
+    (10, CKM_SHA512_RSA_PKCS)
+    (13, CKM_ECDSA)
+    (14, CKM_ECDSA);
 
 // map for hashing algorithms
 static std::map<unsigned int,CK_MECHANISM_TYPE> dnssec2hmech = boost::assign::map_list_of
-(5, CKM_SHA_1)
-(7, CKM_SHA_1)
-(8, CKM_SHA256)
-(10, CKM_SHA512)
-(13, CKM_SHA256)
-(14, CKM_SHA384);
+    (5, CKM_SHA_1)
+    (7, CKM_SHA_1)
+    (8, CKM_SHA256)
+    (10, CKM_SHA512)
+    (13, CKM_SHA256)
+    (14, CKM_SHA384);
 
 // p11 handler for modules
 
@@ -67,7 +67,8 @@ static CK_FUNCTION_LIST** p11_modules;
 #endif
 
 // Attribute handling
-class P11KitAttribute {
+class P11KitAttribute
+{
 private:
   CK_ATTRIBUTE_TYPE type;
   CK_BYTE ckByte;
@@ -77,81 +78,96 @@ private:
   unsigned char *buffer;
   CK_ULONG buflen;
 protected:
-  void Init() {
+  void Init()
+  {
     buffer = NULL;
     buflen = 0;
   };
 public:
-  P11KitAttribute(CK_ATTRIBUTE_TYPE type, const std::string& value) {
+  P11KitAttribute(CK_ATTRIBUTE_TYPE type, const std::string& value)
+  {
     Init();
     this->type = type;
     setString(value);
   }
 
-  P11KitAttribute(CK_ATTRIBUTE_TYPE type, char value) {
+  P11KitAttribute(CK_ATTRIBUTE_TYPE type, char value)
+  {
     Init();
     this->type = type;
     setByte(value);
   }
 
-  P11KitAttribute(CK_ATTRIBUTE_TYPE type, unsigned char value) {
+  P11KitAttribute(CK_ATTRIBUTE_TYPE type, unsigned char value)
+  {
     Init();
     this->type = type;
     setByte(value);
   }
 
-  P11KitAttribute(CK_ATTRIBUTE_TYPE type, unsigned long value) {
+  P11KitAttribute(CK_ATTRIBUTE_TYPE type, unsigned long value)
+  {
     Init();
     this->type = type;
     setLong(value);
   }
 
-  CkaValueType valueType() const {
+  CkaValueType valueType() const
+  {
     return ckType;
   }
 
-  const std::string &str() const {
+  const std::string &str() const
+  {
     return ckString;
   };
 
-  unsigned char byte() const {
+  unsigned char byte() const
+  {
     return ckByte;
   }
 
-  unsigned long ulong() const {
+  unsigned long ulong() const
+  {
     return ckLong;
   }
 
-  void setString(const std::string& value) {
+  void setString(const std::string& value)
+  {
     this->ckString = value;
     this->ckType = Attribute_String;
   }
 
-  void setByte(char value) {
+  void setByte(char value)
+  {
     this->ckByte = value;
     this->ckType = Attribute_Byte;
   }
 
-  void setByte(unsigned char value) {
+  void setByte(unsigned char value)
+  {
     this->ckByte = value;
     this->ckType = Attribute_Byte;
   }
 
-  void setLong(unsigned long value) {
+  void setLong(unsigned long value)
+  {
     this->ckLong = value;
     this->ckType = Attribute_Long;
   }
 
 // this bit is used for getting attribute from object
 // we provide a pointer for GetAttributeValue to write to
-  CK_BYTE_PTR allocate(CK_ULONG amount) {
+  CK_BYTE_PTR allocate(CK_ULONG amount)
+  {
     buffer = new unsigned char[amount];
     buflen = amount;
     return buffer;
   }
 
 // and here we copy the results back and delete buffer
-  void commit(CK_ULONG amount) {
+  void commit(CK_ULONG amount)
+  {
     if (buffer) {
       this->ckString.assign((char*)buffer, amount);
       delete [] buffer;
@@ -161,50 +177,53 @@ public:
   }
 
 // this is *writable* attribute (you write into it)
-  void wattr(CK_ATTRIBUTE_PTR attr) {
+  void wattr(CK_ATTRIBUTE_PTR attr)
+  {
     attr->type = type;
     switch(ckType) {
-      case Attribute_Byte: {
-        attr->pValue = (void*)&ckByte;
-        attr->ulValueLen = 1;
-        break;
-      }
-      case Attribute_Long: {
-        attr->pValue = (void*)&ckLong;
-        attr->ulValueLen = sizeof(CK_ULONG);
-        break;
-      }
-      case Attribute_String: {
-        attr->pValue = buffer;
-        attr->ulValueLen = buflen;
-      }
+    case Attribute_Byte: {
+      attr->pValue = (void*)&ckByte;
+      attr->ulValueLen = 1;
+      break;
+    }
+    case Attribute_Long: {
+      attr->pValue = (void*)&ckLong;
+      attr->ulValueLen = sizeof(CK_ULONG);
+      break;
+    }
+    case Attribute_String: {
+      attr->pValue = buffer;
+      attr->ulValueLen = buflen;
+    }
     };
   };
 
 // this is *readable* attribute (you read from it)
-  void rattr(CK_ATTRIBUTE_PTR attr) const {
+  void rattr(CK_ATTRIBUTE_PTR attr) const
+  {
     attr->type = type;
     switch(ckType) {
-      case Attribute_Byte: {
-        attr->pValue = (void*)&ckByte;
-        attr->ulValueLen = 1;
-        break;
-      }
-      case Attribute_Long: {
-        attr->pValue = (void*)&ckLong;
-        attr->ulValueLen = sizeof(CK_ULONG);
-        break;
-      }
-      case Attribute_String: {
-        attr->pValue = (void*)ckString.c_str();
-        attr->ulValueLen = ckString.size();
-      }
+    case Attribute_Byte: {
+      attr->pValue = (void*)&ckByte;
+      attr->ulValueLen = 1;
+      break;
+    }
+    case Attribute_Long: {
+      attr->pValue = (void*)&ckLong;
+      attr->ulValueLen = sizeof(CK_ULONG);
+      break;
+    }
+    case Attribute_String: {
+      attr->pValue = (void*)ckString.c_str();
+      attr->ulValueLen = ckString.size();
+    }
     };
   };
 };
 
 // representation of slot
-class P11KitSlot {
+class P11KitSlot
+{
 private:
   CK_SESSION_HANDLE d_session;
   CK_SLOT_ID d_slot;
@@ -247,46 +266,51 @@ public:
 // representation of module (or Engine)
 class P11KitModule
 {
-  public:
-    std::string d_module;
-    CK_FUNCTION_LIST_PTR functions;
+public:
+  std::string d_module;
+  CK_FUNCTION_LIST_PTR functions;
 
-    P11KitModule() {}
+  P11KitModule() {}
 
-    P11KitModule(const std::string& module) {
-      this->d_module = module;
-    }
+  P11KitModule(const std::string& module)
+  {
+    this->d_module = module;
+  }
 
-    P11KitModule(const P11KitModule& rhs) {
-      functions = rhs.functions;
-      d_module = rhs.d_module;
-    }
+  P11KitModule(const P11KitModule& rhs)
+  {
+    functions = rhs.functions;
+    d_module = rhs.d_module;
+  }
 
-    void setModule(const std::string& module) {
-      this->d_module = module;
-    };
+  void setModule(const std::string& module)
+  {
+    this->d_module = module;
+  };
 
 // basically get the function list
-    bool initialize() {
+  bool initialize()
+  {
 #ifdef HAVE_P11KIT1_V2
-      functions = p11_kit_module_for_name(p11_modules, d_module.c_str());
+    functions = p11_kit_module_for_name(p11_modules, d_module.c_str());
 #else
-      functions = p11_kit_registered_name_to_module(d_module.c_str());
+    functions = p11_kit_registered_name_to_module(d_module.c_str());
 #endif
-      if (functions == NULL) return false;
-      return true;
-    };
+    if (functions == NULL) return false;
+    return true;
+  };
 
 // convenience method + checking that slot exists
-    bool GetSlot(CK_SLOT_ID slotId, P11KitSlot &slot) {
-      _CK_SLOT_INFO info;
-      if (this->functions->C_GetSlotInfo(slotId, &info)) {
-        return false;
-      }
-      slot.SetSlot(slotId);
-      slot.SetModule(this);
-      return true;
-    };
+  bool GetSlot(CK_SLOT_ID slotId, P11KitSlot &slot)
+  {
+    _CK_SLOT_INFO info;
+    if (this->functions->C_GetSlotInfo(slotId, &info)) {
+      return false;
+    }
+    slot.SetSlot(slotId);
+    slot.SetModule(this);
+    return true;
+  };
 };
 
 P11KitSlot::P11KitSlot() { d_module = NULL; };
@@ -311,12 +335,14 @@ P11KitSlot::~P11KitSlot()
 }
 
 // DO NOT CALL THIS ON YOUR OWN
-void P11KitSlot::SetSlot(CK_SLOT_ID slot) {
+void P11KitSlot::SetSlot(CK_SLOT_ID slot)
+{
   this->d_slot = slot;
 }
 
 // DO NOT CALL THIS ON YOUR OWN
-void P11KitSlot::SetModule(P11KitModule *module) {
+void P11KitSlot::SetModule(P11KitModule *module)
+{
   this->d_module = module;
 }
 
@@ -343,7 +369,7 @@ CK_RV P11KitSlot::GetInfo(CK_SLOT_INFO_PTR info) const
 }
 
 CK_RV P11KitSlot::GetTokenInfo(CK_TOKEN_INFO_PTR info) const
-{  
+{
   if (!this->d_module) return 0xff;
   return this->d_module->functions->C_GetTokenInfo(this->d_slot, info);
 }
@@ -366,7 +392,8 @@ CK_RV P11KitSlot::Logout()
   return this->d_module->functions->C_Logout(this->d_slot);
 }
 
-CK_RV P11KitSlot::GenerateKeyPair(CK_MECHANISM_PTR mechanism, std::vector<P11KitAttribute>& pubAttributes, std::vector<P11KitAttribute>& privAttributes, CK_OBJECT_HANDLE_PTR pubKey, CK_OBJECT_HANDLE_PTR privKey) {
+CK_RV P11KitSlot::GenerateKeyPair(CK_MECHANISM_PTR mechanism, std::vector<P11KitAttribute>& pubAttributes, std::vector<P11KitAttribute>& privAttributes, CK_OBJECT_HANDLE_PTR pubKey, CK_OBJECT_HANDLE_PTR privKey)
+{
   if (!this->d_module) return 0xff;
 
   CK_RV rv;
@@ -387,7 +414,7 @@ CK_RV P11KitSlot::GenerateKeyPair(CK_MECHANISM_PTR mechanism, std::vector<P11Kit
     k++;
   }
 
-  rv = this->d_module->functions->C_GenerateKeyPair(d_session, mechanism, pubAttr, pubAttributes.size(), privAttr, privAttributes.size(), pubKey, privKey); 
+  rv = this->d_module->functions->C_GenerateKeyPair(d_session, mechanism, pubAttr, pubAttributes.size(), privAttr, privAttributes.size(), pubKey, privKey);
 
   delete [] pubAttr;
   delete [] privAttr;
@@ -396,7 +423,7 @@ CK_RV P11KitSlot::GenerateKeyPair(CK_MECHANISM_PTR mechanism, std::vector<P11Kit
 }
 
 // Finds object(s) that match exactly to attributes
-CK_RV P11KitSlot::FindObjects(const std::vector<P11KitAttribute>& attributes, std::vector<CK_OBJECT_HANDLE>& objects, unsigned long maxobjects) const 
+CK_RV P11KitSlot::FindObjects(const std::vector<P11KitAttribute>& attributes, std::vector<CK_OBJECT_HANDLE>& objects, unsigned long maxobjects) const
 {
   if (!this->d_module) return 0xff;
   CK_RV rv;
@@ -426,7 +453,7 @@ CK_RV P11KitSlot::FindObjects(const std::vector<P11KitAttribute>& attributes, st
 
   if (!rv) {
     objects.clear();
-    for(k=0;k<count;k++) {
+    for(k=0; k<count; k++) {
       objects.push_back(handles[k]);
     }
   }
@@ -532,7 +559,7 @@ CK_RV P11KitSlot::Verify(const std::string& data, const std::string& signature, 
 };
 
 CK_RV P11KitSlot::Digest(const std::string& data, std::string& result, CK_MECHANISM_PTR mechanism) const
-{ 
+{
   if (!this->d_module) return 0xff;
   CK_RV rv;
   CK_BYTE buffer[1024];
@@ -584,7 +611,7 @@ static std::map<std::string, P11KitModule> pkcs11_engines;
 // map between engine names and slots (not used now)
 //static std::map<std::string, CK_SLOT_ID> pkcs11_slots;
 
-static bool pkcs11_GetSlot(const std::string& engine, CK_SLOT_ID slotId, const std::string& pin, CK_FLAGS flags, P11KitSlot& slot) 
+static bool pkcs11_GetSlot(const std::string& engine, CK_SLOT_ID slotId, const std::string& pin, CK_FLAGS flags, P11KitSlot& slot)
 {
   CK_RV rv;
   if (engine.empty()) return false;
@@ -599,8 +626,8 @@ static bool pkcs11_GetSlot(const std::string& engine, CK_SLOT_ID slotId, const s
   }
   pkcs11_engines[engine].GetSlot(slotId, slot);
   rv = slot.OpenSession(flags);
-  if (rv) { 
-    return false; 
+  if (rv) {
+    return false;
   };
   rv = slot.Login(pin, CKU_USER);
   if (rv) {
@@ -613,7 +640,8 @@ PKCS11DNSCryptoKeyEngine::PKCS11DNSCryptoKeyEngine(unsigned int algorithm): DNSC
 PKCS11DNSCryptoKeyEngine::~PKCS11DNSCryptoKeyEngine() {}
 PKCS11DNSCryptoKeyEngine::PKCS11DNSCryptoKeyEngine(const PKCS11DNSCryptoKeyEngine& orig) : DNSCryptoKeyEngine(orig.d_algorithm) {}
 
-void PKCS11DNSCryptoKeyEngine::create(unsigned int bits) {
+void PKCS11DNSCryptoKeyEngine::create(unsigned int bits)
+{
   std::vector<P11KitAttribute> pubAttr;
   std::vector<P11KitAttribute> privAttr;
   CK_MECHANISM mech;
@@ -622,7 +650,7 @@ void PKCS11DNSCryptoKeyEngine::create(unsigned int bits) {
   P11KitSlot d_slot;
   pkcs11_GetSlot(d_engine, d_slot_id, d_pin, CKF_SERIAL_SESSION|CKF_RW_SESSION, d_slot);
   std::string pubExp("\000\001\000\001", 4); // 65537
-  
+
   pubAttr.push_back(P11KitAttribute(CKA_CLASS, (unsigned long)CKO_PUBLIC_KEY));
   pubAttr.push_back(P11KitAttribute(CKA_KEY_TYPE, (unsigned long)CKK_RSA));
   pubAttr.push_back(P11KitAttribute(CKA_TOKEN, (char)CK_TRUE));
@@ -630,7 +658,7 @@ void PKCS11DNSCryptoKeyEngine::create(unsigned int bits) {
   pubAttr.push_back(P11KitAttribute(CKA_VERIFY, (char)CK_TRUE));
   pubAttr.push_back(P11KitAttribute(CKA_WRAP, (char)CK_TRUE));
   pubAttr.push_back(P11KitAttribute(CKA_MODULUS_BITS, (unsigned long)bits));
-  pubAttr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, pubExp)); 
+  pubAttr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, pubExp));
   pubAttr.push_back(P11KitAttribute(CKA_LABEL, d_label));
 
   privAttr.push_back(P11KitAttribute(CKA_CLASS, (unsigned long)CKO_PRIVATE_KEY));
@@ -656,13 +684,14 @@ void PKCS11DNSCryptoKeyEngine::create(unsigned int bits) {
   }
 };
 
-std::string PKCS11DNSCryptoKeyEngine::sign(const std::string& msg) const { 
+std::string PKCS11DNSCryptoKeyEngine::sign(const std::string& msg) const
+{
   std::string result;
   std::vector<CK_OBJECT_HANDLE> key;
   std::vector<P11KitAttribute> attr;
   P11KitSlot d_slot;
   pkcs11_GetSlot(d_engine, d_slot_id, d_pin, CKF_SERIAL_SESSION, d_slot);
-  // find key that can be used for signing 
+  // find key that can be used for signing
   attr.push_back(P11KitAttribute(CKA_SIGN, (char)CK_TRUE));
   attr.push_back(P11KitAttribute(CKA_LABEL, d_label));
   d_slot.FindObjects(attr, key, 1);
@@ -677,7 +706,8 @@ std::string PKCS11DNSCryptoKeyEngine::sign(const std::string& msg) const {
   return result;
 };
 
-std::string PKCS11DNSCryptoKeyEngine::hash(const std::string& msg) const {
+std::string PKCS11DNSCryptoKeyEngine::hash(const std::string& msg) const
+{
   std::string result;
   CK_MECHANISM mech;
   mech.mechanism = dnssec2hmech[d_algorithm];
@@ -719,7 +749,8 @@ std::string PKCS11DNSCryptoKeyEngine::hash(const std::string& msg) const {
   return result;
 };
 
-bool PKCS11DNSCryptoKeyEngine::verify(const std::string& msg, const std::string& signature) const {
+bool PKCS11DNSCryptoKeyEngine::verify(const std::string& msg, const std::string& signature) const
+{
   bool result;
   std::vector<CK_OBJECT_HANDLE> key;
   std::vector<P11KitAttribute> attr;
@@ -741,7 +772,8 @@ bool PKCS11DNSCryptoKeyEngine::verify(const std::string& msg, const std::string&
   return result;
 };
 
-std::string PKCS11DNSCryptoKeyEngine::getPubKeyHash() const { 
+std::string PKCS11DNSCryptoKeyEngine::getPubKeyHash() const
+{
   std::string result = "";
   std::vector<CK_OBJECT_HANDLE> key;
   std::vector<P11KitAttribute> attr;
@@ -753,22 +785,23 @@ std::string PKCS11DNSCryptoKeyEngine::getPubKeyHash() const {
 
   d_slot.FindObjects(attr, key, 1);
   if (key.size() > 0) {
-     attr.clear();
-     attr.push_back(P11KitAttribute(CKA_MODULUS, ""));
-     attr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, ""));
-     if (d_slot.GetAttributeValue(key[0], attr) == 0) {
-       CK_MECHANISM mech;
-       mech.mechanism = CKM_SHA_1;
-       d_slot.DigestInit(&mech);
-       d_slot.DigestUpdate(attr[0].str());
-       d_slot.DigestUpdate(attr[1].str());
-       d_slot.DigestFinal(result);
-     }
+    attr.clear();
+    attr.push_back(P11KitAttribute(CKA_MODULUS, ""));
+    attr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, ""));
+    if (d_slot.GetAttributeValue(key[0], attr) == 0) {
+      CK_MECHANISM mech;
+      mech.mechanism = CKM_SHA_1;
+      d_slot.DigestInit(&mech);
+      d_slot.DigestUpdate(attr[0].str());
+      d_slot.DigestUpdate(attr[1].str());
+      d_slot.DigestFinal(result);
+    }
   }
-  return result; 
+  return result;
 };
 
-std::string PKCS11DNSCryptoKeyEngine::getPublicKeyString() const {
+std::string PKCS11DNSCryptoKeyEngine::getPublicKeyString() const
+{
   std::string result("");
   std::vector<CK_OBJECT_HANDLE> key;
   std::vector<P11KitAttribute> attr;
@@ -778,27 +811,28 @@ std::string PKCS11DNSCryptoKeyEngine::getPublicKeyString() const {
 
   d_slot.FindObjects(attr, key, 1);
   if (key.size() > 0) {
-     attr.clear();
-     attr.push_back(P11KitAttribute(CKA_MODULUS, ""));
-     attr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, ""));
-     if (d_slot.GetAttributeValue(key[0], attr) == 0) {
-       if(attr[1].str().length() < 255)
-         result.assign(1, (char) (unsigned int) attr[1].str().length());
-       else {
-         result.assign(1, 0);
-         uint16_t len=htons(attr[1].str().length());
-         result.append((char*)&len, 2);
-       } 
-       result.append(attr[1].str());
-       result.append(attr[0].str());
-     }
+    attr.clear();
+    attr.push_back(P11KitAttribute(CKA_MODULUS, ""));
+    attr.push_back(P11KitAttribute(CKA_PUBLIC_EXPONENT, ""));
+    if (d_slot.GetAttributeValue(key[0], attr) == 0) {
+      if(attr[1].str().length() < 255)
+        result.assign(1, (char) (unsigned int) attr[1].str().length());
+      else {
+        result.assign(1, 0);
+        uint16_t len=htons(attr[1].str().length());
+        result.append((char*)&len, 2);
+      }
+      result.append(attr[1].str());
+      result.append(attr[0].str());
+    }
 //   } else {
 //     std::cerr << "Could not find key" << std::endl;
-   }
-   return result;
+  }
+  return result;
 };
 
-int PKCS11DNSCryptoKeyEngine::getBits() const {
+int PKCS11DNSCryptoKeyEngine::getBits() const
+{
   int bits = -1;
   std::vector<CK_OBJECT_HANDLE> key;
   std::vector<P11KitAttribute> attr;
@@ -811,28 +845,29 @@ int PKCS11DNSCryptoKeyEngine::getBits() const {
 
   d_slot.FindObjects(attr, key, 1);
   if (key.size() > 0) {
-     attr.clear(); 
-     attr.push_back(P11KitAttribute(CKA_MODULUS_BITS, 0UL));
-     if (d_slot.GetAttributeValue(key[0], attr) == 0) {
-       bits = static_cast<int>(attr[0].ulong());
-     }
+    attr.clear();
+    attr.push_back(P11KitAttribute(CKA_MODULUS_BITS, 0UL));
+    if (d_slot.GetAttributeValue(key[0], attr) == 0) {
+      bits = static_cast<int>(attr[0].ulong());
+    }
 //  } else {
 //     std::cerr << "Could not find key" << std::endl;
   }
   return bits;
 };
 
-DNSCryptoKeyEngine::storvector_t PKCS11DNSCryptoKeyEngine::convertToISCVector() const { 
+DNSCryptoKeyEngine::storvector_t PKCS11DNSCryptoKeyEngine::convertToISCVector() const
+{
   storvector_t storvect;
   typedef std::vector<std::pair<std::string, std::string> > outputs_t;
   outputs_t outputs;
 
   boost::assign::push_back(storvect)
-   (make_pair("Algorithm", boost::lexical_cast<std::string>(d_algorithm)))
-   (make_pair("Engine", d_engine))
-   (make_pair("Slot", boost::lexical_cast<std::string>(d_slot_id)))
-   (make_pair("PIN", d_pin))
-   (make_pair("Label", d_label));
+  (make_pair("Algorithm", boost::lexical_cast<std::string>(d_algorithm)))
+  (make_pair("Engine", d_engine))
+  (make_pair("Slot", boost::lexical_cast<std::string>(d_slot_id)))
+  (make_pair("PIN", d_pin))
+  (make_pair("Label", d_label));
   return storvect;
 };
 
@@ -842,9 +877,9 @@ DNSCryptoKeyEngine* PKCS11DNSCryptoKeyEngine::maker(unsigned int algorithm)
 }
 
 // this is called during program startup
-namespace {
-struct LoaderStruct
+namespace
 {
+struct LoaderStruct {
   LoaderStruct()
   {
 #ifdef HAVE_P11KIT1_V2
@@ -853,7 +888,8 @@ struct LoaderStruct
     p11_kit_initialize_registered();
 #endif
   };
-  ~LoaderStruct() {
+  ~LoaderStruct()
+  {
 #ifdef HAVE_P11KIT1_V2
     p11_kit_modules_release(p11_modules);
 #else

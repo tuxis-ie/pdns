@@ -5,7 +5,7 @@
 #include "misc.hh"
 #include <boost/lexical_cast.hpp>
 #include "syncres.hh"
-#include "utility.hh" 
+#include "utility.hh"
 #include "namespaces.hh"
 #include "namespaces.hh"
 
@@ -15,9 +15,9 @@ static FDMultiplexer* make()
   return new PollFDMultiplexer();
 }
 
-static struct RegisterOurselves
-{
-  RegisterOurselves() {
+static struct RegisterOurselves {
+  RegisterOurselves()
+  {
     FDMultiplexer::getMultiplexerMap().insert(make_pair(1, &make));
   }
 } doIt;
@@ -52,9 +52,9 @@ int PollFDMultiplexer::run(struct timeval* now)
   if(d_inrun) {
     throw FDMultiplexerException("FDMultiplexer::run() is not reentrant!\n");
   }
-  
+
   vector<struct pollfd> pollfds;
-  
+
   struct pollfd pollfd;
   for(callbackmap_t::const_iterator i=d_readCallbacks.begin(); i != d_readCallbacks.end(); ++i) {
     pollfd.fd = i->first;
@@ -70,25 +70,24 @@ int PollFDMultiplexer::run(struct timeval* now)
 
   int ret=poll(&pollfds[0], pollfds.size(), 500);
   Utility::gettimeofday(now, 0); // MANDATORY!
-  
+
   if(ret < 0 && errno!=EINTR)
     throw FDMultiplexerException("poll returned error: "+stringerror());
 
   d_iter=d_readCallbacks.end();
   d_inrun=true;
-  
-  for(unsigned int n = 0; n < pollfds.size(); ++n) {  
+
+  for(unsigned int n = 0; n < pollfds.size(); ++n) {
     if(pollfds[n].revents == POLLIN) {
       d_iter=d_readCallbacks.find(pollfds[n].fd);
-    
+
       if(d_iter != d_readCallbacks.end()) {
         d_iter->second.d_callback(d_iter->first, d_iter->second.d_parameter);
         continue; // so we don't refind ourselves as writable!
       }
-    }
-    else if(pollfds[n].revents == POLLOUT) {
+    } else if(pollfds[n].revents == POLLOUT) {
       d_iter=d_writeCallbacks.find(pollfds[n].fd);
-    
+
       if(d_iter != d_writeCallbacks.end()) {
         d_iter->second.d_callback(d_iter->first, d_iter->second.d_parameter);
       }
@@ -114,7 +113,7 @@ void acceptData(int fd, boost::any& parameter)
 int main()
 {
   Socket s(AF_INET, SOCK_DGRAM);
-  
+
   IPEndpoint loc("0.0.0.0", 2000);
   s.bind(loc);
 

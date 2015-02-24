@@ -19,17 +19,18 @@ ArgvMap &arg()
 
 BOOST_AUTO_TEST_SUITE(nameserver_cc)
 
-BOOST_AUTO_TEST_CASE(test_AddressIsUs4) {
+BOOST_AUTO_TEST_CASE(test_AddressIsUs4)
+{
   ComboAddress local1("127.0.0.1", 53);
   ComboAddress local2("127.0.0.2", 53);
   ComboAddress Remote("192.168.255.255", 53);
 
   g_localaddresses.push_back(ComboAddress("0.0.0.0", 53));
-    
+
   BOOST_CHECK_EQUAL(AddressIsUs(local1), true);
 //  BOOST_CHECK_EQUAL(AddressIsUs(local2), false);
   BOOST_CHECK_EQUAL(AddressIsUs(Remote), false);
-  
+
   g_localaddresses.clear();
   g_localaddresses.push_back(ComboAddress("192.168.255.255", 53));
   BOOST_CHECK_EQUAL(AddressIsUs(Remote), true);
@@ -37,15 +38,16 @@ BOOST_AUTO_TEST_CASE(test_AddressIsUs4) {
   BOOST_CHECK_EQUAL(AddressIsUs(Remote), false);
 }
 
-BOOST_AUTO_TEST_CASE(test_AddressIsUs6) {
+BOOST_AUTO_TEST_CASE(test_AddressIsUs6)
+{
   ComboAddress local1("127.0.0.1", 53);
   ComboAddress local2("127.0.0.2", 53);
   ComboAddress local3("::1", 53);
   ComboAddress Remote("192.168.255.255", 53);
-  
+
   g_localaddresses.clear();
   g_localaddresses.push_back(ComboAddress("::", 53));
-  
+
   BOOST_CHECK_EQUAL(AddressIsUs(local1), true);
 //  BOOST_CHECK_EQUAL(AddressIsUs(local2), false);
   BOOST_CHECK_EQUAL(AddressIsUs(local3), true);

@@ -29,13 +29,13 @@
 #include <sys/stat.h>
 
 DynMessenger::DynMessenger(const string &localdir,
-    const string &fname,
-    int timeout_sec,
-    int timeout_usec)
+                           const string &fname,
+                           int timeout_sec,
+                           int timeout_usec)
 {
   d_s=socket(AF_UNIX,SOCK_STREAM,0);
   Utility::setCloseOnExec(d_s);
-  
+
   if(d_s<0) {
     throw PDNSException(string("socket")+strerror(errno));
   }
@@ -48,7 +48,7 @@ DynMessenger::DynMessenger(const string &localdir,
 
   if(mkstemp(d_local.sun_path)<0)
     throw PDNSException("Unable to generate local temporary file: "+stringerror());
-  
+
   unlink(d_local.sun_path);
 
   try {
@@ -88,14 +88,14 @@ DynMessenger::DynMessenger(const string &localdir,
 }
 
 DynMessenger::DynMessenger(const ComboAddress& remote,
-    const string &secret,
-    int timeout_sec,
-    int timeout_usec)
+                           const string &secret,
+                           int timeout_sec,
+                           int timeout_usec)
 {
   *d_local.sun_path=0;
   d_s=socket(AF_INET, SOCK_STREAM,0);
   Utility::setCloseOnExec(d_s);
- 
+
   if(d_s<0) {
     throw PDNSException(string("socket")+strerror(errno));
   }
@@ -133,7 +133,7 @@ DynMessenger::~DynMessenger()
     close(d_s);
   if(*d_local.sun_path && unlink(d_local.sun_path)<0)
     cerr<<"Warning: unable to unlink local unix domain endpoint: "<<strerror(errno)<<endl;
-}   
+}
 
 int DynMessenger::send(const string &msg) const
 {
@@ -151,7 +151,7 @@ int DynMessenger::send(const string &msg) const
   }
 }
 
-string DynMessenger::receive() const 
+string DynMessenger::receive() const
 {
   char buffer[1500];
 

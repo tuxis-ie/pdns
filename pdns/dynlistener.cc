@@ -1,23 +1,23 @@
- /*
-    PowerDNS Versatile Database Driven Nameserver
-    Copyright (C) 2002 - 2013  PowerDNS.COM BV
+/*
+   PowerDNS Versatile Database Driven Nameserver
+   Copyright (C) 2002 - 2013  PowerDNS.COM BV
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
-    published by the Free Software Foundation
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 2 as
+   published by the Free Software Foundation
 
-    Additionally, the license of this program contains a special
-    exception which allows to distribute the program in binary form when
-    it is linked against OpenSSL.
+   Additionally, the license of this program contains a special
+   exception which allows to distribute the program in binary form when
+   it is linked against OpenSSL.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <cstring>
 #include <string>
@@ -40,7 +40,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <boost/algorithm/string.hpp> 
+#include <boost/algorithm/string.hpp>
 #include "misc.hh"
 #include "dns.hh"
 #include "arguments.hh"
@@ -73,11 +73,11 @@ void DynListener::createSocketAndBind(int family, struct sockaddr*local, size_t 
       L<<Logger::Error<<"Unable to create control socket on '"<<((ComboAddress *)local)->toStringWithPort()<<"', reason: "<<strerror(errno)<<endl;
     exit(1);
   }
-  
+
   int tmp=1;
   if(setsockopt(d_s,SOL_SOCKET,SO_REUSEADDR,(char*)&tmp,sizeof tmp)<0)
     throw PDNSException(string("Setsockopt failed on control socket: ")+strerror(errno));
-    
+
   if(bind(d_s, local, len) < 0) {
     if (family == AF_UNIX)
       L<<Logger::Critical<<"Unable to bind to control socket at '"<<((struct sockaddr_un*)local)->sun_path<<"', reason: "<<strerror(errno)<<endl;
@@ -125,7 +125,7 @@ void DynListener::listenOnUnixDomain(const string& fname)
     L<<Logger::Critical<<"Unable to bind to controlsocket, path '"<<fname<<"' is not a valid UNIX socket path."<<endl;
     exit(1);
   }
-  
+
   createSocketAndBind(AF_UNIX, (struct sockaddr*)& local, sizeof(local));
   d_socketname=fname;
   if(!arg()["setgid"].empty()) {
@@ -134,9 +134,9 @@ void DynListener::listenOnUnixDomain(const string& fname)
     if(chown(fname.c_str(),static_cast<uid_t>(-1),Utility::makeGidNumeric(arg()["setgid"]))<0)
       L<<Logger::Error<<"Unable to change group ownership of controlsocket at '"<<fname<<"', reason: "<<strerror(errno)<<endl;
   }
-  
+
   listen(d_s, 10);
-  
+
   L<<Logger::Warning<<"Listening on controlsocket in '"<<fname<<"'"<<endl;
   d_nonlocal=true;
 }
@@ -168,18 +168,17 @@ DynListener::DynListener(const string &progname)
   if(!progname.empty()) {
     string socketname=arg()["socket-dir"]+"/";
     cleanSlashes(socketname);
-    
+
     if(!mkdir(socketname.c_str(),0700)) // make /var directory, if needed
       L<<Logger::Warning<<"Created local state directory '"<<socketname<<"'"<<endl;
     else if(errno!=EEXIST) {
       L<<Logger::Critical<<"FATAL: Unable to create socket directory ("<<socketname<<") and it does not exist yet"<<endl;
       exit(1);
     }
-    
+
     socketname+=progname+".controlsocket";
     listenOnUnixDomain(socketname);
-  }
-  else
+  } else
     d_nonlocal=false; // we listen on stdin!
   d_tcp=false;
 }
@@ -248,7 +247,7 @@ string DynListener::getLine()
         close(d_client);
         continue;
       }
-      
+
       if(strlen(&mesg[0]) == mesg.size()) {
         L<<Logger::Error<<"Line on controlsocket ("<<d_client<<") was too long"<<endl;
         close(d_client);
@@ -256,12 +255,11 @@ string DynListener::getLine()
       }
       break;
     }
-  }
-  else {
+  } else {
     if(isatty(0))
       if(write(1, "% ", 2) !=2)
         throw PDNSException("Writing to console: "+stringerror());
-    if((len=read(0, &mesg[0], mesg.size())) < 0) 
+    if((len=read(0, &mesg[0], mesg.size())) < 0)
       throw PDNSException("Reading from the control pipe: "+stringerror());
     else if(len==0)
       throw PDNSException("Guardian exited - going down as well");
@@ -271,7 +269,7 @@ string DynListener::getLine()
 
     mesg[len]=0;
   }
-  
+
   return &mesg[0];
 }
 
@@ -281,7 +279,7 @@ void DynListener::sendlines(const string &l)
     unsigned int sent=0;
     int ret;
     while(sent < l.length()) {
-      ret=send(d_client, l.c_str()+sent, l.length()-sent, 0); 
+      ret=send(d_client, l.c_str()+sent, l.length()-sent, 0);
 
       if(ret<0 || !ret) {
         L<<Logger::Error<<"Error sending data to pdns_control: "<<stringerror()<<endl;
@@ -317,7 +315,7 @@ void DynListener::theListener()
   try {
     signal(SIGPIPE,SIG_IGN);
 
-    for(int n=0;;++n) {
+    for(int n=0;; ++n) {
       string line=getLine();
       boost::trim_right(line);
 
@@ -338,31 +336,23 @@ void DynListener::theListener()
           sendlines((*s_restfunc)(parts,d_ppid));
         else
           sendlines("Unknown command: '"+parts[0]+"'");
-      }
-      catch(PDNSException &AE) {
+      } catch(PDNSException &AE) {
         L<<Logger::Error<<"Non-fatal error in control listener command '"<<line<<"': "<<AE.reason<<endl;
-      }
-      catch(string &E) {
+      } catch(string &E) {
         L<<Logger::Error<<"Non-fatal error 2 in control listener command '"<<line<<"': "<<E<<endl;
-      }
-      catch(std::exception& e) {
+      } catch(std::exception& e) {
         L<<Logger::Error<<"Non-fatal STL error in control listener command '"<<line<<"': "<<e.what()<<endl;
-      }
-      catch(...) {
+      } catch(...) {
         L<<Logger::Error<<"Non-fatal error in control listener command '"<<line<<"': unknown exception occurred"<<endl;
       }
     }
-  }
-  catch(PDNSException &AE) {
+  } catch(PDNSException &AE) {
     L<<Logger::Error<<"Fatal error in control listener: "<<AE.reason<<endl;
-  }
-  catch(string &E) {
+  } catch(string &E) {
     L<<Logger::Error<<"Fatal error 2 in control listener: "<<E<<endl;
-  }
-  catch(std::exception& e) {
+  } catch(std::exception& e) {
     L<<Logger::Error<<"Fatal STL error in control listener: "<<e.what()<<endl;
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<"Fatal: unknown exception in control listener occurred"<<endl;
   }
 }
@@ -376,8 +366,7 @@ string DynListener::getHelp()
   // s_restfunc, when in guardian mode, is the function that
   // can pass commands on to the guarded instance
   // we just pass it HELP and merge it with our own list
-  if(s_restfunc)
-  {
+  if(s_restfunc) {
     vector<string> parts;
     parts.push_back("HELP");
     rest=((*s_restfunc)(parts,d_ppid));
@@ -386,7 +375,7 @@ string DynListener::getHelp()
 
   const boost::format fmter("%|-32| %||");
 
-  for(g_funkdb_t::const_iterator i=s_funcdb.begin();i!=s_funcdb.end();++i) {
+  for(g_funkdb_t::const_iterator i=s_funcdb.begin(); i!=s_funcdb.end(); ++i) {
     funcs.push_back(str(boost::format(fmter) % (toLower(i->first)+" "+i->second.args) % i->second.usage));
   }
   sort(funcs.begin(), funcs.end());

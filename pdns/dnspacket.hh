@@ -23,9 +23,9 @@
 
 #if __GNUC__ == 2
 #if __GNUC_MINOR__ < 95
-        #error Your compiler is too old! Try g++ 3.3 or higher
+#error Your compiler is too old! Try g++ 3.3 or higher
 #else
-        #warning There are known problems with PowerDNS binaries compiled by gcc version 2.95 and 2.96!
+#warning There are known problems with PowerDNS binaries compiled by gcc version 2.95 and 2.96!
 #endif
 #endif
 
@@ -57,7 +57,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
- #endif // HAVE_CONFIG_H
+#endif // HAVE_CONFIG_H
 
 
 class DNSBackend;
@@ -108,7 +108,7 @@ public:
 
   void clearRecords(); //!< when building a packet, wipe all previously added records (clears 'rrs')
 
-  /** Add a DNSResourceRecord to this packet. A DNSPacket (as does a DNS Packet) has 4 kinds of resource records. Questions, 
+  /** Add a DNSResourceRecord to this packet. A DNSPacket (as does a DNS Packet) has 4 kinds of resource records. Questions,
       Answers, Authority and Additional. See RFC 1034 and 1035 for details. You can specify where a record needs to go in the
       DNSResourceRecord d_place field */
   void addRecord(const DNSResourceRecord &);  // adds to 'rrs'
@@ -149,7 +149,7 @@ public:
 
   bool getTSIGDetails(TSIGRecordContent* tr, string* keyname, string* message) const;
   void setTSIGDetails(const TSIGRecordContent& tr, const string& keyname, const string& secret, const string& previous, bool timersonly=false);
-  
+
   vector<DNSResourceRecord>& getRRS() { return d_rrs; }
   TSIGRecordContent d_trc;
   static bool s_doEDNSSubnetProcessing;
@@ -160,7 +160,7 @@ private:
   bool d_wrapped; // 1
   bool d_compress; // 1
   uint16_t d_qlen; // length of the question (including class & type) in this packet 2
-  
+
   int d_socket; // 4
 
   string d_rawpacket; // this is where everything lives 4

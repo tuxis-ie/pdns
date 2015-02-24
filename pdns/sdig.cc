@@ -40,11 +40,10 @@ try
   }
 
   vector<uint8_t> packet;
-  
+
   DNSPacketWriter pw(packet, argv[3], DNSRecordContent::TypeToNumber(argv[4]));
 
-  if(dnssec || getenv("SDIGBUFSIZE"))
-  {
+  if(dnssec || getenv("SDIGBUFSIZE")) {
     char *sbuf=getenv("SDIGBUFSIZE");
     int bufsize;
     if(sbuf)
@@ -56,31 +55,30 @@ try
     pw.commit();
   }
 
-  if(recurse)
-  {
+  if(recurse) {
     pw.getHeader()->rd=true;
   }
   //  pw.setRD(true);
- 
- /*
-  pw.startRecord("powerdns.com", DNSRecordContent::TypeToNumber("NS"));
-  NSRecordContent nrc("ns1.powerdns.com");
-  nrc.toPacket(pw);
 
-  pw.startRecord("powerdns.com", DNSRecordContent::TypeToNumber("NS"));
-  NSRecordContent nrc2("ns2.powerdns.com");
-  nrc2.toPacket(pw);
+  /*
+    pw.startRecord("powerdns.com", DNSRecordContent::TypeToNumber("NS"));
+    NSRecordContent nrc("ns1.powerdns.com");
+    nrc.toPacket(pw);
+
+    pw.startRecord("powerdns.com", DNSRecordContent::TypeToNumber("NS"));
+    NSRecordContent nrc2("ns2.powerdns.com");
+    nrc2.toPacket(pw);
   */
 
-/*  DNSPacketWriter::optvect_t opts;
+  /*  DNSPacketWriter::optvect_t opts;
 
-  opts.push_back(make_pair(5, ping));
-  
-  pw.commit();
-*/
+    opts.push_back(make_pair(5, ping));
+
+    pw.commit();
+  */
   // pw.addOpt(5200, 0, 0);
   // pw.commit();
-  
+
   string reply;
 
   if(tcp) {
@@ -93,7 +91,7 @@ try
       throw PDNSException("tcp write failed");
 
     sock.writen(string((char*)&*packet.begin(), (char*)&*packet.end()));
-    
+
     if(sock.read((char *) &len, 2) != 2)
       throw PDNSException("tcp read failed");
 
@@ -110,13 +108,11 @@ try
 
     reply=string(creply, len);
     delete[] creply;
-  }
-  else //udp
-  {
+  } else { //udp
     Socket sock(AF_INET, SOCK_DGRAM);
     ComboAddress dest(argv[1] + (*argv[1]=='@'), atoi(argv[2]));
     sock.sendTo(string((char*)&*packet.begin(), (char*)&*packet.end()), dest);
-    
+
     sock.recvFrom(reply, dest);
   }
   MOADNSParser mdp(reply);
@@ -124,17 +120,14 @@ try
   cout<<"Rcode: "<<mdp.d_header.rcode<<", RD: "<<mdp.d_header.rd<<", QR: "<<mdp.d_header.qr;
   cout<<", TC: "<<mdp.d_header.tc<<", AA: "<<mdp.d_header.aa<<", opcode: "<<mdp.d_header.opcode<<endl;
 
-  for(MOADNSParser::answers_t::const_iterator i=mdp.d_answers.begin(); i!=mdp.d_answers.end(); ++i) {          
+  for(MOADNSParser::answers_t::const_iterator i=mdp.d_answers.begin(); i!=mdp.d_answers.end(); ++i) {
     cout<<i->first.d_place-1<<"\t"<<i->first.d_label<<"\tIN\t"<<DNSRecordContent::NumberToType(i->first.d_type);
-    if(i->first.d_type == QType::RRSIG) 
-    {
+    if(i->first.d_type == QType::RRSIG) {
       string zoneRep = i->first.d_content->getZoneRepresentation();
       vector<string> parts;
       stringtok(parts, zoneRep);
       cout<<"\t"<<i->first.d_ttl<<"\t"<< parts[0]<<" "<<parts[1]<<" "<<parts[2]<<" "<<parts[3]<<" [expiry] [inception] [keytag] "<<parts[7]<<" ...\n";
-    }
-    else if(!showflags && i->first.d_type == QType::NSEC3)
-    {
+    } else if(!showflags && i->first.d_type == QType::NSEC3) {
       string zoneRep = i->first.d_content->getZoneRepresentation();
       vector<string> parts;
       stringtok(parts, zoneRep);
@@ -142,23 +135,17 @@ try
       for(vector<string>::iterator iter = parts.begin()+5; iter != parts.end(); ++iter)
         cout<<" "<<*iter;
       cout<<"\n";
-    }
-    else if(i->first.d_type == QType::DNSKEY)
-    {
+    } else if(i->first.d_type == QType::DNSKEY) {
       string zoneRep = i->first.d_content->getZoneRepresentation();
       vector<string> parts;
       stringtok(parts, zoneRep);
       cout<<"\t"<<i->first.d_ttl<<"\t"<< parts[0]<<" "<<parts[1]<<" "<<parts[2]<<" ...\n";
-    }
-    else if (i->first.d_type == QType::SOA && hidesoadetails)
-    {
+    } else if (i->first.d_type == QType::SOA && hidesoadetails) {
       string zoneRep = i->first.d_content->getZoneRepresentation();
       vector<string> parts;
       stringtok(parts, zoneRep);
       cout<<"\t"<<i->first.d_ttl<<"\t"<<parts[0]<<" "<<parts[1]<<" [serial] "<<parts[3]<<" "<<parts[4]<<" "<<parts[5]<<" "<<parts[6]<<"\n";
-    }
-    else
-    {
+    } else {
       cout<<"\t"<<i->first.d_ttl<<"\t"<< i->first.d_content->getZoneRepresentation()<<"\n";
     }
 
@@ -168,22 +155,20 @@ try
   if(getEDNSOpts(mdp, &edo)) {
 //    cerr<<"Have "<<edo.d_options.size()<<" options!"<<endl;
     for(vector<pair<uint16_t, string> >::const_iterator iter = edo.d_options.begin();
-        iter != edo.d_options.end(); 
+        iter != edo.d_options.end();
         ++iter) {
       if(iter->first == 5) {// 'EDNS PING'
         cerr<<"Have ednsping: '"<<iter->second<<"'\n";
-        //if(iter->second == ping) 
-         // cerr<<"It is correct!"<<endl;
-      }
-      else {
+        //if(iter->second == ping)
+        // cerr<<"It is correct!"<<endl;
+      } else {
         cerr<<"Have unknown option "<<(int)iter->first<<endl;
       }
     }
 
   }
 
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

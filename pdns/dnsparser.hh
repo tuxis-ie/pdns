@@ -3,7 +3,7 @@
     Copyright (C) 2005 - 2011 PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -50,7 +50,7 @@
     We can add:        2 -> 1  easily by reversing the packetwriter
     And we might be able to reverse 2 -> 3 as well
 */
-    
+
 #include "namespaces.hh"
 #include "namespaces.hh"
 
@@ -67,7 +67,7 @@ class MOADNSParser;
 class PacketReader
 {
 public:
-  PacketReader(const vector<uint8_t>& content) 
+  PacketReader(const vector<uint8_t>& content)
     : d_pos(0), d_startrecordpos(0), d_content(content)
   {
     d_recordlen = content.size();
@@ -76,7 +76,7 @@ public:
   uint32_t get32BitInt();
   uint16_t get16BitInt();
   uint8_t get8BitInt();
-  
+
   void xfr48BitInt(uint64_t& val);
 
   void xfr32BitInt(uint32_t& val)
@@ -90,7 +90,8 @@ public:
     val=htonl(val);
   }
 
-  void xfrIP6(std::string &val) {
+  void xfrIP6(std::string &val)
+  {
     xfrBlob(val, 16);
   }
 
@@ -177,7 +178,7 @@ public:
     pw.startRecord(qname, d_qtype);
     this->toPacket(pw);
     pw.commit();
-    
+
     string record;
     pw.getRecords(record);
     return record;
@@ -185,13 +186,13 @@ public:
 
   static shared_ptr<DNSRecordContent> unserialize(const string& qname, uint16_t qtype, const string& serialized);
 
-  void doRecordCheck(const struct DNSRecord&){}
+  void doRecordCheck(const struct DNSRecord&) {}
 
   std::string label;
   struct dnsrecordheader header;
 
-  typedef DNSRecordContent* makerfunc_t(const struct DNSRecord& dr, PacketReader& pr);  
-  typedef DNSRecordContent* zmakerfunc_t(const string& str);  
+  typedef DNSRecordContent* makerfunc_t(const struct DNSRecord& dr, PacketReader& pr);
+  typedef DNSRecordContent* zmakerfunc_t(const string& str);
 
   static void regist(uint16_t cl, uint16_t ty, makerfunc_t* f, zmakerfunc_t* z, const char* name)
   {
@@ -204,7 +205,7 @@ public:
     getN2Typemap().insert(make_pair(name, make_pair(cl,ty)));
   }
 
-  static void unregist(uint16_t cl, uint16_t ty) 
+  static void unregist(uint16_t cl, uint16_t ty)
   {
     pair<uint16_t, uint16_t> key=make_pair(cl, ty);
     getTypemap().erase(key);
@@ -216,27 +217,27 @@ public:
     n2typemap_t::const_iterator iter = getN2Typemap().find(toUpper(name));
     if(iter != getN2Typemap().end())
       return iter->second.second;
-    
+
     if(boost::starts_with(name, "TYPE"))
-        return atoi(name.c_str()+4);
-    
+      return atoi(name.c_str()+4);
+
     throw runtime_error("Unknown DNS type '"+name+"'");
   }
 
   static const string NumberToType(uint16_t num, uint16_t classnum=1)
   {
     t2namemap_t::const_iterator iter = getT2Namemap().find(make_pair(classnum, num));
-    if(iter == getT2Namemap().end()) 
+    if(iter == getT2Namemap().end())
       return "TYPE" + lexical_cast<string>(num);
-      //      throw runtime_error("Unknown DNS type with numerical id "+lexical_cast<string>(num));
+    //      throw runtime_error("Unknown DNS type with numerical id "+lexical_cast<string>(num));
     return iter->second;
   }
 
   explicit DNSRecordContent(uint16_t type) : d_qtype(type)
   {}
-  
-  
-  DNSRecordContent& operator=(const DNSRecordContent& orig) 
+
+
+  DNSRecordContent& operator=(const DNSRecordContent& orig)
   {
     const_cast<uint16_t&>(d_qtype) = orig.d_qtype; // **COUGH**
     label = orig.label;
@@ -244,7 +245,7 @@ public:
     return *this;
   }
 
-  
+
   const uint16_t d_qtype;
 
 protected:
@@ -258,8 +259,7 @@ protected:
   static zmakermap_t& getZmakermap();
 };
 
-struct DNSRecord
-{
+struct DNSRecord {
   std::string d_label;
   uint16_t d_type;
   uint16_t d_class;
@@ -275,11 +275,11 @@ struct DNSRecord
       lzrp=toLower(d_content->getZoneRepresentation());
     if(rhs.d_content)
       rzrp=toLower(rhs.d_content->getZoneRepresentation());
-    
+
     string llabel=toLower(d_label);
     string rlabel=toLower(rhs.d_label);
 
-    return 
+    return
       tie(llabel,     d_type,     d_class, lzrp) <
       tie(rlabel, rhs.d_type, rhs.d_class, rzrp);
   }
@@ -291,11 +291,11 @@ struct DNSRecord
       lzrp=toLower(d_content->getZoneRepresentation());
     if(rhs.d_content)
       rzrp=toLower(rhs.d_content->getZoneRepresentation());
-    
+
     string llabel=toLower(d_label);
     string rlabel=toLower(rhs.d_label);
-    
-    return 
+
+    return
       tie(llabel,     d_type,     d_class, lzrp) ==
       tie(rlabel, rhs.d_type, rhs.d_class, rzrp);
   }
@@ -323,7 +323,7 @@ public:
   //uint8_t d_rcode;
 
   typedef vector<pair<DNSRecord, uint16_t > > answers_t;
-  
+
   //! All answers contained in this packet
   answers_t d_answers;
 

@@ -44,9 +44,9 @@ static FDMultiplexer* make()
   return new KqueueFDMultiplexer();
 }
 
-static struct KqueueRegisterOurselves
-{
-  KqueueRegisterOurselves() {
+static struct KqueueRegisterOurselves {
+  KqueueRegisterOurselves()
+  {
     FDMultiplexer::getMultiplexerMap().insert(make_pair(0, &make)); // priority 0!
   }
 } kQueuedoIt;
@@ -64,7 +64,7 @@ void KqueueFDMultiplexer::addFD(callbackmap_t& cbmap, int fd, callbackfunc_t toD
 
   struct kevent kqevent;
   EV_SET(&kqevent, fd, (&cbmap == &d_readCallbacks) ? EVFILT_READ : EVFILT_WRITE, EV_ADD, 0,0,0);
-  
+
   if(kevent(d_kqueuefd, &kqevent, 1, 0, 0, 0) < 0) {
     cbmap.erase(fd);
     throw FDMultiplexerException("Adding fd to kqueue set: "+stringerror());
@@ -77,7 +77,7 @@ void KqueueFDMultiplexer::removeFD(callbackmap_t& cbmap, int fd)
 
   struct kevent kqevent;
   EV_SET(&kqevent, fd, (&cbmap == &d_readCallbacks) ? EVFILT_READ : EVFILT_WRITE, EV_DELETE, 0,0,0);
-  
+
   if(kevent(d_kqueuefd, &kqevent, 1, 0, 0, 0) < 0) // ponder putting Callback back on the map..
     throw FDMultiplexerException("Removing fd from kqueue set: "+stringerror());
 }
@@ -87,14 +87,14 @@ int KqueueFDMultiplexer::run(struct timeval* now)
   if(d_inrun) {
     throw FDMultiplexerException("FDMultiplexer::run() is not reentrant!\n");
   }
-  
+
   struct timespec ts;
   ts.tv_sec=0;
   ts.tv_nsec=500000000U;
 
   int ret=kevent(d_kqueuefd, 0, 0, d_kevents.get(), s_maxevents, &ts);
   gettimeofday(now,0); // MANDATORY!
-  
+
   if(ret < 0 && errno!=EINTR)
     throw FDMultiplexerException("kqueue returned error: "+stringerror());
 
@@ -135,7 +135,7 @@ void acceptData(int fd, boost::any& parameter)
 int main()
 {
   Socket s(AF_INET, SOCK_DGRAM);
-  
+
   IPEndpoint loc("0.0.0.0", 2000);
   s.bind(loc);
 

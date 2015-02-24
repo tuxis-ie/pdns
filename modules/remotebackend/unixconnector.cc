@@ -1,19 +1,20 @@
 #include "remotebackend.hh"
 #include <sys/socket.h>
-#include "pdns/lock.hh" 
+#include "pdns/lock.hh"
 #include <unistd.h>
 #include <fcntl.h>
-#ifndef UNIX_PATH_MAX 
+#ifndef UNIX_PATH_MAX
 #define UNIX_PATH_MAX 108
 #endif
 
-UnixsocketConnector::UnixsocketConnector(std::map<std::string,std::string> options) {
+UnixsocketConnector::UnixsocketConnector(std::map<std::string,std::string> options)
+{
   if (options.count("path") == 0) {
     L<<Logger::Error<<"Cannot find 'path' option in connection string"<<endl;
     throw PDNSException();
-  } 
+  }
   this->timeout = 2000;
-  if (options.find("timeout") != options.end()) { 
+  if (options.find("timeout") != options.end()) {
     this->timeout = boost::lexical_cast<int>(options.find("timeout")->second);
   }
   this->path = options.find("path")->second;
@@ -22,14 +23,16 @@ UnixsocketConnector::UnixsocketConnector(std::map<std::string,std::string> optio
   this->fd = -1;
 }
 
-UnixsocketConnector::~UnixsocketConnector() {
+UnixsocketConnector::~UnixsocketConnector()
+{
   if (this->connected) {
-     L<<Logger::Info<<"closing socket connection"<<endl;
-     close(fd);
+    L<<Logger::Info<<"closing socket connection"<<endl;
+    close(fd);
   }
 }
 
-int UnixsocketConnector::send_message(const rapidjson::Document &input) {
+int UnixsocketConnector::send_message(const rapidjson::Document &input)
+{
   std::string data;
   int rv;
   data = makeStringFromDocument(input);
@@ -40,7 +43,8 @@ int UnixsocketConnector::send_message(const rapidjson::Document &input) {
   return rv;
 }
 
-int UnixsocketConnector::recv_message(rapidjson::Document &output) {
+int UnixsocketConnector::recv_message(rapidjson::Document &output)
+{
   int rv,nread;
   std::string s_output;
   rapidjson::GenericReader<rapidjson::UTF8<> , rapidjson::MemoryPoolAllocator<> > r;
@@ -50,21 +54,21 @@ int UnixsocketConnector::recv_message(rapidjson::Document &output) {
   nread = 0;
   gettimeofday(&t0, NULL);
   memcpy(&t,&t0,sizeof(t0));
-  s_output = "";       
+  s_output = "";
 
-  while((t.tv_sec - t0.tv_sec)*1000 + (t.tv_usec - t0.tv_usec)/1000 < this->timeout) { 
+  while((t.tv_sec - t0.tv_sec)*1000 + (t.tv_usec - t0.tv_usec)/1000 < this->timeout) {
     std::string temp;
     temp.clear();
 
     rv = this->read(temp);
-    if (rv == -1) 
+    if (rv == -1)
       return -1;
 
     if (rv>0) {
       nread += rv;
       s_output.append(temp);
       rapidjson::StringStream ss(s_output.c_str());
-      output.ParseStream<0>(ss); 
+      output.ParseStream<0>(ss);
       if (output.HasParseError() == false)
         return s_output.size();
     }
@@ -76,7 +80,8 @@ int UnixsocketConnector::recv_message(rapidjson::Document &output) {
   return -1;
 }
 
-ssize_t UnixsocketConnector::read(std::string &data) {
+ssize_t UnixsocketConnector::read(std::string &data)
+{
   ssize_t nread;
   char buf[1500] = {0};
 
@@ -97,7 +102,8 @@ ssize_t UnixsocketConnector::read(std::string &data) {
   return nread;
 }
 
-ssize_t UnixsocketConnector::write(const std::string &data) {
+ssize_t UnixsocketConnector::write(const std::string &data)
+{
   ssize_t nwrite, nbuf;
   size_t pos;
   char buf[1500];
@@ -119,7 +125,8 @@ ssize_t UnixsocketConnector::write(const std::string &data) {
   return nwrite;
 }
 
-void UnixsocketConnector::reconnect() {
+void UnixsocketConnector::reconnect()
+{
   struct sockaddr_un sock;
   rapidjson::Document init,res;
   rapidjson::Value val;
@@ -131,21 +138,21 @@ void UnixsocketConnector::reconnect() {
   L<<Logger::Info<<"Reconnecting to backend" << std::endl;
   fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
-     connected = false;
-     L<<Logger::Error<<"Cannot create socket: " << strerror(errno) << std::endl;;
-     return;
+    connected = false;
+    L<<Logger::Error<<"Cannot create socket: " << strerror(errno) << std::endl;;
+    return;
   }
 
   if (makeUNsockaddr(path, &sock)) {
-     L<<Logger::Error<<"Unable to create UNIX domain socket: Path '"<<path<<"' is not a valid UNIX socket path."<<std::endl;
-     return;
+    L<<Logger::Error<<"Unable to create UNIX domain socket: Path '"<<path<<"' is not a valid UNIX socket path."<<std::endl;
+    return;
   }
 
   if (fcntl(fd, F_SETFL, O_NONBLOCK, &fd)) {
-     connected = false;
-     L<<Logger::Error<<"Cannot manipulate socket: " << strerror(errno) << std::endl;;
-     close(fd);
-     return;
+    connected = false;
+    L<<Logger::Error<<"Cannot manipulate socket: " << strerror(errno) << std::endl;;
+    close(fd);
+    return;
   }
 
   if((rv = connect(fd, reinterpret_cast<struct sockaddr*>(&sock), sizeof sock))==-1 && (errno == EINPROGRESS)) {
@@ -154,10 +161,10 @@ void UnixsocketConnector::reconnect() {
   }
 
   if (rv != 0 && errno != EISCONN && errno != 0) {
-     L<<Logger::Error<<"Cannot connect to socket: " << strerror(errno) << std::endl;
-     close(fd);
-     connected = false;
-     return;
+    L<<Logger::Error<<"Cannot connect to socket: " << strerror(errno) << std::endl;
+    close(fd);
+    connected = false;
+    return;
   }
   // send initialize
 
@@ -170,12 +177,12 @@ void UnixsocketConnector::reconnect() {
   for(std::map<std::string,std::string>::iterator i = options.begin(); i != options.end(); i++) {
     val = i->second.c_str();
     init["parameters"].AddMember(i->first.c_str(), val, init.GetAllocator());
-  } 
+  }
 
   this->send_message(init);
   if (this->recv_message(res) == false) {
-     L<<Logger::Warning << "Failed to initialize backend" << std::endl;
-     close(fd);
-     this->connected = false;
+    L<<Logger::Warning << "Failed to initialize backend" << std::endl;
+    close(fd);
+    this->connected = false;
   }
 }

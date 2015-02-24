@@ -27,7 +27,7 @@ try
 
   s.setNonBlocking();
   s.connect(remote);  // we do the connect so the attempt happens while we gather stats
- 
+
   typedef map<string,string> all_t;
   all_t all=getAllStatsMap();
 
@@ -53,12 +53,10 @@ try
     L<<Logger::Warning<<"Error writing carbon data to "<<remote.toStringWithPort()<<": "<<strerror(errno)<<endl;
   if(ret==0)
     L<<Logger::Warning<<"Timeout connecting/writing carbon data to "<<remote.toStringWithPort();
- }
-catch(PDNSException& e)
+} catch(PDNSException& e)
 {
   L<<Logger::Error<<"Error in carbon thread: "<<e.reason<<endl;
-}
-catch(std::exception& e)
+} catch(std::exception& e)
 {
   L<<Logger::Error<<"Error in carbon thread: "<<e.what()<<endl;
 }

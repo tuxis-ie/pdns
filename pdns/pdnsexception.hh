@@ -27,13 +27,13 @@
 
 #include "namespaces.hh"
 
-//! Generic Exception thrown 
+//! Generic Exception thrown
 class PDNSException
 {
 public:
-  PDNSException(){reason="Unspecified";};
-  PDNSException(string r){reason=r;};
-  
+  PDNSException() {reason="Unspecified";};
+  PDNSException(string r) {reason=r;};
+
   string reason; //! Print this to tell the user what went wrong
 };
 

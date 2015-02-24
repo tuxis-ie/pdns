@@ -1,14 +1,14 @@
 /** two modes:
 
-anonymizing and stripping tcpdumps of irrelevant traffic, so operators can send non-privacy violating dumps
-for analysis.
+  anonymizing and stripping tcpdumps of irrelevant traffic, so operators can send non-privacy violating dumps
+  for analysis.
 
-algorithm:
+  algorithm:
 
-read a packet, check if it has the recursion desired bit set. 
+  read a packet, check if it has the recursion desired bit set.
 
-If the question has the response bit set, obfuscate the destination IP address
-otherwise, obfuscate the response IP address
+  If the question has the response bit set, obfuscate the destination IP address
+  otherwise, obfuscate the response IP address
 */
 
 
@@ -60,21 +60,20 @@ try
 
       uint32_t *src=(uint32_t*)&pr.d_ip->ip_src;
       uint32_t *dst=(uint32_t*)&pr.d_ip->ip_dst;
-      
+
       if(dh->qr)
         *dst=htonl(ipo.obf(*dst));
       else
         *src=htonl(ipo.obf(*src));
-      
+
       pr.d_ip->ip_sum=0;
-      
+
       pw.write();
     }
   }
   cerr<<"Saw "<<pr.d_correctpackets<<" correct packets, "<<pr.d_runts<<" runts, "<< pr.d_oversized<<" oversize, "<<
-    pr.d_nonetheripudp<<" unknown encaps"<<endl;
-}
-catch(std::exception& e)
+      pr.d_nonetheripudp<<" unknown encaps"<<endl;
+} catch(std::exception& e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

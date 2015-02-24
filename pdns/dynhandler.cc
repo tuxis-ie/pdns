@@ -3,7 +3,7 @@
     Copyright (C) 2002 - 2008  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
 
     Additionally, the license of this program contains a special
@@ -113,18 +113,17 @@ string DLUptimeHandler(const vector<string>&parts, Utility::pid_t ppid)
 
 string DLPurgeHandler(const vector<string>&parts, Utility::pid_t ppid)
 {
-  extern PacketCache PC;  
+  extern PacketCache PC;
   DNSSECKeeper dk;
   ostringstream os;
   int ret=0;
 
   if(parts.size()>1) {
-    for (vector<string>::const_iterator i=++parts.begin();i<parts.end();++i) {
+    for (vector<string>::const_iterator i=++parts.begin(); i<parts.end(); ++i) {
       ret+=PC.purge(*i);
       dk.clearCaches(*i);
     }
-  }
-  else {
+  } else {
     ret=PC.purge();
     dk.clearAllCaches();
   }
@@ -135,12 +134,12 @@ string DLPurgeHandler(const vector<string>&parts, Utility::pid_t ppid)
 
 string DLCCHandler(const vector<string>&parts, Utility::pid_t ppid)
 {
-  extern PacketCache PC;  
+  extern PacketCache PC;
   map<char,int> counts=PC.getCounts();
   ostringstream os;
   bool first=true;
-  for(map<char,int>::const_iterator i=counts.begin();i!=counts.end();++i) {
-    if(!first) 
+  for(map<char,int>::const_iterator i=counts.begin(); i!=counts.end(); ++i) {
+    if(!first)
       os<<", ";
     first=false;
 
@@ -152,7 +151,7 @@ string DLCCHandler(const vector<string>&parts, Utility::pid_t ppid)
       os<<"non-recursive packets: ";
     else if(i->first=='r')
       os<<"recursive packets: ";
-    else 
+    else
       os<<"unknown: ";
 
     os<<i->second;
@@ -193,21 +192,20 @@ string DLRemotesHandler(const vector<string>&parts, Utility::pid_t ppid)
 
 string DLSettingsHandler(const vector<string>&parts, Utility::pid_t ppid)
 {
-  static const char *whitelist[]={"query-logging",0};
+  static const char *whitelist[]= {"query-logging",0};
   const char **p;
 
   if(parts.size()!=3) {
     return "Syntax: set variable value";
   }
-  
-  for(p=whitelist;*p;p++)
+
+  for(p=whitelist; *p; p++)
     if(*p==parts[1])
       break;
   if(*p) {
     ::arg().set(parts[1])=parts[2];
     return "done";
-  }
-  else
+  } else
     return "This setting cannot be changed at runtime, or no such setting";
 
 }
@@ -229,7 +227,7 @@ string DLNotifyRetrieveHandler(const vector<string>&parts, Utility::pid_t ppid)
   PacketHandler P;
   if(!P.getBackend()->getDomainInfo(domain, di))
     return "Domain '"+domain+"' unknown";
-  
+
   if(di.masters.empty())
     return "Domain '"+domain+"' is not a slave domain (or has no master defined)";
 
@@ -245,15 +243,14 @@ string DLNotifyHostHandler(const vector<string>&parts, Utility::pid_t ppid)
   if(parts.size()!=3)
     return "syntax: notify-host domain ip";
   if(!::arg().mustDo("master"))
-      return "PowerDNS not configured as master";
+    return "PowerDNS not configured as master";
 
   try {
     ComboAddress ca(parts[2]);
-  } catch(...)
-  {
+  } catch(...) {
     return "Unable to convert '"+parts[2]+"' to an IP address";
   }
-  
+
   L<<Logger::Warning<<"Notification request to host "<<parts[2]<<" for domain '"<<parts[1]<<"' received"<<endl;
   Communicator.notify(parts[1],parts[2]);
   return "Added to queue";
@@ -266,7 +263,7 @@ string DLNotifyHandler(const vector<string>&parts, Utility::pid_t ppid)
   if(parts.size()!=2)
     return "syntax: notify domain";
   if(!::arg().mustDo("master"))
-      return "PowerDNS not configured as master";
+    return "PowerDNS not configured as master";
   L<<Logger::Warning<<"Notification request for domain '"<<parts[1]<<"' received from operator"<<endl;
   if(!Communicator.notifyDomain(parts[1]))
     return "Failed to add to the queue - see log";
@@ -281,8 +278,7 @@ string DLRediscoverHandler(const vector<string>&parts, Utility::pid_t ppid)
     string status="Ok";
     P.getBackend()->rediscover(&status);
     return status;
-  }
-  catch(PDNSException &ae) {
+  } catch(PDNSException &ae) {
     return ae.reason;
   }
 

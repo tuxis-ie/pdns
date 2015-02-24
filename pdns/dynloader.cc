@@ -3,7 +3,7 @@
     Copyright (C) 2002 - 2008  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  if(::arg()["config-name"]!="") 
+  if(::arg()["config-name"]!="")
     s_programname+="-"+::arg()["config-name"];
 
   string configname=::arg()["config-dir"]+"/"+s_programname+".conf";
@@ -92,10 +92,10 @@ int main(int argc, char **argv)
     ::arg().laxFile(configname.c_str());
     ::arg().laxParse(argc,argv); // reparse so the commandline still wins
   }
-  
+
   string socketname=::arg()["socket-dir"]+"/"+s_programname+".controlsocket";
   cleanSlashes(socketname);
-  
+
   if(::arg()["chroot"].empty())
     localdir="/tmp";
   else
@@ -110,58 +110,51 @@ int main(int argc, char **argv)
       uint16_t port;
       try {
         port  = lexical_cast<uint16_t>(::arg()["remote-port"]);
-      }
-      catch(...) {
+      } catch(...) {
         cerr<<"Unable to convert '"<<::arg()["remote-port"]<<"' to a port number for connecting to remote PowerDNS\n";
         exit(99);
       }
-      
+
       D=shared_ptr<DynMessenger>(new DynMessenger(ComboAddress(::arg()["remote-address"], port), ::arg()["secret"]));
     }
 
     string message;
-    for(vector<string>::const_iterator i=commands.begin();i!=commands.end();++i) {
+    for(vector<string>::const_iterator i=commands.begin(); i!=commands.end(); ++i) {
       if(i!=commands.begin())
         message+=" ";
       message+=*i;
     }
-    
+
     if(command=="show") {
       message="SHOW ";
-      for(unsigned int n=1;n<commands.size();n++) {
+      for(unsigned int n=1; n<commands.size(); n++) {
         message+=commands[n];
         message+=" ";
       }
-    }
-    else if(command=="list") {
+    } else if(command=="list") {
       message="SHOW *";
       command="show";
-    }
-    else if(command=="quit" || command=="QUIT") {
+    } else if(command=="quit" || command=="QUIT") {
       message="QUIT";
-    }
-    else if(command=="status" || command=="STATUS") {
+    } else if(command=="status" || command=="STATUS") {
       message="STATUS";
-    }
-    else if(command=="version" || command=="VERSION") {
+    } else if(command=="version" || command=="VERSION") {
       message="VERSION";
     }
-    
-    
+
+
     if(D->send(message)<0) {
       cerr<<"Error sending command"<<endl;
       return 1;
     }
-    
+
     string resp=D->receive();
-    
+
     cout<<resp<<endl;
-  }
-  catch(TimeoutException &ae) {
+  } catch(TimeoutException &ae) {
     cerr<<"Timeout error: "<<ae.reason<<endl;
     return 2;
-  }
-  catch(PDNSException &ae) {
+  } catch(PDNSException &ae) {
     cerr<<"Fatal error: "<<ae.reason<<endl;
     return 1;
   }

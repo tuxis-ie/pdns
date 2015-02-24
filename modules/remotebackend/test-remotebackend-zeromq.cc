@@ -31,8 +31,8 @@ ArgvMap &arg()
 
 class RemoteLoader
 {
-   public:
-      RemoteLoader();
+public:
+  RemoteLoader();
 };
 
 DNSBackend *be;
@@ -41,26 +41,27 @@ DNSBackend *be;
 #include <boost/test/unit_test.hpp>
 
 struct RemotebackendSetup {
-    RemotebackendSetup()  {
-	be = 0; 
-	try {
-		// setup minimum arguments
-		::arg().set("module-dir")="./.libs";
-                new RemoteLoader();
-		BackendMakers().launch("remote");
-                // then get us a instance of it 
-                ::arg().set("remote-connection-string")="zeromq:endpoint=ipc:///tmp/remotebackend.0";
-                ::arg().set("remote-dnssec")="yes";
-                be = BackendMakers().all()[0];
-		// load few record types to help out
-		SOARecordContent::report();
-		NSRecordContent::report();
-                ARecordContent::report();
-	} catch (PDNSException &ex) {
-		BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
-	};
-    }
-    ~RemotebackendSetup()  {  }
+  RemotebackendSetup()
+  {
+    be = 0;
+    try {
+      // setup minimum arguments
+      ::arg().set("module-dir")="./.libs";
+      new RemoteLoader();
+      BackendMakers().launch("remote");
+      // then get us a instance of it
+      ::arg().set("remote-connection-string")="zeromq:endpoint=ipc:///tmp/remotebackend.0";
+      ::arg().set("remote-dnssec")="yes";
+      be = BackendMakers().all()[0];
+      // load few record types to help out
+      SOARecordContent::report();
+      NSRecordContent::report();
+      ARecordContent::report();
+    } catch (PDNSException &ex) {
+      BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
+    };
+  }
+  ~RemotebackendSetup()  {  }
 };
 
 BOOST_GLOBAL_FIXTURE( RemotebackendSetup );
@@ -69,7 +70,8 @@ BOOST_GLOBAL_FIXTURE( RemotebackendSetup );
 
 #include <iostream>
 
-int main(void) {
+int main(void)
+{
   std::cout << "No HTTP support in remotebackend - skipping test" << std::endl;
   return 0;
 }

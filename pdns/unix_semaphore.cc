@@ -3,7 +3,7 @@
     Copyright (C) 2002 - 2005  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -25,7 +25,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "pdnsexception.hh"
 #include "logger.hh"
 #include "misc.hh"
@@ -34,7 +34,7 @@
 #include <sys/types.h>
 
 
-#if DARWIN || _AIX || __APPLE__ 
+#if DARWIN || _AIX || __APPLE__
 
 // Darwin 6.0 Compatible implementation, uses pthreads so it portable across more platforms.
 
@@ -48,7 +48,7 @@ Semaphore::Semaphore(unsigned int value)
   }
 
   // Initialize
-  
+
   if (pthread_mutex_init(&m_lock, NULL) != 0) {
     throw PDNSException("Cannot create semaphore: cannot allocate mutex");
   }
@@ -80,13 +80,13 @@ int Semaphore::post()
 int Semaphore::wait()
 {
   pthread_mutex_lock(&m_lock);
-  
+
   while (m_count == 0) {
     m_nwaiters++;
     pthread_cond_wait(&m_gtzero, &m_lock);
     m_nwaiters--;
   }
-  
+
   m_count--;
 
   pthread_mutex_unlock(&m_lock);
@@ -108,7 +108,7 @@ int Semaphore::tryWait()
   }
 
   pthread_mutex_unlock(&m_lock);
- 
+
   return retval;
 }
 
@@ -124,7 +124,7 @@ int Semaphore::getValue(Semaphore::sem_value_t *sval)
 Semaphore::~Semaphore()
 {
   // Make sure there are no waiters.
-  
+
   pthread_mutex_lock(&m_lock);
   if (m_nwaiters > 0) {
     pthread_mutex_unlock(&m_lock);

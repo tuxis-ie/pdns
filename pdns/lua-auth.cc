@@ -23,7 +23,7 @@ bool AuthLua::axfrfilter(const ComboAddress& remote, const string& zone, const D
 
 extern "C" {
 #undef L
-/* Include the Lua API header files. */
+  /* Include the Lua API header files. */
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
@@ -52,7 +52,7 @@ bool AuthLua::axfrfilter(const ComboAddress& remote, const string& zone, const D
     lua_pop(d_lua, 1);
     return false;
   }
-  
+
   lua_pushstring(d_lua,  remote.toString().c_str() );
   lua_pushstring(d_lua,  zone.c_str() );
   lua_pushstring(d_lua,  in.qname.c_str() );
@@ -66,7 +66,7 @@ bool AuthLua::axfrfilter(const ComboAddress& remote, const string& zone, const D
     throw runtime_error(error);
     return false;
   }
-  
+
   int newres = (int)lua_tonumber(d_lua, 1); // did we handle it?
   if(newres < 0) {
     //cerr << "handler did not handle"<<endl;
@@ -91,7 +91,7 @@ bool AuthLua::axfrfilter(const ComboAddress& remote, const string& zone, const D
     lua_gettable(d_lua, 2);
 
     uint32_t tmpnum=0;
-    if(!getFromTable("qtype", tmpnum)) 
+    if(!getFromTable("qtype", tmpnum))
       rr.qtype=QType::A;
     else
       rr.qtype=tmpnum;
@@ -118,32 +118,35 @@ bool AuthLua::axfrfilter(const ComboAddress& remote, const string& zone, const D
   return true;
 }
 
-struct LuaDNSPacket
-{
+struct LuaDNSPacket {
   DNSPacket *d_p;
 };
 
-static DNSPacket* ldp_checkDNSPacket(lua_State *L) {
+static DNSPacket* ldp_checkDNSPacket(lua_State *L)
+{
   void *ud = luaL_checkudata(L, 1, "LuaDNSPacket");
   luaL_argcheck(L, ud != NULL, 1, "`LuaDNSPacket' expected");
   return ((LuaDNSPacket *)ud)->d_p;
 }
 
-static int ldp_setRcode(lua_State *L) {
+static int ldp_setRcode(lua_State *L)
+{
   DNSPacket *p=ldp_checkDNSPacket(L);
   int rcode = luaL_checkint(L, 2);
   p->setRcode(rcode);
   return 0;
 }
 
-static int ldp_getQuestion(lua_State *L) {
+static int ldp_getQuestion(lua_State *L)
+{
   DNSPacket *p=ldp_checkDNSPacket(L);
   lua_pushstring(L, p->qdomain.c_str());
   lua_pushnumber(L, p->qtype.getCode());
   return 2;
 }
 
-static int ldp_addRecords(lua_State *L) {
+static int ldp_addRecords(lua_State *L)
+{
   DNSPacket *p=ldp_checkDNSPacket(L);
   vector<DNSResourceRecord> rrs;
   popResourceRecordsTable(L, "BOGUS", rrs);
@@ -153,7 +156,8 @@ static int ldp_addRecords(lua_State *L) {
   return 0;
 }
 
-static int ldp_getRemote(lua_State *L) {
+static int ldp_getRemote(lua_State *L)
+{
   DNSPacket *p=ldp_checkDNSPacket(L);
   lua_pushstring(L, p->getRemote().c_str());
   return 1;
@@ -162,14 +166,15 @@ static int ldp_getRemote(lua_State *L) {
 // these functions are used for PowerDNS recursor regresseion testing against auth. The Lua 5.2 implementation is most likely broken.
 #if LUA_VERSION_NUM < 502
 static const struct luaL_reg ldp_methods [] = {
-      {"setRcode", ldp_setRcode},
-      {"getQuestion", ldp_getQuestion},
-      {"addRecords", ldp_addRecords},
-      {"getRemote", ldp_getRemote},
-      {NULL, NULL}
-    };
+  {"setRcode", ldp_setRcode},
+  {"getQuestion", ldp_getQuestion},
+  {"addRecords", ldp_addRecords},
+  {"getRemote", ldp_getRemote},
+  {NULL, NULL}
+};
 
-void AuthLua::registerLuaDNSPacket(void) {
+void AuthLua::registerLuaDNSPacket(void)
+{
 
   luaL_newmetatable(d_lua, "LuaDNSPacket");
 
@@ -183,14 +188,15 @@ void AuthLua::registerLuaDNSPacket(void) {
 }
 #else
 static const struct luaL_Reg ldp_methods [] = {
-      {"setRcode", ldp_setRcode},
-      {"getQuestion", ldp_getQuestion},
-      {"addRecords", ldp_addRecords},
-      {"getRemote", ldp_getRemote},
-      {NULL, NULL}
-    };
+  {"setRcode", ldp_setRcode},
+  {"getQuestion", ldp_getQuestion},
+  {"addRecords", ldp_addRecords},
+  {"getRemote", ldp_getRemote},
+  {NULL, NULL}
+};
 
-void AuthLua::registerLuaDNSPacket(void) {
+void AuthLua::registerLuaDNSPacket(void)
+{
 
   luaL_newmetatable(d_lua, "LuaDNSPacket");
 
@@ -212,7 +218,7 @@ DNSPacket* AuthLua::prequery(DNSPacket *p)
     lua_pop(d_lua, 1);
     return 0;
   }
-  
+
   DNSPacket *r=0;
   // allocate a fresh packet and prefill the question
   r=p->replyPacket();
@@ -220,12 +226,12 @@ DNSPacket* AuthLua::prequery(DNSPacket *p)
   // wrap it
   LuaDNSPacket* lua_dp = (LuaDNSPacket *)lua_newuserdata(d_lua, sizeof(LuaDNSPacket));
   lua_dp->d_p=r;
-  
+
   // make it of the right type
   luaL_getmetatable(d_lua, "LuaDNSPacket");
   lua_setmetatable(d_lua, -2);
 
-  if(lua_pcall(d_lua,  1, 1, 0)) { // error 
+  if(lua_pcall(d_lua,  1, 1, 0)) { // error
     string error=string("lua error in prequery: ")+lua_tostring(d_lua, -1);
     theL()<<Logger::Error<<error<<endl;
 
@@ -238,9 +244,7 @@ DNSPacket* AuthLua::prequery(DNSPacket *p)
     // prequery created our response, use it
     theL()<<Logger::Info<<"overriding query from lua prequery result"<<endl;
     return r;
-  }
-  else
-  {
+  } else {
     // prequery wanted nothing to do with this question
     delete r;
     return 0;

@@ -3,7 +3,7 @@
     Copyright (C) 2005 - 2010  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -41,7 +41,7 @@
   static DNSRecordContent* make(const string& zonedata);                                         \
   string getZoneRepresentation() const;                                                          \
   void toPacket(DNSPacketWriter& pw);                                                            \
-  template<class Convertor> void xfrPacket(Convertor& conv);                             
+  template<class Convertor> void xfrPacket(Convertor& conv);
 
 class NAPTRRecordContent : public DNSRecordContent
 {
@@ -360,7 +360,7 @@ private:
 class RRSIGRecordContent : public DNSRecordContent
 {
 public:
-  RRSIGRecordContent(); 
+  RRSIGRecordContent();
   includeboilerplate(RRSIG)
 
   uint16_t d_type;
@@ -373,14 +373,13 @@ public:
 
 
 //namespace {
-  struct soatimes 
-  {
-    uint32_t serial;
-    uint32_t refresh;
-    uint32_t retry;
-    uint32_t expire;
-    uint32_t minimum;
-  };
+struct soatimes {
+  uint32_t serial;
+  uint32_t refresh;
+  uint32_t retry;
+  uint32_t expire;
+  uint32_t minimum;
+};
 //}
 
 class RKEYRecordContent : public DNSRecordContent
@@ -482,7 +481,7 @@ public:
 
   uint8_t d_version, d_size, d_horizpre, d_vertpre;
   uint32_t d_latitude, d_longitude, d_altitude;
-  
+
 private:
 };
 
@@ -522,7 +521,7 @@ private:
   string d_mboxfw;
 };
 
-class EUI48RecordContent : public DNSRecordContent 
+class EUI48RecordContent : public DNSRecordContent
 {
 public:
   EUI48RecordContent() : DNSRecordContent(QType::EUI48) {};
@@ -532,8 +531,8 @@ public:
   void toPacket(DNSPacketWriter& pw);
   string getZoneRepresentation() const;
 private:
- // storage for the bytes
- uint8_t d_eui48[6]; 
+// storage for the bytes
+  uint8_t d_eui48[6];
 };
 
 class EUI64RecordContent : public DNSRecordContent
@@ -546,8 +545,8 @@ public:
   void toPacket(DNSPacketWriter& pw);
   string getZoneRepresentation() const;
 private:
- // storage for the bytes
- uint8_t d_eui64[8];
+// storage for the bytes
+  uint8_t d_eui64[8];
 };
 
 #define boilerplate(RNAME, RTYPE)                                                                         \
@@ -600,8 +599,8 @@ string RNAME##RecordContent::getZoneRepresentation() const                      
   RecordTextWriter rtw(ret);                                                                       \
   const_cast<RNAME##RecordContent*>(this)->xfrPacket(rtw);                                         \
   return ret;                                                                                      \
-}                                                                                                  
-                                                                                           
+}
+
 
 #define boilerplate_conv(RNAME, TYPE, CONV)                       \
 boilerplate(RNAME, TYPE)                                          \
@@ -611,9 +610,8 @@ void RNAME##RecordContent::xfrPacket(Convertor& conv)             \
   CONV;                                                           \
   if (conv.eof() == false) throw MOADNSException("All data was not consumed"); \
 }                                                                 \
-
-struct EDNSOpts
-{
+ 
+struct EDNSOpts {
   uint16_t d_packetsize;
   uint8_t d_extRCode, d_version;
   uint16_t d_Z;
@@ -630,4 +628,4 @@ void reportOtherTypes();
 void reportAllTypes();
 void reportFancyTypes();
 
-#endif 
+#endif

@@ -20,7 +20,8 @@
 
 class GeoIPDomain;
 
-class GeoIPBackend: public DNSBackend {
+class GeoIPBackend: public DNSBackend
+{
 public:
   GeoIPBackend(const std::string& suffix="");
   ~GeoIPBackend();
@@ -57,9 +58,9 @@ private:
   void initialize();
   void ip2geo(const GeoIPDomain& dom, const string& qname, const string& ip);
   string queryGeoIP(const string &ip, bool v6, GeoIPQueryAttribute attribute);
-  string format2str(string format, const string& ip, bool v6);  
+  string format2str(string format, const string& ip, bool v6);
   int d_dbmode;
-  bool d_dnssec; 
+  bool d_dnssec;
   bool hasDNSSECkey(const string &domain);
 
   vector<DNSResourceRecord> d_result;

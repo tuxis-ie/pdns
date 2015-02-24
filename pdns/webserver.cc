@@ -101,7 +101,8 @@ void WebServer::registerBareHandler(const string& url, HandlerFunction handler)
   YaHTTP::Router::Any(url, f);
 }
 
-static void apiWrapper(WebServer::HandlerFunction handler, HttpRequest* req, HttpResponse* resp) {
+static void apiWrapper(WebServer::HandlerFunction handler, HttpRequest* req, HttpResponse* resp)
+{
   const string& api_key = arg()["experimental-api-key"];
   if (api_key.empty()) {
     L<<Logger::Debug<<"HTTP API Request \"" << req->url.path << "\": Authentication failed, API Key missing in config" << endl;
@@ -148,12 +149,14 @@ static void apiWrapper(WebServer::HandlerFunction handler, HttpRequest* req, Htt
   }
 }
 
-void WebServer::registerApiHandler(const string& url, HandlerFunction handler) {
+void WebServer::registerApiHandler(const string& url, HandlerFunction handler)
+{
   HandlerFunction f = boost::bind(&apiWrapper, handler, _1, _2);
   registerBareHandler(url, f);
 }
 
-static void webWrapper(WebServer::HandlerFunction handler, HttpRequest* req, HttpResponse* resp) {
+static void webWrapper(WebServer::HandlerFunction handler, HttpRequest* req, HttpResponse* resp)
+{
   const string& web_password = arg()["webserver-password"];
   if (!web_password.empty()) {
     bool auth_ok = req->compareAuthorization(web_password);
@@ -166,12 +169,14 @@ static void webWrapper(WebServer::HandlerFunction handler, HttpRequest* req, Htt
   handler(req, resp);
 }
 
-void WebServer::registerWebHandler(const string& url, HandlerFunction handler) {
+void WebServer::registerWebHandler(const string& url, HandlerFunction handler)
+{
   HandlerFunction f = boost::bind(&webWrapper, handler, _1, _2);
   registerBareHandler(url, f);
 }
 
-static void *WebServerConnectionThreadStart(void *p) {
+static void *WebServerConnectionThreadStart(void *p)
+{
   connectionThreadData* data = static_cast<connectionThreadData*>(p);
   pthread_detach(pthread_self());
   data->webServer->serveConnection(data->client);
@@ -217,24 +222,19 @@ HttpResponse WebServer::handleRequest(HttpRequest req)
     try {
       handler(&req, &resp);
       L<<Logger::Debug<<"HTTP: Result for \"" << req.url.path << "\": " << resp.status << ", body length: " << resp.body.size() << endl;
-    }
-    catch(HttpException) {
+    } catch(HttpException) {
       throw;
-    }
-    catch(PDNSException &e) {
+    } catch(PDNSException &e) {
       L<<Logger::Error<<"HTTP ISE for \""<< req.url.path << "\": Exception: " << e.reason << endl;
       throw HttpInternalServerErrorException();
-    }
-    catch(std::exception &e) {
+    } catch(std::exception &e) {
       L<<Logger::Error<<"HTTP ISE for \""<< req.url.path << "\": STL Exception: " << e.what() << endl;
       throw HttpInternalServerErrorException();
-    }
-    catch(...) {
+    } catch(...) {
       L<<Logger::Error<<"HTTP ISE for \""<< req.url.path << "\": Unknown Exception" << endl;
       throw HttpInternalServerErrorException();
     }
-  }
-  catch(HttpException &e) {
+  } catch(HttpException &e) {
     resp = e.response();
     L<<Logger::Debug<<"HTTP: Error result for \"" << req.url.path << "\": " << resp.status << endl;
     string what = YaHTTP::Utility::status2text(resp.status);
@@ -264,7 +264,8 @@ HttpResponse WebServer::handleRequest(HttpRequest req)
 }
 
 void WebServer::serveConnection(Socket *client)
-try {
+try
+{
   HttpRequest req;
   YaHTTP::AsyncRequestLoader yarl;
   yarl.initialize(&req);
@@ -295,14 +296,14 @@ try {
   string reply = ss.str();
 
   client->writenWithTimeout(reply.c_str(), reply.size(), timeout);
-}
-catch(PDNSException &e) {
+} catch(PDNSException &e)
+{
   L<<Logger::Error<<"HTTP Exception: "<<e.reason<<endl;
-}
-catch(std::exception &e) {
+} catch(std::exception &e)
+{
   L<<Logger::Error<<"HTTP STL Exception: "<<e.what()<<endl;
-}
-catch(...) {
+} catch(...)
+{
   L<<Logger::Error<<"HTTP: Unknown exception"<<endl;
 }
 
@@ -317,8 +318,7 @@ void WebServer::bind()
   try {
     d_server = createServer();
     L<<Logger::Warning<<"Listening for HTTP requests on "<<d_server->d_local.toStringWithPort()<<endl;
-  }
-  catch(NetworkError &e) {
+  } catch(NetworkError &e) {
     L<<Logger::Error<<"Listening on HTTP socket failed: "<<e.what()<<endl;
     d_server = NULL;
   }
@@ -349,14 +349,11 @@ void WebServer::go()
         delete data;
       }
     }
-  }
-  catch(PDNSException &e) {
+  } catch(PDNSException &e) {
     L<<Logger::Error<<"PDNSException in main webserver thread: "<<e.reason<<endl;
-  }
-  catch(std::exception &e) {
+  } catch(std::exception &e) {
     L<<Logger::Error<<"STL Exception in main webserver thread: "<<e.what()<<endl;
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<"Unknown exception in main webserver thread"<<endl;
   }
   exit(1);

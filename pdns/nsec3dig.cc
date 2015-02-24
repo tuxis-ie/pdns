@@ -28,24 +28,20 @@ void proveOrDeny(const nsec3set &nsec3s, const string &qname, const string &salt
     string base=(*pos).first;
     string next=(*pos).second;
 
-    if(hashed == base)
-    {
+    if(hashed == base) {
       proven.insert(qname);
       cout<<qname<<" ("<<hashed<<") proven by base of "<<base<<".."<<next<<endl;
     }
-    if(hashed == next)
-    {
+    if(hashed == next) {
       proven.insert(qname);
       cout<<qname<<" ("<<hashed<<") proven by next of "<<base<<".."<<next<<endl;
     }
     if((hashed > base && hashed < next) ||
-       (next < base && (hashed < next || hashed > base)))
-    {
+        (next < base && (hashed < next || hashed > base))) {
       denied.insert(qname);
       cout<<qname<<" ("<<hashed<<") denied by "<<base<<".."<<next<<endl;
     }
-    if (base == next && base != hashed)
-    {
+    if (base == next && base != hashed) {
       denied.insert(qname);
       cout<<qname<<" ("<<hashed<<") denied by "<<base<<".."<<next<<endl;
     }
@@ -65,8 +61,7 @@ try
   }
 
   // FIXME: turn recurse and dnssec into proper flags or something
-  if(argc > 5 && strcmp(argv[5], "recurse")==0)
-  {
+  if(argc > 5 && strcmp(argv[5], "recurse")==0) {
     recurse=true;
   }
 
@@ -74,8 +69,7 @@ try
   string qname=argv[3];
   DNSPacketWriter pw(packet, qname, DNSRecordContent::TypeToNumber(argv[4]));
 
-  if(recurse)
-  {
+  if(recurse) {
     pw.getHeader()->rd=true;
     pw.getHeader()->cd=true;
   }
@@ -85,7 +79,7 @@ try
 
 
   ComboAddress dest(argv[1] + (*argv[1]=='@'), atoi(argv[2]));
-  Socket sock(dest.sin4.sin_family, SOCK_STREAM);  
+  Socket sock(dest.sin4.sin_family, SOCK_STREAM);
   sock.connect(dest);
   uint16_t len;
   len = htons(packet.size());
@@ -93,7 +87,7 @@ try
     throw PDNSException("tcp write failed");
 
   sock.writen(string((char*)&*packet.begin(), (char*)&*packet.end()));
-  
+
   if(sock.read((char *) &len, 2) != 2)
     throw PDNSException("tcp read failed");
 
@@ -122,9 +116,8 @@ try
   nsec3set nsec3s;
   string nsec3salt;
   int nsec3iters = 0;
-  for(MOADNSParser::answers_t::const_iterator i=mdp.d_answers.begin(); i!=mdp.d_answers.end(); ++i) {     
-    if(i->first.d_type == QType::NSEC3)
-    {
+  for(MOADNSParser::answers_t::const_iterator i=mdp.d_answers.begin(); i!=mdp.d_answers.end(); ++i) {
+    if(i->first.d_type == QType::NSEC3) {
       // cerr<<"got nsec3 ["<<i->first.d_label<<"]"<<endl;
       // cerr<<i->first.d_content->getZoneRepresentation()<<endl;
       NSEC3RecordContent r = dynamic_cast<NSEC3RecordContent&> (*(i->first.d_content));
@@ -135,16 +128,13 @@ try
       nsec3s.insert(make_pair(toLower(parts[0]), toBase32Hex(r.d_nexthash)));
       nsec3salt = r.d_salt;
       nsec3iters = r.d_iterations;
-    }
-    else
-    {
+    } else {
       // cerr<<"namesseen.insert('"<<i->first.d_label<<"')"<<endl;
       names.insert(stripDot(i->first.d_label));
       namesseen.insert(stripDot(i->first.d_label));
     }
 
-    if(i->first.d_type == QType::CNAME)
-    {
+    if(i->first.d_type == QType::CNAME) {
       namesseen.insert(stripDot(i->first.d_content->getZoneRepresentation()));
     }
 
@@ -167,27 +157,23 @@ try
   set<string> proven;
   set<string> denied;
   namesseen.insert(stripDot(qname));
-  BOOST_FOREACH(string n, namesseen)
-  {
+  BOOST_FOREACH(string n, namesseen) {
     string shorter(n);
     do {
       namestocheck.insert(shorter);
     } while(chopOff(shorter));
   }
-  BOOST_FOREACH(string n, namestocheck)
-  {
+  BOOST_FOREACH(string n, namestocheck) {
     proveOrDeny(nsec3s, n, nsec3salt, nsec3iters, proven, denied);
     proveOrDeny(nsec3s, "*."+n, nsec3salt, nsec3iters, proven, denied);
   }
 
-  if(names.count(qname+"."))
-  {
+  if(names.count(qname+".")) {
     cout<<"== qname found in names, investigating NSEC3s in case it's a wildcard"<<endl;
     // exit(EXIT_SUCCESS);
   }
   // cout<<"== qname not found in names, investigating denial"<<endl;
-  if(proven.count(qname))
-  {
+  if(proven.count(qname)) {
     cout<<"qname found proven, NODATA response?"<<endl;
     exit(EXIT_SUCCESS);
   }
@@ -195,10 +181,8 @@ try
   string encloser;
   string nextcloser;
   string prev(qname);
-  while(chopOff(shorter))
-  {
-    if(proven.count(shorter))
-    {
+  while(chopOff(shorter)) {
+    if(proven.count(shorter)) {
       encloser=shorter;
       nextcloser=prev;
       cout<<"found closest encloser at "<<encloser<<endl;
@@ -207,32 +191,22 @@ try
     }
     prev=shorter;
   }
-  if(encloser.size() && nextcloser.size())
-  {
-    if(denied.count(nextcloser))
-    {
+  if(encloser.size() && nextcloser.size()) {
+    if(denied.count(nextcloser)) {
       cout<<"next closer ("<<nextcloser<<") is denied correctly"<<endl;
-    }
-    else
-    {
+    } else {
       cout<<"next closer ("<<nextcloser<<") NOT denied"<<endl;
     }
-    if(denied.count("*."+encloser))
-    {
+    if(denied.count("*."+encloser)) {
       cout<<"wildcard at encloser (*."<<encloser<<") is denied correctly"<<endl;
-    }
-    else if(proven.count("*."+encloser))
-    {
+    } else if(proven.count("*."+encloser)) {
       cout<<"wildcard at encloser (*."<<encloser<<") is proven"<<endl;
-    }
-    else
-    {
+    } else {
       cout<<"wildcard at encloser (*."<<encloser<<") is NOT denied or proven"<<endl;
     }
   }
   exit(EXIT_SUCCESS);
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

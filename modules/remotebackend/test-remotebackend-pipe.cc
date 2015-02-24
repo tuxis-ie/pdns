@@ -32,33 +32,34 @@ ArgvMap &arg()
 
 class RemoteLoader
 {
-   public:
-      RemoteLoader();
+public:
+  RemoteLoader();
 };
 
 DNSBackend *be;
 
 struct RemotebackendSetup {
-    RemotebackendSetup()  {
-	be = 0; 
-	try {
-		// setup minimum arguments
-		::arg().set("module-dir")="./.libs";
-                new RemoteLoader();
-		BackendMakers().launch("remote");
-                // then get us a instance of it 
-                ::arg().set("remote-connection-string")="pipe:command=unittest_pipe.rb";
-                ::arg().set("remote-dnssec")="yes";
-                be = BackendMakers().all()[0];
-		// load few record types to help out
-		SOARecordContent::report();
-		NSRecordContent::report();
-                ARecordContent::report();
-	} catch (PDNSException &ex) {
-		BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
-	};
-    }
-    ~RemotebackendSetup()  {  }
+  RemotebackendSetup()
+  {
+    be = 0;
+    try {
+      // setup minimum arguments
+      ::arg().set("module-dir")="./.libs";
+      new RemoteLoader();
+      BackendMakers().launch("remote");
+      // then get us a instance of it
+      ::arg().set("remote-connection-string")="pipe:command=unittest_pipe.rb";
+      ::arg().set("remote-dnssec")="yes";
+      be = BackendMakers().all()[0];
+      // load few record types to help out
+      SOARecordContent::report();
+      NSRecordContent::report();
+      ARecordContent::report();
+    } catch (PDNSException &ex) {
+      BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
+    };
+  }
+  ~RemotebackendSetup()  {  }
 };
 
 BOOST_GLOBAL_FIXTURE( RemotebackendSetup );

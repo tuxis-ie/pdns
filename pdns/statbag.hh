@@ -43,7 +43,7 @@ public:
   {
     return d_size;
   }
-  void resize(unsigned int newsize);  
+  void resize(unsigned int newsize);
   void reset();
   void setHelp(const string &str);
   string getHelp();
@@ -104,8 +104,8 @@ public:
   string getValueStrZero(const string &key); //!< read a value behind a key, and return it as a string, and zero afterwards
 
 private:
-  void lock(){pthread_mutex_lock(&d_lock);}
-  void unlock(){pthread_mutex_unlock(&d_lock);}
+  void lock() {pthread_mutex_lock(&d_lock);}
+  void unlock() {pthread_mutex_unlock(&d_lock);}
 };
 
 inline void StatBag::deposit(const string &key, int value)

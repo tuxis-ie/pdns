@@ -22,9 +22,9 @@ ResponseStats::ResponseStats()
 static bool pcomp(const pair<uint16_t, uint64_t>&a , const pair<uint16_t, uint64_t>&b)
 {
   return a.first < b.first;
-} 
+}
 
-void ResponseStats::submitResponse(uint16_t qtype, uint16_t respsize, bool udpOrTCP) 
+void ResponseStats::submitResponse(uint16_t qtype, uint16_t respsize, bool udpOrTCP)
 {
   d_qtypecounters[qtype]++;
   pair<uint16_t, uint64_t> s(respsize, 0);

@@ -54,7 +54,7 @@ HTimer::~HTimer()
       s_timers.erase(iter);
       break;
     }
-  }  
+  }
 }
 
 void HTimer::start()
@@ -87,7 +87,7 @@ uint64_t HTimer::getAccumulated() const
   return accumulated;
 }
 
-uint64_t HTimer::getAccumulatedReset() 
+uint64_t HTimer::getAccumulatedReset()
 {
   uint64_t accumulated = d_accumulated;
   if(d_started) {
@@ -126,8 +126,7 @@ int main()
   HTimer htloop("loop");
   {
     HTimerSentinel hts=htloop.getSentinel();
-    for(int i=0; i < 1000; ++i)
-    {
+    for(int i=0; i < 1000; ++i) {
       shared_ptr<char> p(shared_ptr<char>(new char));
     }
   }

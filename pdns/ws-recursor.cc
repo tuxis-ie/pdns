@@ -201,13 +201,12 @@ static void doCreateZone(const Value& document)
       throw ApiException("kind=Native and recursion_desired are mutually exclusive");
     if(!singleIPTarget.empty()) {
       try {
-	ComboAddress rem(singleIPTarget);
-	if(rem.sin4.sin_family != AF_INET)
-	  throw ApiException("");
-	singleIPTarget = rem.toString();
-      }
-      catch(...) {
-	throw ApiException("Single IP target '"+singleIPTarget+"' is invalid");
+        ComboAddress rem(singleIPTarget);
+        if(rem.sin4.sin_family != AF_INET)
+          throw ApiException("");
+        singleIPTarget = rem.toString();
+      } catch(...) {
+        throw ApiException("Single IP target '"+singleIPTarget+"' is invalid");
       }
     }
     string zonefilename = ::arg()["experimental-api-config-dir"] + "/" + confbasename + ".zone";
@@ -346,8 +345,7 @@ static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp)
     doCreateZone(document);
     reloadAuthAndForwards();
     fillZone(stringFromJson(document, "name"), resp);
-  }
-  else if(req->method == "DELETE" && !::arg().mustDo("experimental-api-readonly")) {
+  } else if(req->method == "DELETE" && !::arg().mustDo("experimental-api-readonly")) {
     if (!doDeleteZone(zonename)) {
       throw ApiException("Deleting domain failed");
     }
@@ -363,7 +361,8 @@ static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp)
   }
 }
 
-static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
+static void apiServerSearchData(HttpRequest* req, HttpResponse* resp)
+{
   if(req->method != "GET")
     throw HttpMethodNotAllowedException();
 
@@ -447,7 +446,7 @@ void RecursorWebServer::jsonstat(HttpRequest* req, HttpResponse *resp)
     req->getvars.erase("command");
   }
 
-  map<string, string> stats; 
+  map<string, string> stats;
   if(command == "domains") {
     Document doc;
     doc.SetArray();
@@ -474,8 +473,7 @@ void RecursorWebServer::jsonstat(HttpRequest* req, HttpResponse *resp)
     }
     resp->setBody(doc);
     return;
-  }
-  else if(command == "zone") {
+  } else if(command == "zone") {
     string arg_zone = req->getvars["zone"];
     SyncRes::domainmap_t::const_iterator ret = t_sstorage->domainmap->find(arg_zone);
     if (ret != t_sstorage->domainmap->end()) {
@@ -522,30 +520,26 @@ void RecursorWebServer::jsonstat(HttpRequest* req, HttpResponse *resp)
       resp->body = returnJsonError("Could not find domain '"+arg_zone+"'");
       return;
     }
-  }
-  else if(command == "flush-cache") {
+  } else if(command == "flush-cache") {
     string canon=toCanonic("", req->getvars["domain"]);
     int count = broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeCache, canon));
     count+=broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeAndCountNegCache, canon));
     stats["number"]=lexical_cast<string>(count);
     resp->body = returnJsonObject(stats);
     return;
-  }
-  else if(command == "config") {
+  } else if(command == "config") {
     vector<string> items = ::arg().list();
     BOOST_FOREACH(const string& var, items) {
       stats[var] = ::arg()[var];
     }
     resp->body = returnJsonObject(stats);
     return;
-  }
-  else if(command == "log-grep") {
+  } else if(command == "log-grep") {
     // legacy parameter name hack
     req->getvars["q"] = req->getvars["needle"];
     apiServerSearchLog(req, resp);
     return;
-  }
-  else if(command == "stats") {
+  } else if(command == "stats") {
     stats = getAllStatsMap();
     resp->body = returnJsonObject(stats);
     return;
@@ -556,7 +550,8 @@ void RecursorWebServer::jsonstat(HttpRequest* req, HttpResponse *resp)
 }
 
 
-void AsyncServerNewConnectionMT(void *p) {
+void AsyncServerNewConnectionMT(void *p)
+{
   AsyncServer *server = (AsyncServer*)p;
   try {
     Socket* socket = server->accept();
@@ -615,7 +610,8 @@ void AsyncWebServer::serveConnection(Socket *client)
   }
 }
 
-void AsyncWebServer::go() {
+void AsyncWebServer::go()
+{
   if (!d_server)
     return;
   ((AsyncServer*)d_server)->asyncWaitForConnections(d_fdm, boost::bind(&AsyncWebServer::serveConnection, this, _1));

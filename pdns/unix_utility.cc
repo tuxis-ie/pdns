@@ -3,7 +3,7 @@
     Copyright (C) 2002 - 2011 PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -24,7 +24,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "pdnsexception.hh"
 #include "logger.hh"
 #include "misc.hh"
@@ -35,7 +35,7 @@
 
 #ifdef NEED_INET_NTOP_PROTO
 extern "C" {
-const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
+  const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
 }
 #endif
 
@@ -48,17 +48,17 @@ int Utility::closesocket( Utility::sock_t socket )
   int ret=::close(socket);
   if(ret < 0 && errno == ECONNRESET) // see ticket 192, odd BSD behaviour
     return 0;
-  if(ret < 0) 
+  if(ret < 0)
     throw PDNSException("Error closing socket: "+stringerror());
   return ret;
 }
 
 // Connects to socket with timeout
 int Utility::timed_connect( Utility::sock_t sock,
-    const sockaddr *addr,
-    Utility::socklen_t sockaddr_size,
-    int timeout_sec,
-    int timeout_usec )
+                            const sockaddr *addr,
+                            Utility::socklen_t sockaddr_size,
+                            int timeout_sec,
+                            int timeout_usec )
 {
   fd_set set;
   struct timeval timeout;
@@ -85,7 +85,7 @@ int Utility::timed_connect( Utility::sock_t sock,
 
 bool Utility::setNonBlocking(sock_t sock)
 {
-  int flags=fcntl(sock,F_GETFL,0);    
+  int flags=fcntl(sock,F_GETFL,0);
   if(flags<0 || fcntl(sock, F_SETFL,flags|O_NONBLOCK) <0)
     return false;
   return true;
@@ -93,7 +93,7 @@ bool Utility::setNonBlocking(sock_t sock)
 
 bool Utility::setBlocking(sock_t sock)
 {
-  int flags=fcntl(sock,F_GETFL,0);    
+  int flags=fcntl(sock,F_GETFL,0);
   if(flags<0 || fcntl(sock, F_SETFL,flags&(~O_NONBLOCK)) <0)
     return false;
   return true;
@@ -101,7 +101,7 @@ bool Utility::setBlocking(sock_t sock)
 
 bool Utility::setCloseOnExec(sock_t sock)
 {
-  int flags=fcntl(sock,F_GETFD,0);    
+  int flags=fcntl(sock,F_GETFD,0);
   if(flags<0 || fcntl(sock, F_SETFD,flags|FD_CLOEXEC) <0)
     return false;
   return true;
@@ -123,7 +123,7 @@ void Utility::usleep(unsigned long usec)
   ts.tv_sec = usec / 1000000;
   ts.tv_nsec = (usec % 1000000) * 1000;
   // POSIX.1 recommends using nanosleep instead of usleep
-  ::nanosleep(&ts, NULL); 
+  ::nanosleep(&ts, NULL);
 }
 
 
@@ -134,8 +134,7 @@ void Utility::dropGroupPrivs( int uid, int gid )
     if(setgid(gid)<0) {
       theL()<<Logger::Critical<<"Unable to set effective group id to "<<gid<<": "<<stringerror()<<endl;
       exit(1);
-    }
-    else
+    } else
       theL()<<Logger::Info<<"Set effective group id to "<<gid<<endl;
 
     struct passwd *pw=getpwuid(uid);
@@ -162,8 +161,7 @@ void Utility::dropUserPrivs( int uid )
     if(setuid(uid)<0) {
       theL()<<Logger::Critical<<"Unable to set effective user id to "<<uid<<":  "<<stringerror()<<endl;
       exit(1);
-    }
-    else
+    } else
       theL()<<Logger::Info<<"Set effective user id to "<<uid<<endl;
   }
 }
@@ -250,16 +248,18 @@ int Utility::writev(int socket, const iovec *vector, size_t count )
 }
 
 /* this is cut and pasted from dietlibc, gratefully copied! */
-static int isleap(int year) {
+static int isleap(int year)
+{
   /* every fourth year is a leap year except for century years that are
-   * not divisible by 400. */
+     not divisible by 400. */
   return (!(year%4) && ((year%100) || !(year%400)));
 }
 
-time_t Utility::timegm(struct tm *const t) 
+time_t Utility::timegm(struct tm *const t)
 {
   const static short spm[13] = /* days per month -- nonleap! */
-  { 0,
+  {
+    0,
     (31),
     (31+28),
     (31+28+31),
@@ -282,7 +282,7 @@ time_t Utility::timegm(struct tm *const t)
   if (t->tm_min>60) { t->tm_hour += t->tm_min/60; t->tm_min%=60; }
   if (t->tm_hour>60) { t->tm_mday += t->tm_hour/60; t->tm_hour%=60; }
   if (t->tm_mon>11) { t->tm_year += t->tm_mon/12; t->tm_mon%=12; }
- 
+
   while (t->tm_mday>spm[1+t->tm_mon]) {
     if (t->tm_mon==1 && isleap(t->tm_year+1900)) {
       if (t->tm_mon==31+29) break;
@@ -323,7 +323,8 @@ time_t Utility::timegm(struct tm *const t)
 
 // we have our own gmtime_r because the one in GNU libc violates POSIX/SuS
 // by supporting leap seconds when TZ=right/UTC
-void Utility::gmtime_r(const time_t *timer, struct tm *tmbuf) {
+void Utility::gmtime_r(const time_t *timer, struct tm *tmbuf)
+{
 
   int monthdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   int days = *timer / 86400;

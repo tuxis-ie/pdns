@@ -9,22 +9,21 @@ PcapPacketReader::PcapPacketReader(const string& fname) : d_fname(fname)
   d_fp=fopen(fname.c_str(),"r");
   if(!d_fp)
     unixDie("Unable to open file");
-  
+
   int flags=fcntl(fileno(d_fp),F_GETFL,0);
   fcntl(fileno(d_fp), F_SETFL,flags&(~O_NONBLOCK)); // bsd needs this in stdin (??)
-  
+
   checkedFread(&d_pfh);
-  
+
   if(d_pfh.magic != 2712847316UL)
     throw runtime_error((format("PCAP file %s has bad magic %x, should be %x") % fname % d_pfh.magic % 2712847316UL).str());
-  
+
   if( d_pfh.linktype==1) {
     d_skipMediaHeader=sizeof(struct ether_header);
   } else if(d_pfh.linktype==113) {
     d_skipMediaHeader=16;
-  }
-  else throw runtime_error((format("Unsupported link type %d") % d_pfh.linktype).str());
-  
+  } else throw runtime_error((format("Unsupported link type %d") % d_pfh.linktype).str());
+
   d_runts = d_oversized = d_correctpackets = d_nonetheripudp = 0;
 }
 
@@ -34,15 +33,15 @@ PcapPacketReader::~PcapPacketReader()
 }
 
 
-void PcapPacketReader::checkedFreadSize(void* ptr, size_t size) 
+void PcapPacketReader::checkedFreadSize(void* ptr, size_t size)
 {
   int ret=fread(ptr, 1, size, d_fp);
   if(ret < 0)
     unixDie( (format("Error reading %d bytes from %s") % size % d_fname).str());
-  
+
   if(!ret)
     throw EofException();
-  
+
   if((size_t)ret != size)
     throw EofException((format("Incomplete read from '%s', got only %d bytes") % d_fname % ret).str());
 }
@@ -75,7 +74,7 @@ try
     d_ip=reinterpret_cast<struct ip*>(d_buffer + d_skipMediaHeader);
     d_ip6=reinterpret_cast<struct ip6_hdr*>(d_buffer + d_skipMediaHeader);
     uint16_t contentCode=0;
-    if(d_pfh.linktype==1) 
+    if(d_pfh.linktype==1)
       contentCode=ntohs(d_ether->ether_type);
     else if(d_pfh.linktype==113)
       contentCode=ntohs(d_lcc->lcc_protocol);
@@ -93,13 +92,12 @@ try
       d_len = ntohs(d_udp->uh_ulen) - sizeof(struct udphdr);
       d_correctpackets++;
       return true;
-    }
-    else {
+    } else {
       d_nonetheripudp++;
     }
   }
-}
-catch(EofException) {
+} catch(EofException)
+{
   return false;
 }
 
@@ -138,7 +136,7 @@ PcapPacketWriter::PcapPacketWriter(const string& fname, PcapPacketReader& ppr) :
   d_fp=fopen(fname.c_str(),"w");
   if(!d_fp)
     unixDie("Unable to open file");
-  
+
   int flags=fcntl(fileno(d_fp),F_GETFL,0);
   fcntl(fileno(d_fp), F_SETFL,flags&(~O_NONBLOCK)); // bsd needs this in stdin (??)
 

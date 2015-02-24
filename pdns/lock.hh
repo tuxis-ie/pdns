@@ -163,7 +163,7 @@ public:
 
     pthread_rwlock_unlock(d_lock);
   }
-  
+
   void upgrade()
   {
     if(g_singleThreaded)

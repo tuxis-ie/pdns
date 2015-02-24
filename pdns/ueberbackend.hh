@@ -47,7 +47,7 @@ class BackendReporter;
 
 /** This is a very magic backend that allows us to load modules dynamically,
     and query them in order. This is persistent over all UeberBackend instantiations
-    across multiple threads. 
+    across multiple threads.
 
     The UeberBackend is transparent for exceptions, which should fall straight through.
 */
@@ -67,7 +67,7 @@ public:
 //  static vector<BackendReporter>backendmakers;
 
   /** Tracks all created UeberBackend instances for us. We use this vector to notify
-      existing threads of new modules 
+      existing threads of new modules
   */
   static vector<UeberBackend *>instances;
   static pthread_mutex_t instances_lock;
@@ -81,7 +81,7 @@ public:
 
   /** This contains all registered backends. The DynListener modifies this list for us when
       new modules are loaded */
-  vector<DNSBackend*> backends; 
+  vector<DNSBackend*> backends;
 
   void die();
   void cleanup();
@@ -114,7 +114,8 @@ public:
   void lookup(const QType &, const string &qdomain, DNSPacket *pkt_p=0,  int zoneId=-1);
 
   /* 5-arg version is only valid for backends and should never be called directly */
-  virtual bool getAuth(DNSPacket *p, SOAData *sd, const string &target, int *zoneId, const int best_match_len) {
+  virtual bool getAuth(DNSPacket *p, SOAData *sd, const string &target, int *zoneId, const int best_match_len)
+  {
     throw PDNSException("5-arg version of getAuth should not be called in UeberBackend");
   }
 
@@ -131,7 +132,7 @@ public:
   void getUpdatedMasters(vector<DomainInfo>* domains);
   bool getDomainInfo(const string &domain, DomainInfo &di);
   bool createDomain(const string &domain);
-  
+
   int addDomainKey(const string& name, const KeyData& key);
   bool getDomainKeys(const string& name, unsigned int kind, std::vector<KeyData>& keys);
   bool getAllDomainMetadata(const string& name, std::map<std::string, std::vector<std::string> >& meta);
@@ -150,7 +151,7 @@ public:
   bool deleteTSIGKey(const string& name);
   bool getTSIGKeys(std::vector< struct TSIGKey > &keys);
 
-  void alsoNotifies(const string &domain, set<string> *ips); 
+  void alsoNotifies(const string &domain, set<string> *ips);
   void rediscover(string* status=0);
   void reload();
 private:
@@ -161,33 +162,32 @@ private:
   handle d_handle;
   bool d_negcached;
   bool d_cached;
-  struct Question
-  {
+  struct Question {
     QType qtype;
     string qname;
     int zoneId;
-  }d_question;
+  } d_question;
   vector<DNSResourceRecord> d_answers;
   vector<DNSResourceRecord>::const_iterator d_cachehandleiter;
 
   int cacheHas(const Question &q, vector<DNSResourceRecord> &rrs);
   void addNegCache(const Question &q);
   void addCache(const Question &q, const vector<DNSResourceRecord> &rrs);
-  
+
   static pthread_mutex_t d_mut;
   static pthread_cond_t d_cond;
   static sem_t d_dynserialize;
   static bool d_go;
   static int s_s;
-  static string s_status; 
+  static string s_status;
   int d_ancount;
-  
+
   bool stale;
   int domain_id;
 };
 
 
-/** Class used to report new backends. It stores a maker function, and a flag that indicates that 
+/** Class used to report new backends. It stores a maker function, and a flag that indicates that
     this module has been reported */
 class BackendReporter
 {
@@ -199,7 +199,7 @@ public:
   };
   map<string,string>d_parameters;
   UeberBackend::BackendMaker *maker; //!< function to make this backend
-  bool reported; //!< if this backend has been reported to running UeberBackend threads 
+  bool reported; //!< if this backend has been reported to running UeberBackend threads
 private:
 };
 

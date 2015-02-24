@@ -3,7 +3,7 @@
     Copyright (C) 2002-2012  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
 
     Additionally, the license of this program contains a special
@@ -43,11 +43,10 @@
 #include "pdns/namespaces.hh"
 using namespace ::boost::multi_index;
 
-/** This struct is used within the Bind2Backend to store DNS information. 
+/** This struct is used within the Bind2Backend to store DNS information.
     It is almost identical to a DNSResourceRecord, but then a bit smaller and with different sorting rules, which make sure that the SOA record comes up front.
 */
-struct Bind2DNSRecord
-{
+struct Bind2DNSRecord {
   string qname;
   string content;
   string nsec3hash;
@@ -66,35 +65,34 @@ struct Bind2DNSRecord
   }
 };
 
-struct Bind2DNSCompare : std::less<Bind2DNSRecord> 
-{ 
-    using std::less<Bind2DNSRecord>::operator(); 
-    // use operator< 
-    bool operator() (const std::string& a, const Bind2DNSRecord& b) const 
-    {return a < b.qname;} 
-    bool operator() (const Bind2DNSRecord& a, const std::string& b) const 
-    {return a.qname < b;} 
-    bool operator() (const Bind2DNSRecord& a, const Bind2DNSRecord& b) const
-    {
-      return a < b;
-    }
-}; 
+struct Bind2DNSCompare : std::less<Bind2DNSRecord> {
+  using std::less<Bind2DNSRecord>::operator();
+  // use operator<
+  bool operator() (const std::string& a, const Bind2DNSRecord& b) const
+  {return a < b.qname;}
+  bool operator() (const Bind2DNSRecord& a, const std::string& b) const
+  {return a.qname < b;}
+  bool operator() (const Bind2DNSRecord& a, const Bind2DNSRecord& b) const
+  {
+    return a < b;
+  }
+};
 
-struct HashedTag{};
+struct HashedTag {};
 
 typedef multi_index_container<
-  Bind2DNSRecord,
-  indexed_by  <
-                 ordered_non_unique<identity<Bind2DNSRecord>, Bind2DNSCompare >,
-                 ordered_non_unique<tag<HashedTag>, member<Bind2DNSRecord,std::string,&Bind2DNSRecord::nsec3hash> >
-              >
+Bind2DNSRecord,
+indexed_by  <
+ordered_non_unique<identity<Bind2DNSRecord>, Bind2DNSCompare >,
+ordered_non_unique<tag<HashedTag>, member<Bind2DNSRecord,std::string,&Bind2DNSRecord::nsec3hash> >
+>
 > recordstorage_t;
 
 template <typename T>
 class LookButDontTouch //  : public boost::noncopyable
 {
 public:
-  LookButDontTouch() 
+  LookButDontTouch()
   {
     pthread_mutex_init(&d_lock, 0);
     pthread_mutex_init(&d_swaplock, 0);
@@ -177,13 +175,13 @@ struct NameTag
 class Bind2Backend : public DNSBackend
 {
 public:
-  Bind2Backend(const string &suffix="", bool loadZones=true); 
+  Bind2Backend(const string &suffix="", bool loadZones=true);
   ~Bind2Backend();
   void getUnfreshSlaveInfos(vector<DomainInfo> *unfreshDomains);
   void getUpdatedMasters(vector<DomainInfo> *changedDomains);
   bool getDomainInfo(const string &domain, DomainInfo &di);
   time_t getCtime(const string &fname);
-   // DNSSEC
+  // DNSSEC
   virtual bool getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string& qname, std::string& unhashed, std::string& before, std::string& after);
   void lookup(const QType &, const string &qdomain, DNSPacket *p=0, int zoneId=-1);
   bool list(const string &target, int id, bool include_disabled=false);
@@ -215,12 +213,12 @@ public:
   virtual bool deleteTSIGKey(const string& name);
   virtual bool getTSIGKeys(std::vector< struct TSIGKey > &keys);
   virtual bool doesDNSSEC();
-  // end of DNSSEC 
+  // end of DNSSEC
 
-  typedef multi_index_container < BB2DomainInfo , 
-				  indexed_by < ordered_unique<member<BB2DomainInfo, unsigned int, &BB2DomainInfo::d_id> >,
-					       ordered_unique<tag<NameTag>, member<BB2DomainInfo, std::string, &BB2DomainInfo::d_name>, CIStringCompare >
-					       > > state_t;
+  typedef multi_index_container < BB2DomainInfo ,
+          indexed_by < ordered_unique<member<BB2DomainInfo, unsigned int, &BB2DomainInfo::d_id> >,
+          ordered_unique<tag<NameTag>, member<BB2DomainInfo, std::string, &BB2DomainInfo::d_name>, CIStringCompare >
+          > > state_t;
   static state_t s_state;
   static pthread_rwlock_t s_state_lock;
 
@@ -250,7 +248,7 @@ private:
   public:
     bool get(DNSResourceRecord &);
     void reset();
-    
+
     handle();
 
     shared_ptr<const recordstorage_t > d_records;

@@ -54,7 +54,7 @@ int writen2(int fd, const void *buf, size_t count)
 {
   const char *ptr = (char*)buf;
   const char *eptr = ptr + count;
-  
+
   int res;
   while(ptr != eptr) {
     res = ::write(fd, ptr, eptr - ptr);
@@ -63,13 +63,12 @@ int writen2(int fd, const void *buf, size_t count)
         throw std::runtime_error("used writen2 on non-blocking socket, got EAGAIN");
       else
         unixDie("failed in writen2");
-    }
-    else if (res == 0)
+    } else if (res == 0)
       throw std::runtime_error("could not write all bytes, got eof in writen2");
-    
+
     ptr += res;
   }
-  
+
   return count;
 }
 
@@ -79,15 +78,15 @@ int readn2(int fd, void* buffer, unsigned int len)
   int res;
   for(;;) {
     res = read(fd, (char*)buffer + pos, len - pos);
-    if(res == 0) 
+    if(res == 0)
       throw runtime_error("EOF while writing message");
     if(res < 0) {
       if (errno == EAGAIN)
         throw std::runtime_error("used writen2 on non-blocking socket, got EAGAIN");
       else
         unixDie("failed in writen2");
-    } 
-    
+    }
+
     pos+=res;
     if(pos == len)
       break;
@@ -145,14 +144,14 @@ bool stripDomainSuffix(string *qname, const string &domain)
 }
 
 /** Chops off the start of a domain, so goes from 'www.ds9a.nl' to 'ds9a.nl' to 'nl' to ''. Return zero on the empty string */
-bool chopOff(string &domain) 
+bool chopOff(string &domain)
 {
   if(domain.empty())
     return false;
 
   string::size_type fdot=domain.find('.');
 
-  if(fdot==string::npos) 
+  if(fdot==string::npos)
     domain="";
   else {
     string::size_type remain = domain.length() - (fdot + 1);
@@ -173,7 +172,7 @@ bool chopOffDotted(string &domain)
   if(fdot == string::npos)
     return false;
 
-  if(fdot==domain.size()-1) 
+  if(fdot==domain.size()-1)
     domain=".";
   else  {
     string::size_type remain = domain.length() - (fdot + 1);
@@ -191,21 +190,21 @@ bool ciEqual(const string& a, const string& b)
     return false;
 
   string::size_type pos=0, epos=a.size();
-  for(;pos < epos; ++pos)
+  for(; pos < epos; ++pos)
     if(dns_tolower(a[pos])!=dns_tolower(b[pos]))
       return false;
   return true;
 }
 
 /** does domain end on suffix? Is smart about "wwwds9a.nl" "ds9a.nl" not matching */
-bool endsOn(const string &domain, const string &suffix) 
+bool endsOn(const string &domain, const string &suffix)
 {
   if( suffix.empty() || ciEqual(domain, suffix) )
     return true;
 
   if(domain.size()<=suffix.size())
     return false;
-  
+
   string::size_type dpos=domain.size()-suffix.size()-1, spos=0;
 
   if(domain[dpos++]!='.')
@@ -219,14 +218,14 @@ bool endsOn(const string &domain, const string &suffix)
 }
 
 /** does domain end on suffix? Is smart about "wwwds9a.nl" "ds9a.nl" not matching */
-bool dottedEndsOn(const string &domain, const string &suffix) 
+bool dottedEndsOn(const string &domain, const string &suffix)
 {
   if( suffix=="." || ciEqual(domain, suffix) )
     return true;
 
   if(domain.size()<=suffix.size())
     return false;
-  
+
   string::size_type dpos=domain.size()-suffix.size()-1, spos=0;
 
   if(domain[dpos++]!='.')
@@ -272,11 +271,9 @@ void parseService(const string &descr, ServiceTuple &st)
 
   if(descr[0]=='[') {
     parseService6(descr, st);
-  }
-  else if(descr[0]==':' || parts.size() > 2 || descr.find("::") != string::npos) {
+  } else if(descr[0]==':' || parts.size() > 2 || descr.find("::") != string::npos) {
     st.host=descr;
-  }
-  else {
+  } else {
     parseService4(descr, st);
   }
 }
@@ -294,7 +291,7 @@ int waitForRWData(int fd, bool waitForRead, int seconds, int useconds)
   struct pollfd pfd;
   memset(&pfd, 0, sizeof(pfd));
   pfd.fd = fd;
-  
+
   if(waitForRead)
     pfd.events=POLLIN;
   else
@@ -316,7 +313,7 @@ int waitFor2Data(int fd1, int fd2, int seconds, int useconds, int*fd)
   memset(&pfds[0], 0, 2*sizeof(struct pollfd));
   pfds[0].fd = fd1;
   pfds[1].fd = fd2;
-  
+
   pfds[0].events= pfds[1].events = POLLIN;
 
   int nsocks = 1 + (fd2 >= 0); // fd2 can optionally be -1
@@ -327,17 +324,16 @@ int waitFor2Data(int fd1, int fd2, int seconds, int useconds, int*fd)
     ret = poll(pfds, nsocks, -1);
   if(!ret || ret < 0)
     return ret;
-    
+
   if((pfds[0].revents & POLLIN) && !(pfds[1].revents & POLLIN))
     *fd = pfds[0].fd;
   else if((pfds[1].revents & POLLIN) && !(pfds[0].revents & POLLIN))
     *fd = pfds[1].fd;
   else if(ret == 2) {
     *fd = pfds[random()%2].fd;
-  }
-  else
+  } else
     *fd = -1; // should never happen
-  
+
   return 1;
 }
 
@@ -381,7 +377,7 @@ const string unquotify(const string &item)
 
   string::size_type bpos=0, epos=item.size();
 
-  if(item[0]=='"') 
+  if(item[0]=='"')
     bpos=1;
 
   if(item[epos-1]=='"')
@@ -401,7 +397,7 @@ void stripLine(string &line)
 string urlEncode(const string &text)
 {
   string ret;
-  for(string::const_iterator i=text.begin();i!=text.end();++i)
+  for(string::const_iterator i=text.begin(); i!=text.end(); ++i)
     if(*i==' ')ret.append("%20");
     else ret.append(1,*i);
   return ret;
@@ -439,7 +435,7 @@ string bitFlip(const string &str)
   string::size_type pos=0, epos=str.size();
   string ret;
   ret.reserve(epos);
-  for(;pos < epos; ++pos)
+  for(; pos < epos; ++pos)
     ret.append(1, ~str[pos]);
   return ret;
 }
@@ -458,7 +454,7 @@ void cleanSlashes(string &str)
 {
   string::const_iterator i;
   string out;
-  for(i=str.begin();i!=str.end();++i) {
+  for(i=str.begin(); i!=str.end(); ++i) {
     if(*i=='/' && i!=str.begin() && *(i-1)=='/')
       continue;
     out.append(1,*i);
@@ -473,7 +469,7 @@ bool IpToU32(const string &str, uint32_t *ip)
     *ip=0;
     return true;
   }
-  
+
   struct in_addr inp;
   if(Utility::inet_aton(str.c_str(), &inp)) {
     *ip=inp.s_addr;
@@ -485,7 +481,7 @@ bool IpToU32(const string &str, uint32_t *ip)
 string U32ToIP(uint32_t val)
 {
   char tmp[17];
-  snprintf(tmp, sizeof(tmp)-1, "%u.%u.%u.%u", 
+  snprintf(tmp, sizeof(tmp)-1, "%u.%u.%u.%u",
            (val >> 24)&0xff,
            (val >> 16)&0xff,
            (val >>  8)&0xff,
@@ -500,7 +496,7 @@ string makeHexDump(const string& str)
   string ret;
   ret.reserve((int)(str.size()*2.2));
 
-  for(string::size_type n=0;n<str.size();++n) {
+  for(string::size_type n=0; n<str.size(); ++n) {
     sprintf(tmp,"%02x ", (unsigned char)str[n]);
     ret+=tmp;
   }
@@ -511,24 +507,24 @@ string makeHexDump(const string& str)
 void shuffle(vector<DNSResourceRecord>& rrs)
 {
   vector<DNSResourceRecord>::iterator first, second;
-  for(first=rrs.begin();first!=rrs.end();++first) 
+  for(first=rrs.begin(); first!=rrs.end(); ++first)
     if(first->d_place==DNSResourceRecord::ANSWER && first->qtype.getCode() != QType::CNAME) // CNAME must come first
       break;
-  for(second=first;second!=rrs.end();++second)
+  for(second=first; second!=rrs.end(); ++second)
     if(second->d_place!=DNSResourceRecord::ANSWER)
       break;
-  
+
   if(second-first>1)
     random_shuffle(first,second);
-  
+
   // now shuffle the additional records
-  for(first=second;first!=rrs.end();++first) 
+  for(first=second; first!=rrs.end(); ++first)
     if(first->d_place==DNSResourceRecord::ADDITIONAL && first->qtype.getCode() != QType::CNAME) // CNAME must come first
       break;
-  for(second=first;second!=rrs.end();++second)
+  for(second=first; second!=rrs.end(); ++second)
     if(second->d_place!=DNSResourceRecord::ADDITIONAL)
       break;
-  
+
   if(second-first>1)
     random_shuffle(first,second);
 
@@ -553,8 +549,7 @@ void normalizeTV(struct timeval& tv)
   if(tv.tv_usec > 1000000) {
     ++tv.tv_sec;
     tv.tv_usec-=1000000;
-  }
-  else if(tv.tv_usec < 0) {
+  } else if(tv.tv_usec < 0) {
     --tv.tv_sec;
     tv.tv_usec+=1000000;
   }
@@ -653,7 +648,7 @@ string labelReverse(const std::string& qname)
 string makeRelative(const std::string& fqdn, const std::string& zone)
 {
   if(zone.empty())
-    return fqdn;  
+    return fqdn;
   if(fqdn != zone)
     return fqdn.substr(0, fqdn.size() - zone.length() - 1); // strip domain name
   return "";
@@ -663,7 +658,7 @@ string dotConcat(const std::string& a, const std::string &b)
 {
   if(a.empty() || b.empty())
     return a+b;
-  else 
+  else
     return a+"."+b;
 }
 
@@ -678,22 +673,22 @@ int makeIPv6sockaddr(const std::string& addr, struct sockaddr_in6* ret)
     if(pos == string::npos || pos + 2 > addr.size() || addr[pos+1]!=':')
       return -1;
     ourAddr.assign(addr.c_str() + 1, pos-1);
-    port = atoi(addr.c_str()+pos+2);  
+    port = atoi(addr.c_str()+pos+2);
   }
-  
+
   if(inet_pton(AF_INET6, ourAddr.c_str(), (void*)&ret->sin6_addr) != 1) {
     struct addrinfo* res;
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
-    
+
     hints.ai_family = AF_INET6;
     hints.ai_flags = AI_NUMERICHOST;
-    
+
     int error;
     if((error=getaddrinfo(ourAddr.c_str(), 0, &hints, &res))) { // this is correct
       return -1;
     }
-  
+
     memcpy(ret, res->ai_addr, res->ai_addrlen);
     freeaddrinfo(res);
   }
@@ -710,7 +705,7 @@ int makeIPv4sockaddr(const std::string& str, struct sockaddr_in* ret)
     return -1;
   }
   struct in_addr inp;
-  
+
   string::size_type pos = str.find(':');
   if(pos == string::npos) { // no port specified, not touching the port
     if(Utility::inet_aton(str.c_str(), &inp)) {
@@ -720,13 +715,13 @@ int makeIPv4sockaddr(const std::string& str, struct sockaddr_in* ret)
     return -1;
   }
   if(!*(str.c_str() + pos + 1)) // trailing :
-    return -1; 
-    
+    return -1;
+
   char *eptr = (char*)str.c_str() + str.size();
   int port = strtol(str.c_str() + pos + 1, &eptr, 10);
   if(*eptr)
     return -1;
-  
+
   ret->sin_port = htons(port);
   if(Utility::inet_aton(str.substr(0, pos).c_str(), &inp)) {
     ret->sin_addr.s_addr=inp.s_addr;
@@ -754,12 +749,12 @@ bool stringfgets(FILE* fp, std::string& line)
 {
   char buffer[1024];
   line.clear();
-  
+
   do {
     if(!fgets(buffer, sizeof(buffer), fp))
       return !line.empty();
-    
-    line.append(buffer); 
+
+    line.append(buffer);
   } while(!strchr(buffer, '\n'));
   return true;
 }
@@ -800,8 +795,7 @@ void addCMsgSrcAddr(struct msghdr* msgh, void* cmsgbuf, ComboAddress* source)
     memset(pkt, 0, sizeof(*pkt));
     pkt->ipi6_addr = source->sin6.sin6_addr;
     msgh->msg_controllen = cmsg->cmsg_len; // makes valgrind happy and is slightly better style
-  }
-  else {
+  } else {
 #ifdef IP_PKTINFO
     struct in_pktinfo *pkt;
 
@@ -872,7 +866,7 @@ uint32_t burtle(const unsigned char* k, uint32_t length, uint32_t initval)
 {
   uint32_t a,b,c,len;
 
-   /* Set up the internal state */
+  /* Set up the internal state */
   len = length;
   a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */
   c = initval;         /* the previous hash value */
@@ -892,7 +886,7 @@ uint32_t burtle(const unsigned char* k, uint32_t length, uint32_t initval)
   case 11: c+=((uint32_t)k[10]<<24);
   case 10: c+=((uint32_t)k[9]<<16);
   case 9 : c+=((uint32_t)k[8]<<8);
-    /* the first byte of c is reserved for the length */
+  /* the first byte of c is reserved for the length */
   case 8 : b+=((uint32_t)k[7]<<24);
   case 7 : b+=((uint32_t)k[6]<<16);
   case 6 : b+=((uint32_t)k[5]<<8);
@@ -924,9 +918,9 @@ uint32_t pdns_strtoui(const char *nptr, char **endptr, int base)
 #else
   unsigned long val = strtoul(nptr, endptr, base);
   if (val > UINT_MAX) {
-   errno = ERANGE;
-   return UINT_MAX;
-  } 
+    errno = ERANGE;
+    return UINT_MAX;
+  }
 
   return val;
 #endif

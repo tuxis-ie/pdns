@@ -1,12 +1,12 @@
 // $Id$
 /*
- * Copyright (c) 2010-2011
- *
- * Maik Zumstrull <maik@zumstrull.net>
- * Steinbuch Centre for Computing <http://www.scc.kit.edu/>
- * Karlsruhe Institute of Technology <http://www.kit.edu/> 
- *
- */
+   Copyright (c) 2010-2011
+
+   Maik Zumstrull <maik@zumstrull.net>
+   Steinbuch Centre for Computing <http://www.scc.kit.edu/>
+   Karlsruhe Institute of Technology <http://www.kit.edu/>
+
+*/
 
 #include <string>
 #include <map>
@@ -45,7 +45,7 @@ class OracleBackend : public DNSBackend
 public:
 
   OracleBackend(const string &suffix = "", OCIEnv *envh =
-                NULL, char *poolname = NULL);
+                  NULL, char *poolname = NULL);
   virtual ~OracleBackend();
 
   void lookup(const QType &qtype, const string &qname, DNSPacket *p = 0,
@@ -79,7 +79,7 @@ public:
   bool createSlaveDomain(const string &ip, const string &domain,
                          const string &nameserver, const string &account);
 
-  bool getAllDomainMetadata(const string& name, std::map<std::string, std::vector<std::string> >& meta); 
+  bool getAllDomainMetadata(const string& name, std::map<std::string, std::vector<std::string> >& meta);
   bool getDomainMetadata(const string& name, const std::string& kind, std::vector<std::string>& meta);
   bool setDomainMetadata(const string& name, const std::string& kind, const std::vector<std::string>& meta);
 

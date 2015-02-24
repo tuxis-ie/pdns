@@ -42,11 +42,10 @@ StatBag::StatBag()
 /** this NEEDS TO HAVE THE LOCK held already! */
 void StatBag::exists(const string &key)
 {
-  if(!d_stats.count(key))
-    {
-      unlock(); // it's the details that count
-      throw PDNSException("Trying to deposit into unknown StatBag key '"+key+"'");
-    }
+  if(!d_stats.count(key)) {
+    unlock(); // it's the details that count
+    throw PDNSException("Trying to deposit into unknown StatBag key '"+key+"'");
+  }
 }
 
 string StatBag::directory()
@@ -56,10 +55,9 @@ string StatBag::directory()
   lock();
   for(map<string, unsigned int *>::const_iterator i=d_stats.begin();
       i!=d_stats.end();
-      i++)
-    {
-      o<<i->first<<"="<<*(i->second)<<",";
-    }
+      i++) {
+    o<<i->first<<"="<<*(i->second)<<",";
+  }
   unlock();
   dir=o.str();
   return dir;
@@ -73,7 +71,7 @@ vector<string>StatBag::getEntries()
   for(map<string, unsigned int *>::const_iterator i=d_stats.begin();
       i!=d_stats.end();
       i++)
-      ret.push_back(i->first);
+    ret.push_back(i->first);
 
   unlock();
   return ret;
@@ -98,7 +96,7 @@ void StatBag::declare(const string &key, const string &descrip)
 }
 
 
-          
+
 void StatBag::set(const string &key, unsigned int value)
 {
   lock();
@@ -112,11 +110,10 @@ unsigned int StatBag::read(const string &key)
 {
   lock();
 
-  if(!d_stats.count(key))
-    {
-      unlock();
-      return 0;
-    }
+  if(!d_stats.count(key)) {
+    unlock();
+    return 0;
+  }
 
   unsigned int tmp=*d_stats[key];
 
@@ -128,12 +125,11 @@ unsigned int StatBag::readZero(const string &key)
 {
   lock();
 
-  if(!d_stats.count(key))
-    {
-      unlock();
-      return 0;
-    }
-  
+  if(!d_stats.count(key)) {
+    unlock();
+    return 0;
+  }
+
   unsigned int tmp=*d_stats[key];
   d_stats[key]=0;
 
@@ -166,11 +162,10 @@ StatBag::~StatBag()
 {
   for(map<string,unsigned int *>::const_iterator i=d_stats.begin();
       i!=d_stats.end();
-      i++)
-    {
-      delete i->second;
-    }
-  
+      i++) {
+    delete i->second;
+  }
+
 }
 
 StatRing::StatRing(unsigned int size)
@@ -196,7 +191,7 @@ void StatRing::resize(unsigned int newsize)
       startpos=d_pos-newsize;
 
     vector<string>newring;
-    for(unsigned int i=startpos;i<d_pos;++i) {
+    for(unsigned int i=startpos; i<d_pos; ++i) {
       newring.push_back(d_items[i%d_size]);
     }
 
@@ -235,13 +230,13 @@ vector<pair<string,unsigned int> >StatRing::get() const
 {
   Lock l(d_lock);
   map<string,unsigned int> res;
-  for(vector<string>::const_iterator i=d_items.begin();i!=d_items.end();++i) {
+  for(vector<string>::const_iterator i=d_items.begin(); i!=d_items.end(); ++i) {
     if(!i->empty())
       res[*i]++;
   }
-  
+
   vector<pair<string,unsigned int> > tmp;
-  for(map<string,unsigned int>::const_iterator i=res.begin();i!=res.end();++i) 
+  for(map<string,unsigned int>::const_iterator i=res.begin(); i!=res.end(); ++i)
     tmp.push_back(*i);
 
   sort(tmp.begin(),tmp.end(),popisort);
@@ -263,7 +258,7 @@ vector<pair<string, unsigned int> > StatBag::getRing(const string &name)
 void StatRing::reset()
 {
   Lock l(d_lock);
-  for(vector<string>::iterator i=d_items.begin();i!=d_items.end();++i) {
+  for(vector<string>::iterator i=d_items.begin(); i!=d_items.end(); ++i) {
     if(!i->empty())
       *i="";
   }
@@ -294,7 +289,7 @@ string StatBag::getRingTitle(const string &name)
 vector<string>StatBag::listRings()
 {
   vector<string> ret;
-  for(map<string,StatRing>::const_iterator i=d_rings.begin();i!=d_rings.end();++i)
+  for(map<string,StatRing>::const_iterator i=d_rings.begin(); i!=d_rings.end(); ++i)
     ret.push_back(i->first);
   return ret;
 }

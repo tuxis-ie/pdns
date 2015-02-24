@@ -15,17 +15,18 @@ using namespace boost;
 using namespace boost::accumulators;
 
 typedef accumulator_set<
-  double
-  , stats<boost::accumulators::tag::median(with_p_square_quantile),
-          boost::accumulators::tag::mean(immediate)
-          >
-  > acc_t;
+double
+, stats<boost::accumulators::tag::median(with_p_square_quantile),
+boost::accumulators::tag::mean(immediate)
+>
+> acc_t;
 
 
 
 BOOST_AUTO_TEST_SUITE(test_dns_random_hh)
 
-BOOST_AUTO_TEST_CASE(test_dns_random_average) {
+BOOST_AUTO_TEST_CASE(test_dns_random_average)
+{
   dns_random_init("loremipsumdolorx");
   acc_t acc;
 
@@ -35,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_dns_random_average) {
   }
   BOOST_CHECK_CLOSE(0.5, median(acc), 2.0); // within 2%
   BOOST_CHECK_CLOSE(0.5, mean(acc), 2.0);
-  
+
   // please add covariance tests, chi-square, Kolmogorov-Smirnov
 }
 

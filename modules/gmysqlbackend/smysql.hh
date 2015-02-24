@@ -1,4 +1,4 @@
-/* Copyright 2001 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE 
+/* Copyright 2001 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE
    for more information.
    $Id$  */
 #ifndef SMYSQL_HH

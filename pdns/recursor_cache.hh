@@ -45,8 +45,7 @@ public:
   uint64_t cacheHits, cacheMisses;
 
 private:
-  struct StoredRecord
-  {
+  struct StoredRecord {
     mutable uint32_t d_ttd;
 
     string d_string;
@@ -63,9 +62,8 @@ private:
 
   };
 
-  struct CacheEntry
-  {
-    CacheEntry(const boost::tuple<string, uint16_t>& key, const vector<StoredRecord>& records, bool auth) : 
+  struct CacheEntry {
+    CacheEntry(const boost::tuple<string, uint16_t>& key, const vector<StoredRecord>& records, bool auth) :
       d_qname(key.get<0>()), d_qtype(key.get<1>()), d_auth(auth), d_records(records)
     {}
 
@@ -89,18 +87,18 @@ private:
   };
 
   typedef multi_index_container<
-    CacheEntry,
-    indexed_by <
-                ordered_unique<
-                      composite_key< 
-                        CacheEntry,
-                        member<CacheEntry,string,&CacheEntry::d_qname>,
-                        member<CacheEntry,uint16_t,&CacheEntry::d_qtype>
-                      >,
-                      composite_key_compare<CIStringCompare, std::less<uint16_t> >
-                >,
-               sequenced<>
-               >
+  CacheEntry,
+  indexed_by <
+  ordered_unique<
+  composite_key<
+  CacheEntry,
+  member<CacheEntry,string,&CacheEntry::d_qname>,
+  member<CacheEntry,uint16_t,&CacheEntry::d_qtype>
+  >,
+  composite_key_compare<CIStringCompare, std::less<uint16_t> >
+  >,
+  sequenced<>
+  >
   > cache_t;
 
   cache_t d_cache;

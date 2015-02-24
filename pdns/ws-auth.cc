@@ -68,8 +68,7 @@ AuthWebServer::AuthWebServer()
 
 void AuthWebServer::go()
 {
-  if(arg().mustDo("webserver"))
-  {
+  if(arg().mustDo("webserver")) {
     S.doRings();
     pthread_create(&d_tid, 0, webThreadHelper, this);
     pthread_create(&d_tid, 0, statThreadHelper, this);
@@ -87,8 +86,7 @@ void AuthWebServer::statThread()
       d_qcachemisses.submit(S.read("query-cache-miss"));
       Utility::sleep(1);
     }
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<"Webserver statThread caught an exception, dying"<<endl;
     exit(1);
   }
@@ -108,7 +106,8 @@ void *AuthWebServer::webThreadHelper(void *p)
   return 0; // never reached
 }
 
-static string htmlescape(const string &s) {
+static string htmlescape(const string &s)
+{
   string result;
   for(string::const_iterator it=s.begin(); it!=s.end(); ++it) {
     switch (*it) {
@@ -134,7 +133,7 @@ void printtable(ostringstream &ret, const string &ringname, const string &title,
   int entries=0;
   vector<pair <string,unsigned int> >ring=S.getRing(ringname);
 
-  for(vector<pair<string, unsigned int> >::const_iterator i=ring.begin(); i!=ring.end();++i) {
+  for(vector<pair<string, unsigned int> >::const_iterator i=ring.begin(); i!=ring.end(); ++i) {
     tot+=i->second;
     entries++;
   }
@@ -145,8 +144,8 @@ void printtable(ostringstream &ret, const string &ringname, const string &title,
   ret<<"<div class=ringmeta>";
   ret<<"<a class=topXofY href=\"?ring="<<ringname<<"\">Showing: Top "<<limit<<" of "<<entries<<"</a>"<<endl;
   ret<<"<span class=resizering>Resize: ";
-  unsigned int sizes[]={10,100,500,1000,10000,500000,0};
-  for(int i=0;sizes[i];++i) {
+  unsigned int sizes[]= {10,100,500,1000,10000,500000,0};
+  for(int i=0; sizes[i]; ++i) {
     if(S.getRingSize(ringname)!=sizes[i])
       ret<<"<a href=\"?resizering="<<ringname<<"&amp;size="<<sizes[i]<<"\">"<<sizes[i]<<"</a> ";
     else
@@ -157,7 +156,7 @@ void printtable(ostringstream &ret, const string &ringname, const string &title,
   ret<<"<table class=\"data\">";
   int printed=0;
   int total=max(1,tot);
-  for(vector<pair<string,unsigned int> >::const_iterator i=ring.begin();limit && i!=ring.end();++i,--limit) {
+  for(vector<pair<string,unsigned int> >::const_iterator i=ring.begin(); limit && i!=ring.end(); ++i,--limit) {
     ret<<"<tr><td>"<<htmlescape(i->first)<<"</td><td>"<<i->second<<"</td><td align=right>"<< AuthWebServer::makePercentage(i->second*100.0/total)<<"</td>"<<endl;
     printed+=i->second;
   }
@@ -174,7 +173,7 @@ void AuthWebServer::printvars(ostringstream &ret)
   ret<<"<div class=panel><h2>Variables</h2><table class=\"data\">"<<endl;
 
   vector<string>entries=S.getEntries();
-  for(vector<string>::const_iterator i=entries.begin();i!=entries.end();++i) {
+  for(vector<string>::const_iterator i=entries.begin(); i!=entries.end(); ++i) {
     ret<<"<tr><td>"<<*i<<"</td><td>"<<S.read(*i)<<"</td><td>"<<S.getDescrip(*i)<<"</td>"<<endl;
   }
 
@@ -186,7 +185,7 @@ void AuthWebServer::printargs(ostringstream &ret)
   ret<<"<table border=1><tr><td colspan=3 bgcolor=\"#0000ff\"><font color=\"#ffffff\">Arguments</font></td>"<<endl;
 
   vector<string>entries=arg().list();
-  for(vector<string>::const_iterator i=entries.begin();i!=entries.end();++i) {
+  for(vector<string>::const_iterator i=entries.begin(); i!=entries.end(); ++i) {
     ret<<"<tr><td>"<<*i<<"</td><td>"<<arg()[*i]<<"</td><td>"<<arg().getHelp(*i)<<"</td>"<<endl;
   }
 }
@@ -205,7 +204,7 @@ void AuthWebServer::indexfunction(HttpRequest* req, HttpResponse* resp)
     resp->headers["Location"] = "/";
     return;
   }
-  if(!req->getvars["resizering"].empty()){
+  if(!req->getvars["resizering"].empty()) {
     int size=atoi(req->getvars["size"].c_str());
     if (S.ringExists(req->getvars["resizering"]) && size > 0 && size <= 500000)
       S.resizeRing(req->getvars["resizering"], atoi(req->getvars["size"].c_str()));
@@ -235,46 +234,45 @@ void AuthWebServer::indexfunction(HttpRequest* req, HttpResponse* resp)
   time_t passed=time(0)-s_starttime;
 
   ret<<"<p>Uptime: "<<
-    humanDuration(passed)<<
-    "<br>"<<endl;
+     humanDuration(passed)<<
+     "<br>"<<endl;
 
   ret<<"Queries/second, 1, 5, 10 minute averages:  "<<std::setprecision(3)<<
-    d_queries.get1()<<", "<<
-    d_queries.get5()<<", "<<
-    d_queries.get10()<<". Max queries/second: "<<d_queries.getMax()<<
-    "<br>"<<endl;
-  
+     d_queries.get1()<<", "<<
+     d_queries.get5()<<", "<<
+     d_queries.get10()<<". Max queries/second: "<<d_queries.getMax()<<
+     "<br>"<<endl;
+
   if(d_cachemisses.get10()+d_cachehits.get10()>0)
     ret<<"Cache hitrate, 1, 5, 10 minute averages: "<<
-      makePercentage((d_cachehits.get1()*100.0)/((d_cachehits.get1())+(d_cachemisses.get1())))<<", "<<
-      makePercentage((d_cachehits.get5()*100.0)/((d_cachehits.get5())+(d_cachemisses.get5())))<<", "<<
-      makePercentage((d_cachehits.get10()*100.0)/((d_cachehits.get10())+(d_cachemisses.get10())))<<
-      "<br>"<<endl;
+       makePercentage((d_cachehits.get1()*100.0)/((d_cachehits.get1())+(d_cachemisses.get1())))<<", "<<
+       makePercentage((d_cachehits.get5()*100.0)/((d_cachehits.get5())+(d_cachemisses.get5())))<<", "<<
+       makePercentage((d_cachehits.get10()*100.0)/((d_cachehits.get10())+(d_cachemisses.get10())))<<
+       "<br>"<<endl;
 
   if(d_qcachemisses.get10()+d_qcachehits.get10()>0)
     ret<<"Backend query cache hitrate, 1, 5, 10 minute averages: "<<std::setprecision(2)<<
-      makePercentage((d_qcachehits.get1()*100.0)/((d_qcachehits.get1())+(d_qcachemisses.get1())))<<", "<<
-      makePercentage((d_qcachehits.get5()*100.0)/((d_qcachehits.get5())+(d_qcachemisses.get5())))<<", "<<
-      makePercentage((d_qcachehits.get10()*100.0)/((d_qcachehits.get10())+(d_qcachemisses.get10())))<<
-      "<br>"<<endl;
+       makePercentage((d_qcachehits.get1()*100.0)/((d_qcachehits.get1())+(d_qcachemisses.get1())))<<", "<<
+       makePercentage((d_qcachehits.get5()*100.0)/((d_qcachehits.get5())+(d_qcachemisses.get5())))<<", "<<
+       makePercentage((d_qcachehits.get10()*100.0)/((d_qcachehits.get10())+(d_qcachemisses.get10())))<<
+       "<br>"<<endl;
 
   ret<<"Backend query load, 1, 5, 10 minute averages: "<<std::setprecision(3)<<
-    d_qcachemisses.get1()<<", "<<
-    d_qcachemisses.get5()<<", "<<
-    d_qcachemisses.get10()<<". Max queries/second: "<<d_qcachemisses.getMax()<<
-    "<br>"<<endl;
+     d_qcachemisses.get1()<<", "<<
+     d_qcachemisses.get5()<<", "<<
+     d_qcachemisses.get10()<<". Max queries/second: "<<d_qcachemisses.getMax()<<
+     "<br>"<<endl;
 
   ret<<"Total queries: "<<S.read("udp-queries")<<". Question/answer latency: "<<S.read("latency")/1000.0<<"ms</p><br>"<<endl;
   if(req->getvars["ring"].empty()) {
     vector<string>entries=S.listRings();
-    for(vector<string>::const_iterator i=entries.begin();i!=entries.end();++i)
+    for(vector<string>::const_iterator i=entries.begin(); i!=entries.end(); ++i)
       printtable(ret,*i,S.getRingTitle(*i));
 
     printvars(ret);
     if(arg().mustDo("webserver-print-arguments"))
       printargs(ret);
-  }
-  else
+  } else
     printtable(ret,req->getvars["ring"],S.getRingTitle(req->getvars["ring"]),100);
 
   ret<<"</div></div>"<<endl;
@@ -285,7 +283,8 @@ void AuthWebServer::indexfunction(HttpRequest* req, HttpResponse* resp)
   resp->status = 200;
 }
 
-static void fillZone(const string& zonename, HttpResponse* resp) {
+static void fillZone(const string& zonename, HttpResponse* resp)
+{
   UeberBackend B;
   DomainInfo di;
   DNSSECKeeper dk;
@@ -381,7 +380,8 @@ void productServerStatisticsFetch(map<string,string>& out)
   out["uptime"] = lexical_cast<string>(time(0) - s_starttime);
 }
 
-static void gatherRecords(const Value& container, vector<DNSResourceRecord>& new_records, vector<DNSResourceRecord>& new_ptrs) {
+static void gatherRecords(const Value& container, vector<DNSResourceRecord>& new_records, vector<DNSResourceRecord>& new_ptrs)
+{
   UeberBackend B;
   DNSResourceRecord rr;
   const Value& records = container["records"];
@@ -398,9 +398,7 @@ static void gatherRecords(const Value& container, vector<DNSResourceRecord>& new
       try {
         shared_ptr<DNSRecordContent> drc(DNSRecordContent::mastermake(rr.qtype.getCode(), 1, rr.content));
         string tmp = drc->serialize(rr.qname);
-      }
-      catch(std::exception& e)
-      {
+      } catch(std::exception& e) {
         throw ApiException("Record "+rr.qname+"/"+rr.qtype.getName()+" "+rr.content+": "+e.what());
       }
 
@@ -425,7 +423,8 @@ static void gatherRecords(const Value& container, vector<DNSResourceRecord>& new
   }
 }
 
-static void gatherComments(const Value& container, vector<Comment>& new_comments, bool use_name_type_from_container) {
+static void gatherComments(const Value& container, vector<Comment>& new_comments, bool use_name_type_from_container)
+{
   Comment c;
   if (use_name_type_from_container) {
     c.qname = stringFromJson(container, "name");
@@ -449,7 +448,8 @@ static void gatherComments(const Value& container, vector<Comment>& new_comments
   }
 }
 
-static void updateDomainSettingsFromDocument(const DomainInfo& di, const string& zonename, Document& document) {
+static void updateDomainSettingsFromDocument(const DomainInfo& di, const string& zonename, Document& document)
+{
   string master;
   const Value &masters = document["masters"];
   if (masters.IsArray()) {
@@ -470,7 +470,8 @@ static void updateDomainSettingsFromDocument(const DomainInfo& di, const string&
   }
 }
 
-static void apiZoneCryptokeys(HttpRequest* req, HttpResponse* resp) {
+static void apiZoneCryptokeys(HttpRequest* req, HttpResponse* resp)
+{
   if(req->method != "GET")
     throw ApiException("Only GET is implemented");
 
@@ -523,16 +524,12 @@ static void apiZoneCryptokeys(HttpRequest* req, HttpResponse* resp) {
       try {
         Value ds3(makeDSFromDNSKey(zonename, value.first.getDNSKEY(), 3).getZoneRepresentation().c_str(), doc.GetAllocator());
         dses.PushBack(ds3, doc.GetAllocator());
-      }
-      catch(...)
-      {
+      } catch(...) {
       }
       try {
         Value ds4(makeDSFromDNSKey(zonename, value.first.getDNSKEY(), 4).getZoneRepresentation().c_str(), doc.GetAllocator());
         dses.PushBack(ds4, doc.GetAllocator());
-      }
-      catch(...)
-      {
+      } catch(...) {
       }
       key.AddMember("ds", dses, doc.GetAllocator());
     }
@@ -543,7 +540,8 @@ static void apiZoneCryptokeys(HttpRequest* req, HttpResponse* resp) {
   resp->setBody(doc);
 }
 
-static void gatherRecordsFromZone(const Value &container, vector<DNSResourceRecord>& new_records, string zonename) {
+static void gatherRecordsFromZone(const Value &container, vector<DNSResourceRecord>& new_records, string zonename)
+{
   DNSResourceRecord rr;
   vector<string> zonedata;
   stringtok(zonedata, stringFromJson(container, "zone"), "\r\n");
@@ -564,13 +562,13 @@ static void gatherRecordsFromZone(const Value &container, vector<DNSResourceReco
       rr.qname = stripDot(rr.qname);
       new_records.push_back(rr);
     }
-  }
-  catch(std::exception& ae) {
+  } catch(std::exception& ae) {
     throw ApiException("An error occured while parsing the zonedata: "+string(ae.what()));
   }
 }
 
-static void apiServerZones(HttpRequest* req, HttpResponse* resp) {
+static void apiServerZones(HttpRequest* req, HttpResponse* resp)
+{
   UeberBackend B;
   DNSSECKeeper dk;
   if (req->method == "POST" && !::arg().mustDo("experimental-api-readonly")) {
@@ -739,7 +737,8 @@ static void apiServerZones(HttpRequest* req, HttpResponse* resp) {
   resp->setBody(doc);
 }
 
-static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp) {
+static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp)
+{
   string zonename = apiZoneIdToName(req->parameters["id"]);
 
   if(req->method == "PUT" && !::arg().mustDo("experimental-api-readonly")) {
@@ -756,8 +755,7 @@ static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp) {
 
     fillZone(zonename, resp);
     return;
-  }
-  else if(req->method == "DELETE" && !::arg().mustDo("experimental-api-readonly")) {
+  } else if(req->method == "DELETE" && !::arg().mustDo("experimental-api-readonly")) {
     // delete domain
     UeberBackend B;
     DomainInfo di;
@@ -782,7 +780,8 @@ static void apiServerZoneDetail(HttpRequest* req, HttpResponse* resp) {
   throw HttpMethodNotAllowedException();
 }
 
-static string makeDotted(string in) {
+static string makeDotted(string in)
+{
   if (in.empty()) {
     return ".";
   }
@@ -792,7 +791,8 @@ static string makeDotted(string in) {
   return in;
 }
 
-static void apiServerZoneExport(HttpRequest* req, HttpResponse* resp) {
+static void apiServerZoneExport(HttpRequest* req, HttpResponse* resp)
+{
   string zonename = apiZoneIdToName(req->parameters["id"]);
 
   if(req->method != "GET")
@@ -833,11 +833,11 @@ static void apiServerZoneExport(HttpRequest* req, HttpResponse* resp) {
     }
 
     ss <<
-      makeDotted(rr.qname) << "\t" <<
-      rr.ttl << "\t" <<
-      rr.qtype.getName() << "\t" <<
-      content <<
-      endl;
+       makeDotted(rr.qname) << "\t" <<
+       rr.ttl << "\t" <<
+       rr.qtype.getName() << "\t" <<
+       content <<
+       endl;
   }
 
   if (req->accept_json) {
@@ -852,7 +852,8 @@ static void apiServerZoneExport(HttpRequest* req, HttpResponse* resp) {
   }
 }
 
-static void makePtr(const DNSResourceRecord& rr, DNSResourceRecord* ptr) {
+static void makePtr(const DNSResourceRecord& rr, DNSResourceRecord* ptr)
+{
   if (rr.qtype.getCode() == QType::A) {
     uint32_t ip;
     if (!IpToU32(rr.content, &ip)) {
@@ -863,7 +864,7 @@ static void makePtr(const DNSResourceRecord& rr, DNSResourceRecord* ptr) {
                   % ((ip >> 16) & 0xff)
                   % ((ip >>  8) & 0xff)
                   % ((ip      ) & 0xff)
-      ).str();
+                 ).str();
   } else if (rr.qtype.getCode() == QType::AAAA) {
     ComboAddress ca(rr.content);
     char buf[3];
@@ -889,7 +890,8 @@ static void makePtr(const DNSResourceRecord& rr, DNSResourceRecord* ptr) {
   ptr->content = rr.qname;
 }
 
-static void patchZone(HttpRequest* req, HttpResponse* resp) {
+static void patchZone(HttpRequest* req, HttpResponse* resp)
+{
   UeberBackend B;
   DomainInfo di;
   string zonename = apiZoneIdToName(req->parameters["id"]);
@@ -931,8 +933,7 @@ static void patchZone(HttpRequest* req, HttpResponse* resp) {
         if (!di.backend->replaceRRSet(di.id, qname, qtype, vector<DNSResourceRecord>())) {
           throw ApiException("Hosting backend does not support editing records.");
         }
-      }
-      else if (changetype == "REPLACE") {
+      } else if (changetype == "REPLACE") {
         new_records.clear();
         new_comments.clear();
         // new_ptrs is merged
@@ -971,8 +972,7 @@ static void patchZone(HttpRequest* req, HttpResponse* resp) {
             throw ApiException("Hosting backend does not support editing comments.");
           }
         }
-      }
-      else
+      } else
         throw ApiException("Changetype not understood");
     }
 
@@ -1027,7 +1027,8 @@ static void patchZone(HttpRequest* req, HttpResponse* resp) {
   fillZone(zonename, resp);
 }
 
-static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
+static void apiServerSearchData(HttpRequest* req, HttpResponse* resp)
+{
   if(req->method != "GET")
     throw HttpMethodNotAllowedException();
 
@@ -1123,20 +1124,19 @@ void AuthWebServer::jsonstat(HttpRequest* req, HttpResponse* resp)
 
   if(command == "flush-cache") {
     extern PacketCache PC;
-    int number; 
+    int number;
     if(req->getvars["domain"].empty())
       number = PC.purge();
     else
       number = PC.purge(req->getvars["domain"]);
-      
+
     map<string, string> object;
     object["number"]=lexical_cast<string>(number);
     //cerr<<"Flushed cache for '"<<parameters["domain"]<<"', cleaned "<<number<<" records"<<endl;
     resp->body = returnJsonObject(object);
     resp->status = 200;
     return;
-  }
-  else if(command == "pdns-control") {
+  } else if(command == "pdns-control") {
     if(req->method!="POST")
       throw HttpMethodNotAllowedException();
     // cout<<"post: "<<post<<endl;
@@ -1145,12 +1145,12 @@ void AuthWebServer::jsonstat(HttpRequest* req, HttpResponse* resp)
     // cout<<"Parameters: '"<<document["parameters"].GetString()<<"'\n";
     vector<string> parameters;
     stringtok(parameters, document["parameters"].GetString(), " \t");
-    
+
     DynListener::g_funk_t* ptr=0;
     if(!parameters.empty())
       ptr = DynListener::getFunc(toUpper(parameters[0]));
     map<string, string> m;
-    
+
     if(ptr) {
       resp->status = 200;
       m["result"] = (*ptr)(parameters, 0);
@@ -1160,8 +1160,7 @@ void AuthWebServer::jsonstat(HttpRequest* req, HttpResponse* resp)
     }
     resp->body = returnJsonObject(m);
     return;
-  }
-  else if(command=="log-grep") {
+  } else if(command=="log-grep") {
     // legacy parameter name hack
     req->getvars["q"] = req->getvars["needle"];
     apiServerSearchLog(req, resp);
@@ -1230,8 +1229,7 @@ void AuthWebServer::webThread()
     d_ws->registerWebHandler("/style.css", boost::bind(&AuthWebServer::cssfunction, this, _1, _2));
     d_ws->registerWebHandler("/", boost::bind(&AuthWebServer::indexfunction, this, _1, _2));
     d_ws->go();
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<"AuthWebServer thread caught an exception, dying"<<endl;
     exit(1);
   }

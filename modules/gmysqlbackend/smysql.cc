@@ -43,12 +43,12 @@ SMySQL::SMySQL(const string &database, const string &host, uint16_t port, const 
     mysql_options(&d_db, MYSQL_READ_DEFAULT_GROUP, group.c_str());
 
     if (!mysql_real_connect(&d_db, host.empty() ? NULL : host.c_str(),
-                          user.empty() ? NULL : user.c_str(),
-                          password.empty() ? NULL : password.c_str(),
-                          database.empty() ? NULL : database.c_str(),
-                          port,
-                          msocket.empty() ? NULL : msocket.c_str(),
-                          CLIENT_MULTI_RESULTS)) {
+                            user.empty() ? NULL : user.c_str(),
+                            password.empty() ? NULL : password.c_str(),
+                            database.empty() ? NULL : database.c_str(),
+                            port,
+                            msocket.empty() ? NULL : msocket.c_str(),
+                            CLIENT_MULTI_RESULTS)) {
 
       if (retry == 0)
         throw sPerrorException("Unable to connect to database");
@@ -122,7 +122,7 @@ bool SMySQL::getRow(row_t &row)
   MYSQL_ROW rrow;
 
   if((rrow = mysql_fetch_row(d_rres))) {
-    for(unsigned int i=0;i<mysql_num_fields(d_rres);i++)
+    for(unsigned int i=0; i<mysql_num_fields(d_rres); i++)
       row.push_back(rrow[i] ?: "");
     return true;
   }
@@ -142,7 +142,7 @@ string SMySQL::escape(const string &name)
 {
   string a;
 
-  for(string::const_iterator i=name.begin();i!=name.end();++i) {
+  for(string::const_iterator i=name.begin(); i!=name.end(); ++i) {
     if(*i=='\'' || *i=='\\')
       a+='\\';
     a+=*i;

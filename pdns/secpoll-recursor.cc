@@ -5,7 +5,7 @@
 #include "version.hh"
 #include "version_generated.h"
 #include <stdint.h>
-#ifndef PACKAGEVERSION 
+#ifndef PACKAGEVERSION
 #define PACKAGEVERSION PDNS_VERSION
 #endif
 
@@ -20,7 +20,7 @@ void doSecPoll(time_t* last_secpoll)
   struct timeval now;
   gettimeofday(&now, 0);
   SyncRes sr(now);
-  
+
   vector<DNSResourceRecord> ret;
 
   string query = "recursor-" PACKAGEVERSION ".security-status."+::arg()["security-poll-suffix"];
@@ -37,26 +37,24 @@ void doSecPoll(time_t* last_secpoll)
     if(!content.empty() && content[0]=='"' && content[content.size()-1]=='"') {
       content=content.substr(1, content.length()-2);
     }
-      
+
     pair<string, string> split = splitField(content, ' ');
-    
+
     g_security_status = atoi(split.first.c_str());
     g_security_message = split.second;
 
     *last_secpoll=now.tv_sec;
-  }
-  else {
+  } else {
     L<<Logger::Warning<<"Could not retrieve security status update for '" PACKAGEVERSION "' on '"+query+"', RCODE = "<< RCode::to_s(res)<<endl;
     if(g_security_status == 1) // it was ok, not it is unknown
       g_security_status = 0;
     if(res == RCode::NXDomain) // if we had servfail, keep on trying more more frequently
-      *last_secpoll=now.tv_sec; 
+      *last_secpoll=now.tv_sec;
   }
 
   if(g_security_status == 2) {
     L<<Logger::Error<<"PowerDNS Security Update Recommended: "<<g_security_message<<endl;
-  }
-  else if(g_security_status == 3) {
+  } else if(g_security_status == 3) {
     L<<Logger::Error<<"PowerDNS Security Update Mandatory: "<<g_security_message<<endl;
   }
 }

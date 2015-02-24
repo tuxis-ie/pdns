@@ -34,7 +34,8 @@
 
 class WebServer;
 
-class HttpRequest : public YaHTTP::Request {
+class HttpRequest : public YaHTTP::Request
+{
 public:
   HttpRequest() : YaHTTP::Request(), accept_json(false), accept_html(false), complete(false) { };
 
@@ -48,7 +49,8 @@ public:
   bool compareHeader(const string &header_name, const string &expected_value);
 };
 
-class HttpResponse: public YaHTTP::Response {
+class HttpResponse: public YaHTTP::Response
+{
 public:
   HttpResponse() : YaHTTP::Response() { };
   HttpResponse(const YaHTTP::Response &resp) : YaHTTP::Response(resp) { };
@@ -74,12 +76,14 @@ protected:
   HttpResponse d_response;
 };
 
-class HttpBadRequestException : public HttpException {
+class HttpBadRequestException : public HttpException
+{
 public:
   HttpBadRequestException() : HttpException(400) { };
 };
 
-class HttpUnauthorizedException : public HttpException {
+class HttpUnauthorizedException : public HttpException
+{
 public:
   HttpUnauthorizedException() : HttpException(401)
   {
@@ -87,17 +91,20 @@ public:
   }
 };
 
-class HttpNotFoundException : public HttpException {
+class HttpNotFoundException : public HttpException
+{
 public:
   HttpNotFoundException() : HttpException(404) { };
 };
 
-class HttpMethodNotAllowedException : public HttpException {
+class HttpMethodNotAllowedException : public HttpException
+{
 public:
   HttpMethodNotAllowedException() : HttpException(405) { };
 };
 
-class HttpInternalServerErrorException : public HttpException {
+class HttpInternalServerErrorException : public HttpException
+{
 public:
   HttpInternalServerErrorException() : HttpException(500) { };
 };
@@ -105,14 +112,16 @@ public:
 class ApiException : public runtime_error
 {
 public:
-  ApiException(const string& what) : runtime_error(what) {
+  ApiException(const string& what) : runtime_error(what)
+  {
   }
 };
 
 class Server
 {
 public:
-  Server(const string &localaddress, int port) : d_local(localaddress.empty() ? "0.0.0.0" : localaddress, port), d_server_socket(d_local.sin4.sin_family, SOCK_STREAM, 0) {
+  Server(const string &localaddress, int port) : d_local(localaddress.empty() ? "0.0.0.0" : localaddress, port), d_server_socket(d_local.sin4.sin_family, SOCK_STREAM, 0)
+  {
     d_server_socket.setReuseAddr();
     d_server_socket.bind(d_local);
     d_server_socket.listen();
@@ -120,7 +129,8 @@ public:
 
   ComboAddress d_local;
 
-  Socket *accept() {
+  Socket *accept()
+  {
     return d_server_socket.accept();
   }
 
@@ -147,7 +157,8 @@ protected:
   static int B64Decode(const std::string& strInput, std::string& strOutput);
   void registerBareHandler(const string& url, HandlerFunction handler);
 
-  virtual Server* createServer() {
+  virtual Server* createServer()
+  {
     return new Server(d_listenaddress, d_port);
   }
 

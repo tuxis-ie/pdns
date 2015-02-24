@@ -23,8 +23,7 @@
 
 void primeHints(void);
 
-struct NegCacheEntry
-{
+struct NegCacheEntry {
   string d_name;
   QType d_qtype;
   string d_qname;
@@ -50,11 +49,10 @@ public:
     if(now > d_last_clean + 300 ) {
 
       d_last_clean=now;
-      for(typename cont_t::iterator i=d_cont.begin();i!=d_cont.end();) {
+      for(typename cont_t::iterator i=d_cont.begin(); i!=d_cont.end();) {
         if( i->second.ttd < now) {
           d_cont.erase(i++);
-        }
-        else
+        } else
           ++i;
       }
     }
@@ -69,18 +67,17 @@ public:
 
     return true; // still listed, still blocked
   }
-  void throttle(time_t now, const Thing& t, time_t ttl=0, unsigned int tries=0) 
+  void throttle(time_t now, const Thing& t, time_t ttl=0, unsigned int tries=0)
   {
     typename cont_t::iterator i=d_cont.find(t);
-    entry e={ now+(ttl ? ttl : d_ttl), tries ? tries : d_limit};
+    entry e= { now+(ttl ? ttl : d_ttl), tries ? tries : d_limit};
 
     if(i==d_cont.end()) {
       d_cont[t]=e;
-    } 
-    else if(i->second.ttd > e.ttd || (i->second.count) < e.count) 
+    } else if(i->second.ttd > e.ttd || (i->second.count) < e.count)
       d_cont[t]=e;
   }
-  
+
   unsigned int size()
   {
     return (unsigned int)d_cont.size();
@@ -89,8 +86,7 @@ private:
   unsigned int d_limit;
   time_t d_ttl;
   time_t d_last_clean;
-  struct entry 
-  {
+  struct entry {
     time_t ttd;
     unsigned int count;
   };
@@ -106,7 +102,7 @@ private:
 class DecayingEwma
 {
 public:
-  DecayingEwma() :  d_val(0.0) 
+  DecayingEwma() :  d_val(0.0)
   {
     d_needinit=true;
     d_last.tv_sec = d_last.tv_usec = 0;
@@ -137,13 +133,12 @@ public:
       d_lastget=now;
       d_needinit=false;
       d_val = val;
-    }
-    else {
+    } else {
       float diff= makeFloat(d_last - now);
 
       d_last=now;
       double factor=exp(diff)/2.0; // might be '0.5', or 0.0001
-      d_val=(float)((1-factor)*val+ (float)factor*d_val); 
+      d_val=(float)((1-factor)*val+ (float)factor*d_val);
     }
   }
 
@@ -195,12 +190,11 @@ public:
     if(i==d_cont.end()) {
       d_cont[t]=1;
       return 1;
-    }
-    else {
+    } else {
       if (i->second < std::numeric_limits<unsigned long>::max())
         i->second++;
       return (unsigned long)i->second;
-   }
+    }
   }
   unsigned long decr(const Thing& t)
   {
@@ -233,7 +227,7 @@ private:
 class SyncRes : public boost::noncopyable
 {
 public:
-  enum LogMode { LogNone, Log, Store}; 
+  enum LogMode { LogNone, Log, Store};
 
   explicit SyncRes(const struct timeval& now);
 
@@ -247,15 +241,15 @@ public:
   {
     s_lm = lm;
   }
- 
-  void setLogMode(LogMode lm) 
+
+  void setLogMode(LogMode lm)
   {
     d_lm = lm;
   }
 
   bool doLog()
   {
-    return d_lm != LogNone; 
+    return d_lm != LogNone;
   }
 
   void setCacheOnly(bool state=true)
@@ -278,7 +272,7 @@ public:
   }
 
   int asyncresolveWrapper(const ComboAddress& ip, const string& domain, int type, bool doTCP, bool sendRDQuery, struct timeval* now, LWResult* res);
-  
+
   static void doEDNSDumpAndClose(int fd);
 
   static uint64_t s_queries;
@@ -300,26 +294,25 @@ public:
   //  typedef map<string,NegCacheEntry> negcache_t;
 
   typedef multi_index_container <
-    NegCacheEntry,
-    indexed_by <
-       ordered_unique<
-           composite_key<
-                 NegCacheEntry,
-                    member<NegCacheEntry, string, &NegCacheEntry::d_name>,
-                    member<NegCacheEntry, QType, &NegCacheEntry::d_qtype>
-           >,
-           composite_key_compare<CIStringCompare, std::less<QType> >
-       >,
-       sequenced<> 
-    >
+  NegCacheEntry,
+  indexed_by <
+  ordered_unique<
+  composite_key<
+  NegCacheEntry,
+  member<NegCacheEntry, string, &NegCacheEntry::d_name>,
+  member<NegCacheEntry, QType, &NegCacheEntry::d_qtype>
+  >,
+  composite_key_compare<CIStringCompare, std::less<QType> >
+  >,
+  sequenced<>
+  >
   > negcache_t;
-  
-  //! This represents a number of decaying Ewmas, used to store performance per nameserver-name. 
+
+  //! This represents a number of decaying Ewmas, used to store performance per nameserver-name.
   /** Modelled to work mostly like the underlying DecayingEwma. After you've called get,
       d_best is filled out with the best address for this collection */
-  struct DecayingEwmaCollection
-  {
-    void submit(const ComboAddress& remote, int usecs, struct timeval* now) 
+  struct DecayingEwmaCollection {
+    void submit(const ComboAddress& remote, int usecs, struct timeval* now)
     {
       collection_t::iterator pos;
       for(pos=d_collection.begin(); pos != d_collection.end(); ++pos)
@@ -327,8 +320,7 @@ public:
           break;
       if(pos!=d_collection.end()) {
         pos->second.submit(usecs, now);
-      }
-      else {
+      } else {
         DecayingEwma de;
         de.submit(usecs, now);
         d_collection.push_back(make_pair(remote, de));
@@ -347,13 +339,13 @@ public:
           d_best=pos->first;
         }
       }
-      
+
       return ret;
     }
-    
+
     bool stale(time_t limit) const
     {
-      for(collection_t::const_iterator pos=d_collection.begin(); pos != d_collection.end(); ++pos) 
+      for(collection_t::const_iterator pos=d_collection.begin(); pos != d_collection.end(); ++pos)
         if(!pos->second.stale(limit))
           return false;
       return true;
@@ -364,10 +356,9 @@ public:
     ComboAddress d_best;
   };
 
-  typedef map<string, DecayingEwmaCollection, CIStringCompare> nsspeeds_t;  
+  typedef map<string, DecayingEwmaCollection, CIStringCompare> nsspeeds_t;
 
-  struct EDNSStatus
-  {
+  struct EDNSStatus {
     EDNSStatus() : mode(UNKNOWN), modeSetAt(0), EDNSPingHitCount(0) {}
     enum EDNSMode { CONFIRMEDPINGER=-1, UNKNOWN=0, EDNSNOPING=1, EDNSPINGOK=2, EDNSIGNORANT=3, NOEDNS=4 } mode;
     time_t modeSetAt;
@@ -379,33 +370,32 @@ public:
   static bool s_noEDNSPing;
   static bool s_noEDNS;
 
-  struct AuthDomain
-  {
+  struct AuthDomain {
     vector<ComboAddress> d_servers;
     bool d_rdForward;
     typedef multi_index_container <
-      DNSResourceRecord,
-      indexed_by < 
-        ordered_non_unique< 
-          composite_key< DNSResourceRecord,
-        	         member<DNSResourceRecord, string, &DNSResourceRecord::qname>,
-        	         member<DNSResourceRecord, QType, &DNSResourceRecord::qtype>
-                       >,
-          composite_key_compare<CIStringCompare, std::less<QType> >
-        >
-      >
+    DNSResourceRecord,
+    indexed_by <
+    ordered_non_unique<
+    composite_key< DNSResourceRecord,
+    member<DNSResourceRecord, string, &DNSResourceRecord::qname>,
+    member<DNSResourceRecord, QType, &DNSResourceRecord::qtype>
+    >,
+    composite_key_compare<CIStringCompare, std::less<QType> >
+    >
+    >
     > records_t;
-    records_t d_records;       
+    records_t d_records;
   };
-  
+
 
   typedef map<string, AuthDomain, CIStringCompare> domainmap_t;
-  
+
 
   typedef Throttle<boost::tuple<ComboAddress,string,uint16_t> > throttle_t;
 
   typedef Counters<ComboAddress> fails_t;
-  
+
   struct timeval d_now;
   static unsigned int s_maxnegttl;
   static unsigned int s_maxcachettl;
@@ -415,10 +405,10 @@ public:
   static unsigned int s_serverdownthrottletime;
   static bool s_nopacketcache;
   static string s_serverID;
-  
-  
+
+
   struct StaticStorage {
-    negcache_t negcache;    
+    negcache_t negcache;
     nsspeeds_t nsSpeeds;
     ednsstatus_t ednsstatus;
     throttle_t throttle;
@@ -429,7 +419,7 @@ public:
 private:
   struct GetBestNSAnswer;
   int doResolveAt(set<string, CIStringCompare> nameservers, string auth, bool flawedNSSet, const string &qname, const QType &qtype, vector<DNSResourceRecord>&ret,
-        	  int depth, set<GetBestNSAnswer>&beenthere);
+                  int depth, set<GetBestNSAnswer>&beenthere);
   int doResolve(const string &qname, const QType &qtype, vector<DNSResourceRecord>&ret, int depth, set<GetBestNSAnswer>& beenthere);
   bool doOOBResolve(const string &qname, const QType &qtype, vector<DNSResourceRecord>&ret, int depth, int &res);
   domainmap_t::const_iterator getBestAuthZone(string* qname);
@@ -452,8 +442,7 @@ private:
   static LogMode s_lm;
   LogMode d_lm;
 
-  struct GetBestNSAnswer
-  {
+  struct GetBestNSAnswer {
     string qname;
     set<DNSResourceRecord> bestns;
     bool operator<(const GetBestNSAnswer &b) const
@@ -475,8 +464,7 @@ int asendtcp(const string& data, Socket* sock);
 int arecvtcp(string& data, int len, Socket* sock, bool incompleteOkay);
 
 
-struct PacketID
-{
+struct PacketID {
   PacketID() : id(0), type(0), sock(0), inNeeded(0), inIncompleteOkay(false), outPos(0), nearMisses(0), fd(-1)
   {
     memset(&remote, 0, sizeof(remote));
@@ -484,7 +472,7 @@ struct PacketID
 
   uint16_t id;  // wait for a specific id/remote pair
   ComboAddress remote;  // this is the remote
-  string domain;             // this is the question 
+  string domain;             // this is the question
   uint16_t type;             // and this is its type
 
   Socket* sock;  // or wait for an event on a TCP fd
@@ -518,8 +506,7 @@ struct PacketID
   }
 };
 
-struct PacketIDBirthdayCompare: public std::binary_function<PacketID, PacketID, bool>  
-{
+struct PacketIDBirthdayCompare: public std::binary_function<PacketID, PacketID, bool> {
   bool operator()(const PacketID& a, const PacketID& b) const
   {
     int ourSock= a.sock ? a.sock->getHandle() : 0;
@@ -537,8 +524,7 @@ extern __thread RecursorPacketCache* t_packetCache;
 typedef MTasker<PacketID,string> MT_t;
 extern __thread MT_t* MT;
 
-struct RecursorStats
-{
+struct RecursorStats {
   uint64_t servFails;
   uint64_t nxDomains;
   uint64_t noErrors;
@@ -576,7 +562,7 @@ class TCPConnection : public boost::noncopyable
 public:
   TCPConnection(int fd, const ComboAddress& addr);
   ~TCPConnection();
-  
+
   int getFD()
   {
     return d_fd;
@@ -596,13 +582,12 @@ private:
 class ImmediateServFailException
 {
 public:
-  ImmediateServFailException(string r){reason=r;};
+  ImmediateServFailException(string r) {reason=r;};
 
   string reason; //! Print this to tell the user what went wrong
 };
 
-struct RemoteKeeper
-{
+struct RemoteKeeper {
   typedef vector<ComboAddress> remotes_t;
   remotes_t remotes;
   int d_remotepos;

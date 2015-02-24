@@ -32,20 +32,22 @@
 
 vector<QType::namenum> QType::names;
 // XXX FIXME we need to do something with initializer order here!
-QType::init QType::initializer; 
+QType::init QType::initializer;
 
 QType::QType()
 {
 }
 
-bool QType::isSupportedType() {
-  for(vector<namenum>::iterator pos=names.begin();pos<names.end();++pos)
+bool QType::isSupportedType()
+{
+  for(vector<namenum>::iterator pos=names.begin(); pos<names.end(); ++pos)
     if(pos->second==code)
       return true;
   return false;
 }
 
-bool QType::isMetadataType() {
+bool QType::isMetadataType()
+{
   if (code == QType::AXFR ||
       code == QType::MAILA ||
       code == QType::MAILB ||
@@ -64,7 +66,7 @@ uint16_t QType::getCode() const
 const string QType::getName() const
 {
   vector<namenum>::iterator pos;
-  for(pos=names.begin();pos<names.end();++pos)
+  for(pos=names.begin(); pos<names.end(); ++pos)
     if(pos->second==code)
       return pos->first;
 
@@ -84,14 +86,14 @@ int QType::chartocode(const char *p)
   for(pos=names.begin(); pos < names.end(); ++pos)
     if(pos->first == p)
       return pos->second;
-  
+
   if(*p=='#') {
     return atoi(p+1);
   }
 
   if(boost::starts_with(p, "TYPE"))
     return atoi(p+4);
-    
+
   return 0;
 }
 

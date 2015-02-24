@@ -30,7 +30,7 @@ uint32_t localtime_format_YYYYMMDDSS(time_t t, uint32_t seq)
   struct tm tm;
   localtime_r(&t, &tm);
   return
-      (uint32_t)(tm.tm_year+1900) * 1000000u
+    (uint32_t)(tm.tm_year+1900) * 1000000u
     + (uint32_t)(tm.tm_mon + 1) * 10000u
     + (uint32_t)tm.tm_mday * 100u
     + seq;
@@ -49,7 +49,8 @@ bool editSOA(DNSSECKeeper& dk, const string& qname, DNSPacket* dp)
   return false;
 }
 
-bool editSOARecord(DNSResourceRecord& rr, const string& kind) {
+bool editSOARecord(DNSResourceRecord& rr, const string& kind)
+{
   if(kind.empty())
     return false;
 
@@ -60,12 +61,12 @@ bool editSOARecord(DNSResourceRecord& rr, const string& kind) {
   return true;
 }
 
-uint32_t calculateEditSOA(SOAData sd, const string& kind) {
+uint32_t calculateEditSOA(SOAData sd, const string& kind)
+{
   if(pdns_iequals(kind,"INCEPTION")) {
     time_t inception = getStartOfWeek();
     return localtime_format_YYYYMMDDSS(inception, 1);
-  }
-  else if(pdns_iequals(kind,"INCEPTION-INCREMENT")) {
+  } else if(pdns_iequals(kind,"INCEPTION-INCREMENT")) {
     time_t inception = getStartOfWeek();
     uint32_t inception_serial = localtime_format_YYYYMMDDSS(inception, 1);
     uint32_t dont_increment_after = localtime_format_YYYYMMDDSS(inception + 2*86400, 99);
@@ -75,19 +76,15 @@ uint32_t calculateEditSOA(SOAData sd, const string& kind) {
     } else if(sd.serial <= dont_increment_after) { /* >= <inceptionday>00 but <= <inceptionday+2>99 */
       return (sd.serial + 2); /* "<inceptionday>00" and "<inceptionday>01" are reserved for inception increasing, so increment sd.serial by two */
     }
-  }
-  else if(pdns_iequals(kind,"INCEPTION-WEEK")) {
+  } else if(pdns_iequals(kind,"INCEPTION-WEEK")) {
     time_t inception = getStartOfWeek();
     return ( inception / (7*86400) );
-  }
-  else if(pdns_iequals(kind,"INCREMENT-WEEKS")) {
+  } else if(pdns_iequals(kind,"INCREMENT-WEEKS")) {
     time_t inception = getStartOfWeek();
     return (sd.serial + (inception / (7*86400)));
-  }
-  else if(pdns_iequals(kind,"EPOCH")) {
+  } else if(pdns_iequals(kind,"EPOCH")) {
     return time(0);
-  }
-  else if(pdns_iequals(kind,"INCEPTION-EPOCH")) {
+  } else if(pdns_iequals(kind,"INCEPTION-EPOCH")) {
     uint32_t inception = getStartOfWeek();
     if (sd.serial < inception)
       return inception;

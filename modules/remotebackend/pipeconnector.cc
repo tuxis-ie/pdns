@@ -2,7 +2,8 @@
 #include <sys/wait.h>
 #include "remotebackend.hh"
 
-PipeConnector::PipeConnector(std::map<std::string,std::string> options) {
+PipeConnector::PipeConnector(std::map<std::string,std::string> options)
+{
   if (options.count("command") == 0) {
     L<<Logger::Error<<"Cannot find 'command' option in connection string"<<endl;
     throw PDNSException();
@@ -12,7 +13,7 @@ PipeConnector::PipeConnector(std::map<std::string,std::string> options) {
   d_timeout=2000;
 
   if (options.find("timeout") != options.end()) {
-     d_timeout = boost::lexical_cast<int>(options.find("timeout")->second);
+    d_timeout = boost::lexical_cast<int>(options.find("timeout")->second);
   }
 
   d_pid = -1;
@@ -20,7 +21,8 @@ PipeConnector::PipeConnector(std::map<std::string,std::string> options) {
   launch();
 }
 
-PipeConnector::~PipeConnector(){
+PipeConnector::~PipeConnector()
+{
   int status;
   // just in case...
   if (d_pid == -1) return;
@@ -34,7 +36,8 @@ PipeConnector::~PipeConnector(){
   if (d_fp != NULL) fclose(d_fp);
 }
 
-void PipeConnector::launch() {
+void PipeConnector::launch()
+{
   // no relaunch
   if (d_pid > 0 && checkStatus()) return;
 
@@ -64,10 +67,9 @@ void PipeConnector::launch() {
     Utility::setCloseOnExec(d_fd2[0]);
     if(!(d_fp=fdopen(d_fd2[0],"r")))
       throw PDNSException("Unable to associate a file pointer with pipe: "+stringerror());
-    if (d_timeout) 
+    if (d_timeout)
       setbuf(d_fp,0); // no buffering please, confuses select
-  }
-  else if(!d_pid) { // child
+  } else if(!d_pid) { // child
     signal(SIGCHLD, SIG_DFL); // silence a warning from perl
     close(d_fd1[1]);
     close(d_fd2[0]);
@@ -113,60 +115,60 @@ void PipeConnector::launch() {
 
 int PipeConnector::send_message(const rapidjson::Document &input)
 {
-   std::string line;
-   line = makeStringFromDocument(input);
-   launch();
+  std::string line;
+  line = makeStringFromDocument(input);
+  launch();
 
-   line.append(1,'\n');
+  line.append(1,'\n');
 
-   unsigned int sent=0;
-   int bytes;
+  unsigned int sent=0;
+  int bytes;
 
-   // writen routine - socket may not accept al data in one go
-   while(sent<line.size()) {
-     bytes=write(d_fd1[1],line.c_str()+sent,line.length()-sent);
-     if(bytes<0)
-       throw PDNSException("Writing to coprocess failed: "+std::string(strerror(errno)));
+  // writen routine - socket may not accept al data in one go
+  while(sent<line.size()) {
+    bytes=write(d_fd1[1],line.c_str()+sent,line.length()-sent);
+    if(bytes<0)
+      throw PDNSException("Writing to coprocess failed: "+std::string(strerror(errno)));
 
-     sent+=bytes;
-   }
-   return sent;
+    sent+=bytes;
+  }
+  return sent;
 }
 
-int PipeConnector::recv_message(rapidjson::Document &output) 
+int PipeConnector::recv_message(rapidjson::Document &output)
 {
-   std::string receive;
-   rapidjson::GenericReader<rapidjson::UTF8<> , rapidjson::MemoryPoolAllocator<> > r;
-   std::string tmp;
-   std::string s_output;
-   launch();
+  std::string receive;
+  rapidjson::GenericReader<rapidjson::UTF8<> , rapidjson::MemoryPoolAllocator<> > r;
+  std::string tmp;
+  std::string s_output;
+  launch();
 
-   while(1) {
-     receive.clear();
-     if(d_timeout) {
-       struct timeval tv;
-       tv.tv_sec = d_timeout/1000;
-       tv.tv_usec = (d_timeout % 1000) * 1000;
-       fd_set rds;
-       FD_ZERO(&rds);
-       FD_SET(fileno(d_fp),&rds);
-       int ret=select(fileno(d_fp)+1,&rds,0,0,&tv);
-       if(ret<0) 
-         throw PDNSException("Error waiting on data from coprocess: "+stringerror());
-       if(!ret)
-         throw PDNSException("Timeout waiting for data from coprocess");
-     }
+  while(1) {
+    receive.clear();
+    if(d_timeout) {
+      struct timeval tv;
+      tv.tv_sec = d_timeout/1000;
+      tv.tv_usec = (d_timeout % 1000) * 1000;
+      fd_set rds;
+      FD_ZERO(&rds);
+      FD_SET(fileno(d_fp),&rds);
+      int ret=select(fileno(d_fp)+1,&rds,0,0,&tv);
+      if(ret<0)
+        throw PDNSException("Error waiting on data from coprocess: "+stringerror());
+      if(!ret)
+        throw PDNSException("Timeout waiting for data from coprocess");
+    }
 
-     if(!stringfgets(d_fp, receive))
-       throw PDNSException("Child closed pipe");
-  
-      s_output.append(receive);
-      rapidjson::StringStream ss(s_output.c_str());
-      output.ParseStream<0>(ss); 
-      if (output.HasParseError() == false)
-        return s_output.size();
-   }
-   return 0;
+    if(!stringfgets(d_fp, receive))
+      throw PDNSException("Child closed pipe");
+
+    s_output.append(receive);
+    rapidjson::StringStream ss(s_output.c_str());
+    output.ParseStream<0>(ss);
+    if (output.HasParseError() == false)
+      return s_output.size();
+  }
+  return 0;
 }
 
 bool PipeConnector::checkStatus()

@@ -8,7 +8,8 @@
 #include "dnsrecords.hh"
 
 static unsigned int poweroften[10] = {1, 10, 100, 1000, 10000, 100000,
-                                 1000000,10000000,100000000,1000000000};
+                                      1000000,10000000,100000000,1000000000
+                                     };
 
 /* converts ascii size/precision X * 10**Y(cm) to 0xXY. moves pointer.*/
 static uint8_t precsize_aton(const char **strptr)
@@ -51,7 +52,7 @@ static uint8_t precsize_aton(const char **strptr)
 }
 
 /* converts ascii lat/lon to unsigned encoded 32-bit number.
- *  moves pointer. */
+    moves pointer. */
 static uint32_t
 latlon2ul(const char **latlonstrptr, int *which)
 {
@@ -63,22 +64,22 @@ latlon2ul(const char **latlonstrptr, int *which)
 
   while (isdigit(*cp))
     deg = deg * 10 + (*cp++ - '0');
-  
+
   while (isspace(*cp))
     cp++;
-  
+
   if (!(isdigit(*cp)))
     goto fndhemi;
-  
+
   while (isdigit(*cp))
     min = min * 10 + (*cp++ - '0');
-    
+
   while (isspace(*cp))
     cp++;
-  
+
   if (*cp && !(isdigit(*cp)))
     goto fndhemi;
-  
+
   while (isdigit(*cp))
     secs = secs * 10 + (*cp++ - '0');
 
@@ -94,32 +95,32 @@ latlon2ul(const char **latlonstrptr, int *which)
       }
     }
   }
-  
+
   while (*cp && !isspace(*cp))   /* if any trailing garbage */
     cp++;
-  
+
   while (isspace(*cp))
     cp++;
-  
- fndhemi:
+
+fndhemi:
   switch (*cp) {
   case 'N': case 'n':
   case 'E': case 'e':
     retval = ((unsigned)1<<31)
-      + (((((deg * 60) + min) * 60) + secs) * 1000)
-      + secsfrac;
+             + (((((deg * 60) + min) * 60) + secs) * 1000)
+             + secsfrac;
     break;
   case 'S': case 's':
   case 'W': case 'w':
     retval = ((unsigned)1<<31)
-      - (((((deg * 60) + min) * 60) + secs) * 1000)
-      - secsfrac;
+             - (((((deg * 60) + min) * 60) + secs) * 1000)
+             - secsfrac;
     break;
   default:
     retval = 0;     /* invalid value -- indicates error */
     break;
   }
-  
+
   switch (*cp) {
   case 'N': case 'n':
   case 'S': case 's':
@@ -135,15 +136,15 @@ latlon2ul(const char **latlonstrptr, int *which)
   }
 
   cp++;                   /* skip the hemisphere */
-  
+
   while (*cp && !isspace(*cp))   /* if any trailing garbage */
     cp++;
-  
+
   while (isspace(*cp))    /* move to next field */
     cp++;
-  
+
   *latlonstrptr = cp;
-  
+
   return (retval);
 }
 
@@ -171,7 +172,7 @@ void LOCRecordContent::toPacket(DNSPacketWriter& pw)
   pw.xfr32BitInt(d_altitude);
 }
 
-LOCRecordContent::DNSRecordContent* LOCRecordContent::make(const DNSRecord &dr, PacketReader& pr) 
+LOCRecordContent::DNSRecordContent* LOCRecordContent::make(const DNSRecord &dr, PacketReader& pr)
 {
   LOCRecordContent* ret=new LOCRecordContent();
   pr.xfr8BitInt(ret->d_version);
@@ -182,7 +183,7 @@ LOCRecordContent::DNSRecordContent* LOCRecordContent::make(const DNSRecord &dr, 
   pr.xfr32BitInt(ret->d_latitude);
   pr.xfr32BitInt(ret->d_longitude);
   pr.xfr32BitInt(ret->d_altitude);
-  
+
   return ret;
 }
 
@@ -193,7 +194,7 @@ LOCRecordContent::LOCRecordContent(const string& content, const string& zone) : 
   d_version = 0;
 
   const char *cp, *maxcp;
-  
+
   uint32_t lltemp1 = 0, lltemp2 = 0;
   int altmeters = 0, altfrac = 0, altsign = 1;
   d_horizpre = 0x16;    /* default = 1e6 cm = 10000.00m = 10km */
@@ -231,10 +232,10 @@ LOCRecordContent::LOCRecordContent(const string& content, const string& zone) : 
 
   if (*cp == '+')
     cp++;
-  
+
   while (isdigit(*cp))
     altmeters = altmeters * 10 + (*cp++ - '0');
-  
+
   if (*cp == '.') {               /* decimal meters */
     cp++;
     if (isdigit(*cp)) {
@@ -244,45 +245,45 @@ LOCRecordContent::LOCRecordContent(const string& content, const string& zone) : 
       }
     }
   }
-  
+
   d_altitude = (10000000 + (altsign * (altmeters * 100 + altfrac)));
-  
+
   while (!isspace(*cp) && (cp < maxcp))
     /* if trailing garbage or m */
     cp++;
-  
+
   while (isspace(*cp) && (cp < maxcp))
     cp++;
-  
-  
+
+
   if (cp >= maxcp)
     goto defaults;
-  
+
   d_size = precsize_aton(&cp);
-  
+
   while (!isspace(*cp) && (cp < maxcp))/*if trailing garbage or m*/
     cp++;
-  
+
   while (isspace(*cp) && (cp < maxcp))
     cp++;
-  
+
   if (cp >= maxcp)
     goto defaults;
-  
+
   d_horizpre = precsize_aton(&cp);
-  
+
   while (!isspace(*cp) && (cp < maxcp))/*if trailing garbage or m*/
     cp++;
-  
+
   while (isspace(*cp) && (cp < maxcp))
     cp++;
-  
+
   if (cp >= maxcp)
     goto defaults;
-  
+
   d_vertpre = precsize_aton(&cp);
-  
- defaults:
+
+defaults:
   ;
 }
 
@@ -293,9 +294,9 @@ string LOCRecordContent::getZoneRepresentation() const
   // 51 59 00.000 N 5 55 00.000 E 4.00m 1.00m 10000.00m 10.00m
 
   double latitude= ((int32_t)d_latitude  - (1<<31))/3600000.0;
-  double longitude=((int32_t)d_longitude - (1<<31))/3600000.0; 
+  double longitude=((int32_t)d_longitude - (1<<31))/3600000.0;
   double altitude= ((int32_t)d_altitude           )/100.0 - 100000;
-  
+
   double size=0.01*((d_size>>4)&0xf);
   int count=d_size & 0xf;
   while(count--)

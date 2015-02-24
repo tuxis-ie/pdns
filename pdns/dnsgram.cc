@@ -20,7 +20,7 @@ StatBag S;
 struct tm* pdns_localtime_r(const uint32_t* then, struct tm* tm)
 {
   time_t t = *then;
-  
+
   return localtime_r(&t, tm);
 }
 
@@ -36,17 +36,17 @@ void makeReport(const struct pdns_timeval& tv)
     struct tm tm=*pdns_localtime_r(&tv.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
 
-    cout << tmp << ": Resolver dropped too many questions (" 
+    cout << tmp << ": Resolver dropped too many questions ("
          << g_clientQuestions <<" vs " << g_clientResponses << "), diff: " <<clientdiff<<endl;
 
     tm=*pdns_localtime_r(&g_lastanswerTime.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
-    
+
     cout<<"Last answer: "<<tmp<<"."<<g_lastanswerTime.tv_usec/1000000.0<<endl;
 
     tm=*pdns_localtime_r(&g_lastquestionTime.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
-    
+
     cout<<"Last question: "<<tmp<<"."<<g_lastquestionTime.tv_usec/1000000.0<<endl;
   }
 
@@ -55,20 +55,20 @@ void makeReport(const struct pdns_timeval& tv)
     struct tm tm=*pdns_localtime_r(&tv.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
 
-    cout << tmp << ": Auth server dropped too many questions (" 
+    cout << tmp << ": Auth server dropped too many questions ("
          << g_serverQuestions <<" vs " << g_serverResponses << "), diff: " <<serverdiff<<endl;
 
     tm=*pdns_localtime_r(&g_lastanswerTime.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
-    
+
     cout<<"Last answer: "<<tmp<<"."<<g_lastanswerTime.tv_usec/1000000.0<<endl;
 
     tm=*pdns_localtime_r(&g_lastquestionTime.tv_sec, &tm);
     strftime(tmp, sizeof(tmp) - 1, "%F %H:%M:%S", &tm);
-    
+
     cout<<"Last question: "<<tmp<<"."<<g_lastquestionTime.tv_usec/1000000.0<<endl;
   }
-//  cout <<"Recursive questions: "<<g_clientQuestions<<", recursive responses: " << g_clientResponses<< 
+//  cout <<"Recursive questions: "<<g_clientQuestions<<", recursive responses: " << g_clientResponses<<
 //    ", server questions: "<<g_serverQuestions<<", server responses: "<<g_serverResponses<<endl;
 
 
@@ -87,29 +87,29 @@ try
     unsigned int parseErrors=0, totalQueries=0, skipped=0;
     PcapPacketReader pr(argv[n]);
     //    PcapPacketWriter pw(argv[n]+string(".out"), pr);
-    /* four sorts of packets: 
+    /* four sorts of packets:
        "rd": question from a client pc
        "rd qr": answer to a client pc
        "": question from the resolver
        "qr": answer to the resolver */
-    
+
     /* what are interesting events to note? */
     /* we measure every 60 seconds, each interval with 10% less answers than questions is interesting */
     /* report chunked */
-    
-    struct pdns_timeval lastreport={0, 0};
-    
+
+    struct pdns_timeval lastreport= {0, 0};
+
     typedef set<pair<string, uint16_t> > queries_t;
     queries_t questions, answers;
 
     //    unsigned int count = 50000;
-    
+
     map<pair<string, uint16_t>, int> counts;
 
     while(pr.getUDPPacket()) {
       if((ntohs(pr.d_udp->uh_dport)==5300 || ntohs(pr.d_udp->uh_sport)==5300 ||
           ntohs(pr.d_udp->uh_dport)==53   || ntohs(pr.d_udp->uh_sport)==53) &&
-         pr.d_len > 12) {
+          pr.d_len > 12) {
         try {
           MOADNSParser mdp((const char*)pr.d_payload, pr.d_len);
 
@@ -123,35 +123,30 @@ try
             totalQueries++;
             counts[make_pair(mdp.d_qname, mdp.d_qtype)]++;
             questions.insert(make_pair(mdp.d_qname, mdp.d_qtype));
-          }
-          else if(mdp.d_header.rd && mdp.d_header.qr) {
+          } else if(mdp.d_header.rd && mdp.d_header.qr) {
             g_lastanswerTime=pr.d_pheader.ts;
             g_clientResponses++;
             answers.insert(make_pair(mdp.d_qname, mdp.d_qtype));
-          }
-          else if(!mdp.d_header.rd && !mdp.d_header.qr) {
+          } else if(!mdp.d_header.rd && !mdp.d_header.qr) {
             g_lastquestionTime=pr.d_pheader.ts;
             g_serverQuestions++;
             counts[make_pair(mdp.d_qname, mdp.d_qtype)]++;
             questions.insert(make_pair(mdp.d_qname, mdp.d_qtype));
             totalQueries++;
-          }
-          else if(!mdp.d_header.rd && mdp.d_header.qr) {
+          } else if(!mdp.d_header.rd && mdp.d_header.qr) {
             answers.insert(make_pair(mdp.d_qname, mdp.d_qtype));
             g_serverResponses++;
           }
-          
+
           if(pr.d_pheader.ts.tv_sec - lastreport.tv_sec >= 5) {
             makeReport(pr.d_pheader.ts);
             lastreport = pr.d_pheader.ts;
-          }          
-        }
-        catch(MOADNSException& mde) {
+          }
+        } catch(MOADNSException& mde) {
           //        cerr<<"error parsing packet: "<<mde.what()<<endl;
           parseErrors++;
           continue;
-        }
-        catch(std::exception& e) {
+        } catch(std::exception& e) {
           cerr << e.what() << endl;
           continue;
         }
@@ -173,7 +168,7 @@ try
     }
 
     diff.clear();
-    
+
     set_difference(answers.begin(), answers.end(), questions.begin(), questions.end(), back_inserter(diff));
     cerr<<diff.size()<<" answers w/o questions\n";
 
@@ -184,8 +179,7 @@ try
       succeeded << i->first << "\t" <<DNSRecordContent::NumberToType(i->second) << "\t" << counts[make_pair(i->first, i->second)]<<"\n";
     }
   }
-}
-catch(std::exception& e)
+} catch(std::exception& e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

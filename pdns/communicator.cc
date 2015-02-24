@@ -3,8 +3,8 @@
     Copyright (C) 2002-2011  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
-    published by the Free Software Foundation; 
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation;
 
     Additionally, the license of this program contains a special
     exception which allows to distribute the program in binary form when
@@ -44,9 +44,9 @@ void CommunicatorClass::retrievalLoopThread(void)
     SuckRequest sr;
     {
       Lock l(&d_lock);
-      if(d_suckdomains.empty()) 
+      if(d_suckdomains.empty())
         continue;
-        
+
       sr=d_suckdomains.front();
       d_suckdomains.pop_front();
     }
@@ -65,8 +65,7 @@ void CommunicatorClass::go()
 
   try {
     d_onlyNotify.toMasks(::arg()["only-notify"]);
-  }
-  catch(PDNSException &e) {
+  } catch(PDNSException &e) {
     L<<Logger::Error<<"Unparseable IP in only-notify. Error: "<<e.reason<<endl;
     exit(0);
   }
@@ -77,8 +76,7 @@ void CommunicatorClass::go()
     try {
       ComboAddress caIp(*iter, 53);
       d_alsoNotify.insert(caIp.toStringWithPort());
-    }
-    catch(PDNSException &e) {
+    } catch(PDNSException &e) {
       L<<Logger::Error<<"Unparseable IP in also-notify. Error: "<<e.reason<<endl;
       exit(0);
     }
@@ -101,9 +99,9 @@ void CommunicatorClass::mainloop(void)
       slaveRefresh(&P);
       masterUpdateCheck(&P);
       tick=doNotifications(); // this processes any notification acknowledgements and actually send out our own notifications
-      
-      tick = min (tick, d_tickinterval); 
-      
+
+      tick = min (tick, d_tickinterval);
+
       next=time(0)+tick;
 
       while(time(0) < next) {
@@ -111,25 +109,21 @@ void CommunicatorClass::mainloop(void)
 
         if(rc)
           Utility::sleep(1);
-        else { 
+        else {
           break; // something happened
         }
         // this gets executed at least once every second
         doNotifications();
       }
     }
-  }
-  catch(PDNSException &ae) {
+  } catch(PDNSException &ae) {
     L<<Logger::Error<<"Exiting because communicator thread died with error: "<<ae.reason<<endl;
     Utility::sleep(1);
     exit(0);
-  }
-  catch(std::exception &e) {
+  } catch(std::exception &e) {
     L<<Logger::Error<<"Exiting because communicator thread died with STL error: "<<e.what()<<endl;
     exit(0);
-  }
-  catch( ... )
-  {
+  } catch( ... ) {
     L << Logger::Error << "Exiting because communicator caught unknown exception." << endl;
     exit( 0 );
   }

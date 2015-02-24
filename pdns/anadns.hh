@@ -10,15 +10,14 @@
 #include "namespaces.hh"
 #include "namespaces.hh"
 
-struct QuestionIdentifier
-{
-  QuestionIdentifier() 
+struct QuestionIdentifier {
+  QuestionIdentifier()
   {}
 
   bool operator<(const QuestionIdentifier& rhs) const
   {
-    return 
-      tie(d_source, d_dest, d_qname, d_qtype, d_id) < 
+    return
+      tie(d_source, d_dest, d_qname, d_qtype, d_id) <
       tie(rhs.d_source, rhs.d_dest, rhs.d_qname, rhs.d_qtype, rhs.d_id);
   }
 
@@ -30,8 +29,7 @@ struct QuestionIdentifier
     if(mdp.d_header.qr) {
       ret.d_source = dst;
       ret.d_dest = src;
-    }
-    else {
+    } else {
       ret.d_source = src;
       ret.d_dest = dst;
     }
@@ -48,10 +46,10 @@ struct QuestionIdentifier
   uint16_t d_id;
 };
 
-inline ostream& operator<<(ostream &s, const QuestionIdentifier& qi) 
+inline ostream& operator<<(ostream &s, const QuestionIdentifier& qi)
 {
   s<< "'"<<qi.d_qname<<"|"<<DNSRecordContent::NumberToType(qi.d_qtype)<<"', with id " << qi.d_id <<" from "<<qi.d_source.toStringWithPort();
-  
+
   s<<" to " << qi.d_dest.toStringWithPort();
   return s;
 }

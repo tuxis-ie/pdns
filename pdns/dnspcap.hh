@@ -38,8 +38,7 @@ struct pdns_pcap_file_header {
 };
 
 
-struct pdns_timeval
-{
+struct pdns_timeval {
   uint32_t tv_sec;
   uint32_t tv_usec;
 };
@@ -69,7 +68,7 @@ public:
     }
   };
 
-  PcapPacketReader(const string& fname); 
+  PcapPacketReader(const string& fname);
 
   ~PcapPacketReader();
 
@@ -107,9 +106,9 @@ private:
 
 class PcapPacketWriter
 {
-public: 
+public:
   PcapPacketWriter(const string& fname, PcapPacketReader& ppr);
-  
+
   void write();
 
   ~PcapPacketWriter();
@@ -119,6 +118,6 @@ private:
   const PcapPacketReader& d_ppr;
 
   FILE *d_fp;
-}; 
+};
 
 #endif // DNSPCAP_HH

@@ -3,7 +3,7 @@
     Copyright (C) 2005  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -42,7 +42,8 @@ public:
 
   //! The urgency of a log message
   enum Urgency {All=99999,NTLog=12345,Alert=LOG_ALERT, Critical=LOG_CRIT, Error=LOG_ERR, Warning=LOG_WARNING,
-        	Notice=LOG_NOTICE,Info=LOG_INFO, Debug=LOG_DEBUG, None=-1};
+                Notice=LOG_NOTICE,Info=LOG_INFO, Debug=LOG_DEBUG, None=-1
+               };
 
   /** Log a message.
       \param msg Message you wish to log
@@ -50,8 +51,8 @@ public:
   */
   void log(const string &msg, Urgency u=Notice);
 
-  void setFacility(int f){d_facility=f;open();} //!< Choose logging facility
-  void setFlag(int f){flags|=f;open();} //!< set a syslog flag
+  void setFacility(int f) {d_facility=f; open();} //!< Choose logging facility
+  void setFlag(int f) {flags|=f; open();} //!< set a syslog flag
   void setName(const string &);
 
   //! set lower limit of urgency needed for console display. Messages of this urgency, and higher, will be displayed
@@ -60,12 +61,12 @@ public:
 
   //! Log to a file.
   void toFile( const string & filename );
-  
-  void resetFlags(){flags=0;open();} //!< zero the flags
+
+  void resetFlags() {flags=0; open();} //!< zero the flags
   /** Use this to stream to your log, like this:
       \code
       L<<"This is an informational message"<<endl; // logged at default loglevel (Info)
-      L<<Logger::Warning<<"Out of diskspace"<<endl; // Logged as a warning 
+      L<<Logger::Warning<<"Out of diskspace"<<endl; // Logged as a warning
       L<<"This is an informational message"<<endl; // logged AGAIN at default loglevel (Info)
       \endcode
   */

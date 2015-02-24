@@ -1,4 +1,4 @@
-/* Copyright 2001 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE 
+/* Copyright 2001 Netherlabs BV, bert.hubert@netherlabs.nl. See LICENSE
    for more information.
 
    Additionally, the license of this program contains a special
@@ -14,14 +14,14 @@
 #include "../../namespaces.hh"
 
 
-class SSqlException 
+class SSqlException
 {
-public: 
-  SSqlException(const string &reason) 
+public:
+  SSqlException(const string &reason)
   {
-      d_reason=reason;
+    d_reason=reason;
   }
-  
+
   string txtReason()
   {
     return d_reason;
@@ -41,8 +41,8 @@ public:
   virtual int doCommand(const string &query)=0;
   virtual bool getRow(row_t &row)=0;
   virtual string escape(const string &name)=0;
-  virtual void setLog(bool state){}
-  virtual ~SSql(){};
+  virtual void setLog(bool state) {}
+  virtual ~SSql() {};
 };
 
 #endif /* SSQL_HH */

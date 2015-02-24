@@ -23,8 +23,8 @@ ArgvMap &arg()
 
 class RemoteLoader
 {
-   public:
-      RemoteLoader();
+public:
+  RemoteLoader();
 };
 
 DNSBackend *be;
@@ -39,22 +39,23 @@ DNSBackend *be;
 #include <boost/tuple/tuple.hpp>
 
 struct RemotebackendSetup {
-    RemotebackendSetup()  {
-	be = 0; 
-	try {
-		// setup minimum arguments
-		::arg().set("module-dir")="./.libs";
-                new RemoteLoader();
-		BackendMakers().launch("remote");
-                // then get us a instance of it 
-                ::arg().set("remote-connection-string")="http:url=http://localhost:62434/dns/endpoint.json,post=1,post_json=1";
-                ::arg().set("remote-dnssec")="yes";
-                be = BackendMakers().all()[0];
-	} catch (PDNSException &ex) {
-		BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
-	};
-    }
-    ~RemotebackendSetup()  {  }
+  RemotebackendSetup()
+  {
+    be = 0;
+    try {
+      // setup minimum arguments
+      ::arg().set("module-dir")="./.libs";
+      new RemoteLoader();
+      BackendMakers().launch("remote");
+      // then get us a instance of it
+      ::arg().set("remote-connection-string")="http:url=http://localhost:62434/dns/endpoint.json,post=1,post_json=1";
+      ::arg().set("remote-dnssec")="yes";
+      be = BackendMakers().all()[0];
+    } catch (PDNSException &ex) {
+      BOOST_TEST_MESSAGE("Cannot start remotebackend: " << ex.reason );
+    };
+  }
+  ~RemotebackendSetup()  {  }
 };
 
 BOOST_GLOBAL_FIXTURE( RemotebackendSetup );

@@ -44,19 +44,19 @@ class DynMessenger
   struct sockaddr_un d_remote; // our remote address
 
   DynMessenger(const DynMessenger &); // NOT IMPLEMENTED
-  
+
 public:
   // CREATORS
 
   DynMessenger(const string &ldir,
-    const string &filename,
-    int timeout_sec = 7,
-    int timeout_usec = 0);  //!< Create a DynMessenger sending to this file
+               const string &filename,
+               int timeout_sec = 7,
+               int timeout_usec = 0);  //!< Create a DynMessenger sending to this file
 
   DynMessenger(const ComboAddress& remote,
-    const string &password,
-    int timeout_sec = 7,
-    int timeout_usec = 0);  //!< Create a DynMessenger sending to this file
+               const string &password,
+               int timeout_sec = 7,
+               int timeout_usec = 0);  //!< Create a DynMessenger sending to this file
 
   ~DynMessenger();
 
@@ -64,5 +64,5 @@ public:
   int send(const string &message) const; //!< Send a message to a DynListener
   string receive() const; //!< receive an answer from a DynListener
 };
- 
+
 #endif

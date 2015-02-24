@@ -7,7 +7,7 @@
 #include "dns.hh"
 #include "namespaces.hh"
 
-/** this class can be used to write DNS packets. It knows about DNS in the sense that it makes 
+/** this class can be used to write DNS packets. It knows about DNS in the sense that it makes
     the packet header and record headers.
 
     The model is:
@@ -15,7 +15,7 @@
     packetheader (recordheader recordcontent)*
 
     The packetheader needs to be updated with the amount of packets of each kind (answer, auth, additional)
-    
+
     Each recordheader contains the length of a dns record.
 
     Calling convention:
@@ -38,12 +38,12 @@ class DNSPacketWriter : public boost::noncopyable
 
 public:
   typedef vector<pair<string, uint16_t> > lmap_t;
-  enum Place {ANSWER=1, AUTHORITY=2, ADDITIONAL=3}; 
+  enum Place {ANSWER=1, AUTHORITY=2, ADDITIONAL=3};
 
   //! Start a DNS Packet in the vector passed, with question qname, qtype and qclass
   DNSPacketWriter(vector<uint8_t>& content, const string& qname, uint16_t  qtype, uint16_t qclass=QClass::IN, uint8_t opcode=0);
-  
-  /** Start a new DNS record within this packet for namq, qtype, ttl, class and in the requested place. Note that packets can only be written in natural order - 
+
+  /** Start a new DNS record within this packet for namq, qtype, ttl, class and in the requested place. Note that packets can only be written in natural order -
       ANSWER, AUTHORITY, ADDITIONAL */
   void startRecord(const string& name, uint16_t qtype, uint32_t ttl=3600, uint16_t qclass=QClass::IN, Place place=ANSWER, bool compress=true);
 
@@ -53,7 +53,7 @@ public:
 
   /** needs to be called after the last record is added, but can be called again and again later on. Is called internally by startRecord too.
       The content of the vector<> passed to the constructor is inconsistent until commit is called.
-   */
+  */
   void commit();
 
   uint32_t size(); // needs to be 32 bit because otherwise we don't see the wrap coming when it happened!
@@ -75,7 +75,7 @@ public:
   {
     xfr32BitInt(htonl(val));
   }
-  void xfrIP6(const std::string& val) 
+  void xfrIP6(const std::string& val)
   {
     xfrBlob(val,16);
   }
@@ -92,17 +92,17 @@ public:
   void xfrHexBlob(const string& blob, bool keepReading=false);
 
   uint16_t d_pos;
-  
+
   dnsheader* getHeader();
   void getRecords(string& records);
   const vector<uint8_t>& getRecordBeingWritten() { return d_record; }
 
-  void setCanonic(bool val) 
+  void setCanonic(bool val)
   {
     d_canonic=val;
   }
 
-  void setLowercase(bool val) 
+  void setLowercase(bool val)
   {
     d_lowerCase=val;
   }

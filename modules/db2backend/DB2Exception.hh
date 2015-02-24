@@ -11,21 +11,21 @@
 
 class DB2Exception
 {
-   public:
+public:
 
-      DB2Exception(SQLRETURN inError);
-      DB2Exception(SQLRETURN inError, SQLSMALLINT inHandleType, SQLHANDLE inHandle);
-      virtual ~DB2Exception();
+  DB2Exception(SQLRETURN inError);
+  DB2Exception(SQLRETURN inError, SQLSMALLINT inHandleType, SQLHANDLE inHandle);
+  virtual ~DB2Exception();
 
-      SQLRETURN GetError();      
-      bool GetNextSqlError(int& outNativeError, string& outSqlState, string& outSqlMessage);
+  SQLRETURN GetError();
+  bool GetNextSqlError(int& outNativeError, string& outSqlState, string& outSqlMessage);
 
-   private:
-            
-      SQLRETURN   mError;
-      SQLHANDLE   mHandle;
-      SQLSMALLINT mHandleType;
-      SQLSMALLINT mErrorIndex;
+private:
+
+  SQLRETURN   mError;
+  SQLHANDLE   mHandle;
+  SQLSMALLINT mHandleType;
+  SQLSMALLINT mErrorIndex;
 };
-      
+
 #endif // DB2EXCEPTION_HH

@@ -25,7 +25,7 @@ CoProcess::CoProcess(const string &command,int timeout, int infd, int outfd)
 
   for (size_t n = 0; n < v.size(); n++)
     argv[n]=v[n].c_str();
-  // we get away with not copying since nobody resizes v 
+  // we get away with not copying since nobody resizes v
   launch(argv, timeout, infd, outfd);
 }
 
@@ -54,8 +54,7 @@ void CoProcess::launch(const char **argv, int timeout, int infd, int outfd)
       throw PDNSException("Unable to associate a file pointer with pipe: "+stringerror());
     if( d_timeout)
       setbuf(d_fp,0); // no buffering please, confuses select
-  }
-  else if(!d_pid) { // child
+  } else if(!d_pid) { // child
     signal(SIGCHLD, SIG_DFL); // silence a warning from perl
     close(d_fd1[1]);
     close(d_fd2[0]);
@@ -87,7 +86,7 @@ CoProcess::~CoProcess()
     kill(d_pid, 9);
     waitpid(d_pid, &status, 0);
   }
-  
+
   close(d_fd1[1]);
   fclose(d_fp);
 }
@@ -96,7 +95,7 @@ void CoProcess::checkStatus()
 {
   int status;
   int ret=waitpid(d_pid, &status, WNOHANG);
-  if(ret<0) 
+  if(ret<0)
     throw PDNSException("Unable to ascertain status of coprocess "+itoa(d_pid)+" from "+itoa(getpid())+": "+string(strerror(errno)));
   else if(ret) {
     if(WIFEXITED(status)) {
@@ -107,10 +106,10 @@ void CoProcess::checkStatus()
       int sig=WTERMSIG(status);
       string reason="CoProcess died on receiving signal "+itoa(sig);
 #ifdef WCOREDUMP
-      if(WCOREDUMP(status)) 
+      if(WCOREDUMP(status))
         reason+=". Dumped core";
 #endif
-      
+
       throw PDNSException(reason);
     }
   }
@@ -121,7 +120,7 @@ void CoProcess::send(const string &snd)
   checkStatus();
   string line(snd);
   line.append(1,'\n');
-  
+
   unsigned int sent=0;
   int bytes;
 
@@ -138,7 +137,7 @@ void CoProcess::send(const string &snd)
 void CoProcess::receive(string &receive)
 {
   receive.clear();
-    
+
   if(d_timeout) {
     struct timeval tv;
     tv.tv_sec=d_timeout/1000;
@@ -156,7 +155,7 @@ void CoProcess::receive(string &receive)
 
   if(!stringfgets(d_fp, receive))
     throw PDNSException("Child closed pipe");
-  
+
   trim_right(receive);
 }
 
@@ -168,7 +167,7 @@ void CoProcess::sendReceive(const string &snd, string &rcv)
 
 }
 
-UnixRemote::UnixRemote(const string& path, int timeout) 
+UnixRemote::UnixRemote(const string& path, int timeout)
 {
   d_fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if(d_fd < 0)
@@ -230,10 +229,9 @@ main()
     string reply;
     cp.sendReceive("www.trilab.com", reply);
     cout<<"Answered: '"<<reply<<"'"<<endl;
-  }
-  catch(PDNSException &ae) {
+  } catch(PDNSException &ae) {
     cerr<<ae.reason<<endl;
   }
-  
+
 }
 #endif

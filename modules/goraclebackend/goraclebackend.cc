@@ -46,7 +46,8 @@ class gOracleFactory : public BackendFactory
 public:
   gOracleFactory(const string &mode) : BackendFactory(mode), d_mode(mode) {}
 
-  void declareArguments(const string &suffix="") {
+  void declareArguments(const string &suffix="")
+  {
     declare(suffix,"home", "Oracle home path", "");
     declare(suffix,"sid", "Oracle sid", "XE");
     declare(suffix,"nls-lang", "Oracle language", "AMERICAN_AMERICA.AL32UTF8");
@@ -132,7 +133,8 @@ public:
     declare(suffix, "delete-comments-query", "", "DELETE FROM comments WHERE domain_id=%d");
   }
 
-  DNSBackend* make(const string &suffix="") {
+  DNSBackend* make(const string &suffix="")
+  {
     return new gOracleBackend(d_mode,suffix);
   }
 
@@ -146,7 +148,8 @@ class gOracleLoader
 {
 public:
   //! This reports us to the main UeberBackend class
-  gOracleLoader() {
+  gOracleLoader()
+  {
     BackendMakers().report(new gOracleFactory("goracle"));
     L << Logger::Info << "[goraclebackend] This is the goracle backend version " VERSION " (" __DATE__ ", " __TIME__ ") reporting" << endl;
   }

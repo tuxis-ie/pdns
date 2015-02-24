@@ -2,7 +2,7 @@
     Copyright (C) 2002 - 2012  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
 
     Additionally, the license of this program contains a special
@@ -42,7 +42,7 @@
 
 extern StatBag S;
 
-/** \mainpage 
+/** \mainpage
     PowerDNS is a very versatile nameserver that can answer questions from different backends. To implement your
     own backend, see the documentation for the DNSBackend class.
 
@@ -51,7 +51,7 @@ extern StatBag S;
 
     \section overview High level overview
 
-    The Distributor contains a configurable number of PacketHandler instances, each in its own thread, for connection pooling. 
+    The Distributor contains a configurable number of PacketHandler instances, each in its own thread, for connection pooling.
     PacketHandler instances are recycled of they let escape an PDNSException.
 
     The PacketHandler implements the RFC1034 algorithm and converts question packets into DNSBackend queries.
@@ -65,26 +65,26 @@ extern StatBag S;
 
     \section TCP TCP Operations
 
-    The TCP operation runs within a single thread called tcpreceiver(), that also queries the PacketHandler. 
+    The TCP operation runs within a single thread called tcpreceiver(), that also queries the PacketHandler.
 
     \section Cache Caching
- 
+
     On its own, this setup is not suitable for high performance operations. A single DNS query can turn into many DNSBackend questions,
     each taking many milliseconds to complete. This is why the qthread() first checks the PacketCache to see if an answer is known to a packet
     asking this question. If so, the entire Distributor is shunted, and the answer is sent back *directly*, within a few microseconds.
 
     \section misc Miscellaneous
-    Configuration details are available via the ArgvMap instance arg. Statistics are created by making calls to the StatBag object called S. 
+    Configuration details are available via the ArgvMap instance arg. Statistics are created by making calls to the StatBag object called S.
     These statistics are made available via the UeberBackend on the same socket that is used for dynamic module commands.
 
-    \section Main Main 
+    \section Main Main
     The main() of PowerDNS can be found in receiver.cc - start reading there for further insights into the operation of the nameserver
 */
 
 #if defined(IP_PKTINFO)
-  #define GEN_IP_PKTINFO IP_PKTINFO
+#define GEN_IP_PKTINFO IP_PKTINFO
 #elif defined(IP_RECVDSTADDR)
-  #define GEN_IP_PKTINFO IP_RECVDSTADDR 
+#define GEN_IP_PKTINFO IP_RECVDSTADDR
 #endif
 
 vector<ComboAddress> g_localaddresses; // not static, our unit tests need to poke this
@@ -99,7 +99,7 @@ void UDPNameserver::bindIPv4()
     throw PDNSException("No local address specified");
 
   int s;
-  for(vector<string>::const_iterator i=locals.begin();i!=locals.end();++i) {
+  for(vector<string>::const_iterator i=locals.begin(); i!=locals.end(); ++i) {
     string localname(*i);
     ComboAddress locala;
 
@@ -109,12 +109,12 @@ void UDPNameserver::bindIPv4()
       L<<Logger::Error<<"Unable to acquire a UDP socket: "+string(strerror(errno)) << endl;
       throw PDNSException("Unable to acquire a UDP socket: "+string(strerror(errno)));
     }
-  
+
     Utility::setCloseOnExec(s);
-  
+
     if(!Utility::setNonBlocking(s))
       throw PDNSException("Unable to set UDP socket to non-blocking: "+stringerror());
-  
+
     memset(&locala,0,sizeof(locala));
     locala.sin4.sin_family=AF_INET;
 
@@ -125,16 +125,16 @@ void UDPNameserver::bindIPv4()
 
 #ifdef SO_REUSEPORT
     if( d_can_reuseport )
-        if( setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) )
-          d_can_reuseport = false;
+      if( setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) )
+        d_can_reuseport = false;
 #endif
 
     locala=ComboAddress(localname, ::arg().asNum("local-port"));
-    if(locala.sin4.sin_family != AF_INET) 
+    if(locala.sin4.sin_family != AF_INET)
       throw PDNSException("Attempting to bind IPv4 socket to IPv6 address");
 
     if( !d_additional_socket )
-        g_localaddresses.push_back(locala);
+      g_localaddresses.push_back(locala);
 
     if(::bind(s, (sockaddr*)&locala, locala.getSocklen()) < 0) {
       string binderror = strerror(errno);
@@ -163,7 +163,7 @@ static bool IsAnyAddress(const ComboAddress& addr)
     return addr.sin4.sin_addr.s_addr == 0;
   else if(addr.sin4.sin_family == AF_INET6)
     return !memcmp(&addr.sin6.sin6_addr, &in6addr_any, sizeof(addr.sin6.sin6_addr));
-  
+
   return false;
 }
 
@@ -175,14 +175,14 @@ bool AddressIsUs(const ComboAddress& remote)
       return true;
     if(IsAnyAddress(us)) {
       int s = socket(remote.sin4.sin_family, SOCK_DGRAM, 0);
-      if(s < 0) 
+      if(s < 0)
         continue;
 
       if(connect(s, (struct sockaddr*)&remote, remote.getSocklen()) < 0) {
         close(s);
         continue;
       }
-    
+
       ComboAddress actualLocal;
       actualLocal.sin4.sin_family = remote.sin4.sin_family;
       socklen_t socklen = actualLocal.getSocklen();
@@ -212,7 +212,7 @@ void UDPNameserver::bindIPv6()
     return;
 
   int s;
-  for(vector<string>::const_iterator i=locals.begin();i!=locals.end();++i) {
+  for(vector<string>::const_iterator i=locals.begin(); i!=locals.end(); ++i) {
     string localname(*i);
 
     s=socket(AF_INET6,SOCK_DGRAM,0);
@@ -227,10 +227,10 @@ void UDPNameserver::bindIPv6()
 
 
     ComboAddress locala(localname, ::arg().asNum("local-port"));
-    
+
     if(IsAnyAddress(locala)) {
       setsockopt(s, IPPROTO_IP, GEN_IP_PKTINFO, &one, sizeof(one));     // linux supports this, so why not - might fail on other systems
-      setsockopt(s, IPPROTO_IPV6, IPV6_RECVPKTINFO, &one, sizeof(one)); 
+      setsockopt(s, IPPROTO_IPV6, IPV6_RECVPKTINFO, &one, sizeof(one));
       setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &one, sizeof(one));      // if this fails, we report an error in tcpreceiver too
     }
 
@@ -238,12 +238,12 @@ void UDPNameserver::bindIPv6()
 
 #ifdef SO_REUSEPORT
     if( d_can_reuseport )
-        if( setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) )
-          d_can_reuseport = false;
+      if( setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) )
+        d_can_reuseport = false;
 #endif
 
     if( !d_additional_socket )
-        g_localaddresses.push_back(locala);
+      g_localaddresses.push_back(locala);
     if(::bind(s, (sockaddr*)&locala, sizeof(locala))<0) {
       close(s);
       if( errno == EADDRNOTAVAIL && ! ::arg().mustDo("local-ipv6-nonexist-fail") ) {
@@ -261,7 +261,7 @@ void UDPNameserver::bindIPv6()
     pfd.revents = 0;
     d_rfds.push_back(pfd);
     L<<Logger::Error<<"UDPv6 server bound to "<<locala.toStringWithPort()<<endl;
-    
+
   }
 #endif
 }
@@ -279,8 +279,8 @@ UDPNameserver::UDPNameserver( bool additional_socket )
   if(!::arg()["local-ipv6"].empty())
     bindIPv6();
 
-  if(::arg()["local-address"].empty() && ::arg()["local-ipv6"].empty()) 
-    L<<Logger::Critical<<"PDNS is deaf and mute! Not listening on any interfaces"<<endl;    
+  if(::arg()["local-address"].empty() && ::arg()["local-ipv6"].empty())
+    L<<Logger::Critical<<"PDNS is deaf and mute! Not listening on any interfaces"<<endl;
 }
 
 ResponseStats g_rs;
@@ -336,13 +336,13 @@ void UDPNameserver::send(DNSPacket *p)
     L<<Logger::Error<<"Error sending reply with sendmsg (socket="<<p->getSocket()<<", dest="<<p->d_remote.toStringWithPort()<<"): "<<strerror(errno)<<endl;
 }
 
-static bool HarvestTimestamp(struct msghdr* msgh, struct timeval* tv) 
+static bool HarvestTimestamp(struct msghdr* msgh, struct timeval* tv)
 {
 #ifdef SO_TIMESTAMP
   struct cmsghdr *cmsg;
   for (cmsg = CMSG_FIRSTHDR(msgh); cmsg != NULL; cmsg = CMSG_NXTHDR(msgh,cmsg)) {
-    if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SO_TIMESTAMP) && 
-	CMSG_LEN(sizeof(*tv)) == cmsg->cmsg_len) {
+    if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SO_TIMESTAMP) &&
+        CMSG_LEN(sizeof(*tv)) == cmsg->cmsg_len) {
       memcpy(tv, CMSG_DATA(cmsg), sizeof(*tv));
       return true;
     }
@@ -357,26 +357,26 @@ static bool HarvestDestinationAddress(struct msghdr* msgh, ComboAddress* destina
   struct cmsghdr *cmsg;
   for (cmsg = CMSG_FIRSTHDR(msgh); cmsg != NULL; cmsg = CMSG_NXTHDR(msgh,cmsg)) {
 #if defined(IP_PKTINFO)
-     if ((cmsg->cmsg_level == IPPROTO_IP) && (cmsg->cmsg_type == IP_PKTINFO)) {
-        struct in_pktinfo *i = (struct in_pktinfo *) CMSG_DATA(cmsg);
-        destination->sin4.sin_addr = i->ipi_addr;
-        destination->sin4.sin_family = AF_INET;
-        return true;
+    if ((cmsg->cmsg_level == IPPROTO_IP) && (cmsg->cmsg_type == IP_PKTINFO)) {
+      struct in_pktinfo *i = (struct in_pktinfo *) CMSG_DATA(cmsg);
+      destination->sin4.sin_addr = i->ipi_addr;
+      destination->sin4.sin_family = AF_INET;
+      return true;
     }
 #elif defined(IP_RECVDSTADDR)
     if ((cmsg->cmsg_level == IPPROTO_IP) && (cmsg->cmsg_type == IP_RECVDSTADDR)) {
       struct in_addr *i = (struct in_addr *) CMSG_DATA(cmsg);
       destination->sin4.sin_addr = *i;
-      destination->sin4.sin_family = AF_INET;      
+      destination->sin4.sin_family = AF_INET;
       return true;
     }
 #endif
 
     if ((cmsg->cmsg_level == IPPROTO_IPV6) && (cmsg->cmsg_type == IPV6_PKTINFO)) {
-        struct in6_pktinfo *i = (struct in6_pktinfo *) CMSG_DATA(cmsg);
-        destination->sin6.sin6_addr = i->ipi6_addr;
-        destination->sin4.sin_family = AF_INET6;
-        return true;
+      struct in6_pktinfo *i = (struct in6_pktinfo *) CMSG_DATA(cmsg);
+      destination->sin6.sin6_addr = i->ipi6_addr;
+      destination->sin4.sin_family = AF_INET6;
+      return true;
     }
   }
   return false;
@@ -398,7 +398,7 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
   iov.iov_len  = sizeof(mesg);
 
   memset(&msgh, 0, sizeof(struct msghdr));
-  
+
   msgh.msg_control = cbuf;
   msgh.msg_controllen = sizeof(cbuf);
   msgh.msg_name = &remote;
@@ -406,7 +406,7 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
   msgh.msg_iov  = &iov;
   msgh.msg_iovlen = 1;
   msgh.msg_flags = 0;
-  
+
   int err;
   vector<struct pollfd> rfds= d_rfds;
 
@@ -414,19 +414,19 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
     pfd.events = POLLIN;
     pfd.revents = 0;
   }
-    
-  retry:;
-  
+
+retry:;
+
   err = poll(&rfds[0], rfds.size(), -1);
   if(err < 0) {
     if(errno==EINTR)
       goto retry;
     unixDie("Unable to poll for new UDP events");
   }
-    
+
   BOOST_FOREACH(struct pollfd &pfd, rfds) {
     if(pfd.revents & POLLIN) {
-      sock=pfd.fd;        
+      sock=pfd.fd;
       if((len=recvmsg(sock, &msgh, 0)) < 0 ) {
         if(errno != EAGAIN)
           L<<Logger::Error<<"recvfrom gave error, ignoring: "<<strerror(errno)<<endl;
@@ -437,14 +437,14 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
   }
   if(sock==-1)
     throw PDNSException("poll betrayed us! (should not happen)");
-  
+
   DLOG(L<<"Received a packet " << len <<" bytes long from "<< remote.toString()<<endl);
 
   BOOST_STATIC_ASSERT(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port));
 
   if(remote.sin4.sin_port == 0) // would generate error on responding. sin4 also works for ipv6
     return 0;
-  
+
   DNSPacket *packet;
   if(prefilled)  // they gave us a preallocated packet
     packet=prefilled;
@@ -458,14 +458,13 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
   if(HarvestDestinationAddress(&msgh, &dest)) {
 //    cerr<<"Setting d_anyLocal to '"<<dest.toString()<<"'"<<endl;
     packet->d_anyLocal = dest;
-  }            
+  }
 
   struct timeval recvtv;
   if(HarvestTimestamp(&msgh, &recvtv)) {
     packet->d_dt.setTimeval(recvtv);
-  }
-  else
-    packet->d_dt.set(); // timing    
+  } else
+    packet->d_dt.set(); // timing
 
   if(packet->parse(mesg, len)<0) {
     S.inc("corrupt-packets");
@@ -475,6 +474,6 @@ DNSPacket *UDPNameserver::receive(DNSPacket *prefilled)
       delete packet;
     return 0; // unable to parse
   }
-  
+
   return packet;
 }

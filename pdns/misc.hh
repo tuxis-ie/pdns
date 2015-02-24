@@ -38,8 +38,7 @@ using namespace ::boost::multi_index;
 using std::cout;
 using std::endl;
 
-struct TSCTimer
-{
+struct TSCTimer {
   TSCTimer()
   {
     RDTSC(d_tsc1);
@@ -91,8 +90,7 @@ uint32_t pdns_strtoui(const char *nptr, char **endptr, int base);
 
 int logFacilityToLOG(unsigned int facility);
 
-struct ServiceTuple
-{
+struct ServiceTuple {
   string host;
   uint16_t port;
 };
@@ -105,23 +103,23 @@ stringtok (Container &container, string const &in,
 {
   const string::size_type len = in.length();
   string::size_type i = 0;
-  
+
   while (i<len) {
     // eat leading whitespace
     i = in.find_first_not_of (delimiters, i);
     if (i == string::npos)
       return;   // nothing left but white space
-    
+
     // find the end of the token
     string::size_type j = in.find_first_of (delimiters, i);
-    
+
     // push token
     if (j == string::npos) {
       container.push_back (in.substr(i));
       return;
     } else
       container.push_back (in.substr(i, j-i));
-    
+
     // set up for next loop
     i = j + 1;
   }
@@ -136,27 +134,27 @@ template<typename T> bool rfc1982LessThan(T a, T b)
 template <typename Container>
 void
 vstringtok (Container &container, string const &in,
-           const char * const delimiters = " \t\n")
+            const char * const delimiters = " \t\n")
 {
   const string::size_type len = in.length();
   string::size_type i = 0;
-  
+
   while (i<len) {
     // eat leading whitespace
     i = in.find_first_not_of (delimiters, i);
     if (i == string::npos)
       return;   // nothing left but white space
-    
+
     // find the end of the token
     string::size_type j = in.find_first_of (delimiters, i);
-    
+
     // push token
     if (j == string::npos) {
       container.push_back (make_pair(i, len));
       return;
     } else
       container.push_back (make_pair(i, j));
-    
+
     // set up for next loop
     i = j + 1;
   }
@@ -181,9 +179,9 @@ int makeGidNumeric(const string &group);
 int makeUidNumeric(const string &user);
 void cleanSlashes(string &str);
 
-/** The DTime class can be used for timing statistics with microsecond resolution. 
-On 32 bits systems this means that 2147 seconds is the longest time that can be measured. */
-class DTime 
+/** The DTime class can be used for timing statistics with microsecond resolution.
+  On 32 bits systems this means that 2147 seconds is the longest time that can be measured. */
+class DTime
 {
 public:
   DTime(); //!< Does not set the timer for you! Saves lots of gettimeofday() calls
@@ -260,11 +258,11 @@ inline const string toLowerCanonic(const string &upper)
       c = dns_tolower(upper[i]);
       if(c != upper[i])
         reply[i] = c;
-    }   
+    }
     if(upper[i-1]=='.')
       reply.resize(i-1);
   }
-      
+
   return reply;
 }
 
@@ -273,18 +271,18 @@ inline const string toLowerCanonic(const string &upper)
 // Make s uppercase:
 inline string toUpper( const string& s )
 {
-        string r(s);
-        for( unsigned int i = 0; i < s.length(); i++ ) {
-        	r[i] = toupper( r[i] );
-        }
-        return r;
+  string r(s);
+  for( unsigned int i = 0; i < s.length(); i++ ) {
+    r[i] = toupper( r[i] );
+  }
+  return r;
 }
 
 inline double getTime()
 {
   struct timeval now;
   Utility::gettimeofday(&now,0);
-  
+
   return now.tv_sec+now.tv_usec/1000000.0;
 }
 
@@ -305,7 +303,7 @@ inline float makeFloat(const struct timeval& tv)
   return tv.tv_sec + tv.tv_usec/1000000.0f;
 }
 
-inline bool operator<(const struct timeval& lhs, const struct timeval& rhs) 
+inline bool operator<(const struct timeval& lhs, const struct timeval& rhs)
 {
   return make_pair(lhs.tv_sec, lhs.tv_usec) < make_pair(rhs.tv_sec, rhs.tv_usec);
 }
@@ -357,97 +355,94 @@ class AtomicCounter
 {
 public:
 
-    explicit AtomicCounter( unsigned int v = 0) : value_( v ) {}
+  explicit AtomicCounter( unsigned int v = 0) : value_( v ) {}
 
-    unsigned int operator++()
-    {
-      return atomic_exchange_and_add( &value_, +1 ) + 1;
-    }
+  unsigned int operator++()
+  {
+    return atomic_exchange_and_add( &value_, +1 ) + 1;
+  }
 
-    unsigned int operator++(int)
-    {
-      return atomic_exchange_and_add( &value_, +1 );
-    }
+  unsigned int operator++(int)
+  {
+    return atomic_exchange_and_add( &value_, +1 );
+  }
 
-    unsigned int operator--()
-    {
-      return atomic_exchange_and_add( &value_, -1 ) - 1;
-    }
+  unsigned int operator--()
+  {
+    return atomic_exchange_and_add( &value_, -1 ) - 1;
+  }
 
-    operator unsigned int() const
-    {
-      return atomic_exchange_and_add( &value_, 0);
-    }
+  operator unsigned int() const
+  {
+    return atomic_exchange_and_add( &value_, 0);
+  }
 
-    AtomicCounter(AtomicCounter const &rhs) : value_(rhs)
-    {
-    }
+  AtomicCounter(AtomicCounter const &rhs) : value_(rhs)
+  {
+  }
 
 private:
-    mutable unsigned int value_;
-    
-    // the below is necessary because __sync_fetch_and_add is not universally available on i386.. I 3> RHEL5. 
-    #if defined( __GNUC__ ) && ( defined( __i386__ ) || defined( __x86_64__ ) )
-    static int atomic_exchange_and_add( unsigned int * pw, int dv )
-    {
-        // int r = *pw;
-        // *pw += dv;
-        // return r;
+  mutable unsigned int value_;
 
-        int r;
+  // the below is necessary because __sync_fetch_and_add is not universally available on i386.. I 3> RHEL5.
+#if defined( __GNUC__ ) && ( defined( __i386__ ) || defined( __x86_64__ ) )
+  static int atomic_exchange_and_add( unsigned int * pw, int dv )
+  {
+    // int r = *pw;
+    // *pw += dv;
+    // return r;
 
-        __asm__ __volatile__
-        (
-            "lock\n\t"
-            "xadd %1, %0":
-            "+m"( *pw ), "=r"( r ): // outputs (%0, %1)
-            "1"( dv ): // inputs (%2 == %1)
-            "memory", "cc" // clobbers
-        );
+    int r;
 
-        return r;
-    }
-    #else 
-    static int atomic_exchange_and_add( unsigned int * pw, int dv )
-    {
-      return __sync_fetch_and_add(pw, dv);
-    }
-    #endif
+    __asm__ __volatile__
+    (
+      "lock\n\t"
+      "xadd %1, %0":
+      "+m"( *pw ), "=r"( r ): // outputs (%0, %1)
+      "1"( dv ): // inputs (%2 == %1)
+      "memory", "cc" // clobbers
+    );
+
+    return r;
+  }
+#else
+  static int atomic_exchange_and_add( unsigned int * pw, int dv )
+  {
+    return __sync_fetch_and_add(pw, dv);
+  }
+#endif
 };
 
 
-struct CIStringCompare: public std::binary_function<string, string, bool>  
-{
+struct CIStringCompare: public std::binary_function<string, string, bool> {
   bool operator()(const string& a, const string& b) const
   {
     return pdns_ilexicographical_compare(a, b);
   }
 };
 
-struct CIStringComparePOSIX
-{
-   bool operator() (const std::string& lhs, const std::string& rhs)
-   {
-      std::string::const_iterator a,b;
-      const std::locale &loc = std::locale("POSIX");
-      a=lhs.begin();b=rhs.begin();
-      while(a!=lhs.end()) {
-          if (b==rhs.end() || std::tolower(*b,loc)<std::tolower(*a,loc)) return false;
-          else if (std::tolower(*a,loc)<std::tolower(*b,loc)) return true;
-          a++;b++;
-      }
-      return (b!=rhs.end());
-   }
+struct CIStringComparePOSIX {
+  bool operator() (const std::string& lhs, const std::string& rhs)
+  {
+    std::string::const_iterator a,b;
+    const std::locale &loc = std::locale("POSIX");
+    a=lhs.begin(); b=rhs.begin();
+    while(a!=lhs.end()) {
+      if (b==rhs.end() || std::tolower(*b,loc)<std::tolower(*a,loc)) return false;
+      else if (std::tolower(*a,loc)<std::tolower(*b,loc)) return true;
+      a++; b++;
+    }
+    return (b!=rhs.end());
+  }
 };
 
-struct CIStringPairCompare: public std::binary_function<pair<string, uint16_t>, pair<string,uint16_t>, bool>  
-{
+struct CIStringPairCompare: public std::binary_function<pair<string, uint16_t>, pair<string,uint16_t>, bool> {
   bool operator()(const pair<string, uint16_t>& a, const pair<string, uint16_t>& b) const
   {
     if(pdns_ilexicographical_compare(a.first, b.first))
-	return true;
+      return true;
     if(pdns_ilexicographical_compare(b.first, a.first))
-	return false;
+      return false;
     return a.second < b.second;
   }
 };
@@ -455,7 +450,7 @@ struct CIStringPairCompare: public std::binary_function<pair<string, uint16_t>, 
 inline size_t pdns_ci_find(const string& haystack, const string& needle)
 {
   string::const_iterator it = std::search(haystack.begin(), haystack.end(),
-    needle.begin(), needle.end(), pdns_iequals_ch);
+                                          needle.begin(), needle.end(), pdns_iequals_ch);
   if (it == haystack.end()) {
     // not found
     return string::npos;
@@ -512,7 +507,7 @@ class Regex
 public:
   /** constructor that accepts the expression to regex */
   Regex(const string &expr);
-  
+
   ~Regex()
   {
     regfree(&d_preg);
@@ -522,7 +517,7 @@ public:
   {
     return regexec(&d_preg,line.c_str(),0,0,0)==0;
   }
-  
+
 private:
   regex_t d_preg;
 };

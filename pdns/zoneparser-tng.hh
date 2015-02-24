@@ -3,7 +3,7 @@
     Copyright (C) 2005 - 2007 PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 
+    it under the terms of the GNU General Public License version 2
     as published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -59,7 +59,7 @@ private:
   parts_t d_templateparts;
 
   struct filestate {
-    filestate(FILE* fp, string filename) : d_fp(fp), d_filename(filename), d_lineno(0){}
+    filestate(FILE* fp, string filename) : d_fp(fp), d_filename(filename), d_lineno(0) {}
     FILE *d_fp;
     string d_filename;
     int d_lineno;

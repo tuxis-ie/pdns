@@ -7,7 +7,8 @@ using namespace boost;
 
 BOOST_AUTO_TEST_SUITE(iputils_hh)
 
-BOOST_AUTO_TEST_CASE(test_ComboAddress) {
+BOOST_AUTO_TEST_CASE(test_ComboAddress)
+{
   ComboAddress local("127.0.0.1", 53);
   BOOST_CHECK(local==local);
   BOOST_CHECK_EQUAL(local.sin4.sin_family, AF_INET);
@@ -18,10 +19,11 @@ BOOST_AUTO_TEST_CASE(test_ComboAddress) {
   BOOST_CHECK(!(local == remote));
 }
 
-BOOST_AUTO_TEST_CASE(test_Netmask) {
+BOOST_AUTO_TEST_CASE(test_Netmask)
+{
   ComboAddress local("127.0.0.1", 53);
   ComboAddress remote("130.161.252.29", 53);
-  
+
   Netmask nm("127.0.0.1/24");
   BOOST_CHECK(nm.match(local));
   BOOST_CHECK(!nm.match(remote));
@@ -44,7 +46,8 @@ BOOST_AUTO_TEST_CASE(test_Netmask) {
   BOOST_CHECK(all6.match("::1") && all6.match("fe80::92fb:a6ff:fe4a:51da"));
 }
 
-BOOST_AUTO_TEST_CASE(test_NetmaskGroup) {
+BOOST_AUTO_TEST_CASE(test_NetmaskGroup)
+{
   NetmaskGroup ng;
   ng.addMask("10.0.1.0");
   BOOST_CHECK(ng.match(ComboAddress("10.0.1.0")));

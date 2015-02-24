@@ -1,13 +1,13 @@
 // $Id$
 
 /*
- * Copyright (c) 2010-2011
- *
- * Maik Zumstrull <maik@zumstrull.net>
- * Steinbuch Centre for Computing <http://www.scc.kit.edu/>
- * Karlsruhe Institute of Technology <http://www.kit.edu/>
- *
- */
+   Copyright (c) 2010-2011
+
+   Maik Zumstrull <maik@zumstrull.net>
+   Steinbuch Centre for Computing <http://www.scc.kit.edu/>
+   Karlsruhe Institute of Technology <http://www.kit.edu/>
+
+*/
 
 #include <string>
 #include <stdexcept>
@@ -30,8 +30,8 @@ static const char *basicQueryDefaultAuthSQL =
   "WHERE type = :type AND fqdn = lower(:name)";
 
 static const char *basicQueryDefaultSQL = "SELECT fqdn, ttl, type, content, zone_id, last_change "
-  "FROM Records "
-  "WHERE type = :type AND fqdn = lower(:name)";
+    "FROM Records "
+    "WHERE type = :type AND fqdn = lower(:name)";
 
 static const char *basicIdQueryKey = "PDNS_Basic_Id_Query";
 static const char *basicIdQueryDefaultAuthSQL =
@@ -39,7 +39,7 @@ static const char *basicIdQueryDefaultAuthSQL =
   "FROM Records "
   "WHERE type = :type AND fqdn = lower(:name) AND zone_id = :zoneid";
 
-static const char *basicIdQueryDefaultSQL = 
+static const char *basicIdQueryDefaultSQL =
   "SELECT fqdn, ttl, type, content, zone_id, last_change "
   "FROM Records "
   "WHERE type = :type AND fqdn = lower(:name) AND zone_id = :zoneid";
@@ -285,12 +285,9 @@ OracleBackend::OracleBackend (const string &suffix, OCIEnv *envh,
   curStmtHandle = NULL;
   openTransactionZoneID = -1;
 
-  try
-  {
+  try {
     d_dnssecQueries = mustDo("dnssec");
-  }
-  catch (ArgException e)
-  {
+  } catch (ArgException e) {
     d_dnssecQueries = false;
   }
 
@@ -381,8 +378,8 @@ OracleBackend::openMasterConnection ()
     }
 
     err = OCISessionGet(oraenv, oraerr, &masterSvcCtx, masterAuthHandle,
-        (OraText*)database.c_str(), database.size(),
-        NULL, 0, NULL, NULL, NULL, OCI_SESSGET_STMTCACHE);
+                        (OraText*)database.c_str(), database.size(),
+                        NULL, 0, NULL, NULL, NULL, OCI_SESSGET_STMTCACHE);
     if (err == OCI_ERROR) {
       throw OracleException("openMasterConnection OCISessionGet");
     }
@@ -497,10 +494,10 @@ OracleBackend::getBeforeAndAfterNames (
 
 bool
 OracleBackend::getBeforeAndAfterNamesAbsolute(uint32_t zoneId,
-  const string& name, string& unhashed, string& before, string& after)
+    const string& name, string& unhashed, string& before, string& after)
 {
   if(!d_dnssecQueries)
-    return -1; 
+    return -1;
 
   sword rc;
   OCIStmt *stmt;
@@ -2169,7 +2166,8 @@ private:
 
 public:
 
-OracleFactory () : BackendFactory("oracle") {
+  OracleFactory () : BackendFactory("oracle")
+  {
     pthread_mutex_init(&factoryLock, NULL);
     oraenv = NULL;
     oraerr = NULL;
@@ -2178,12 +2176,14 @@ OracleFactory () : BackendFactory("oracle") {
     mSessionPoolNameLen = 0;
   }
 
-  ~OracleFactory () {
+  ~OracleFactory ()
+  {
     Cleanup();
     pthread_mutex_destroy(&factoryLock);
   }
 
-  void declareArguments (const string & suffix = "") {
+  void declareArguments (const string & suffix = "")
+  {
     declare(suffix,"home", "Oracle home path", "");
     declare(suffix,"sid", "Oracle sid", "XE");
     declare(suffix,"nls-lang", "Oracle language", "AMERICAN_AMERICA.AL32UTF8");
@@ -2243,7 +2243,8 @@ OracleFactory () : BackendFactory("oracle") {
     declare(suffix, "set-zone-key-state-query", "", setZoneKeyStateQueryDefaultSQL);
   }
 
-  DNSBackend *make (const string & suffix = "") {
+  DNSBackend *make (const string & suffix = "")
+  {
     {
       Lock l(&factoryLock);
       if (oraenv == NULL) {

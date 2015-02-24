@@ -31,8 +31,7 @@ SelectFDMultiplexer g_fdm;
 int g_pdnssocket;
 bool g_verbose;
 
-struct NotificationInFlight
-{
+struct NotificationInFlight {
   ComboAddress source;
   time_t resentTime;
   string domain;
@@ -62,17 +61,17 @@ try
   if(!res)
     return;
 
-  if(res < 0) 
+  if(res < 0)
     throw runtime_error("reading packet from remote: "+stringerror());
-    
+
   string packet(buffer, res);
   MOADNSParser mdp(packet);
   nif.domain = mdp.d_qname;
   nif.origID = mdp.d_header.id;
 
 
-  if(mdp.d_header.opcode == Opcode::Query && !mdp.d_header.qr && mdp.d_answers.empty() && mdp.d_qname == "pdns.nproxy." && 
-     (mdp.d_qtype == QType::TXT || mdp.d_qtype ==QType::A)) {
+  if(mdp.d_header.opcode == Opcode::Query && !mdp.d_header.qr && mdp.d_answers.empty() && mdp.d_qname == "pdns.nproxy." &&
+      (mdp.d_qtype == QType::TXT || mdp.d_qtype ==QType::A)) {
     vector<uint8_t> packet;
     DNSPacketWriter pw(packet, mdp.d_qname, mdp.d_qtype);
     pw.getHeader()->id = mdp.d_header.id;
@@ -83,8 +82,7 @@ try
     if(mdp.d_qtype == QType::TXT) {
       TXTRecordContent trc("\"OK\"");
       trc.toPacket(pw);
-    }
-    else if(mdp.d_qtype == QType::A) {
+    } else if(mdp.d_qtype == QType::A) {
       ARecordContent arc("1.2.3.4");
       arc.toPacket(pw);
     }
@@ -100,21 +98,20 @@ try
     syslogFmt(boost::format("Received non-notification packet for domain '%s' from external nameserver %s") % nif.domain % nif.source.toStringWithPort());
     return;
   }
-  syslogFmt(boost::format("External notification received for domain '%s' from %s") % nif.domain % nif.source.toStringWithPort());  
+  syslogFmt(boost::format("External notification received for domain '%s' from %s") % nif.domain % nif.source.toStringWithPort());
   vector<uint8_t> outpacket;
   DNSPacketWriter pw(outpacket, mdp.d_qname, mdp.d_qtype, 1, Opcode::Notify);
 
   static uint16_t s_idpool;
   pw.getHeader()->id = nif.resentID = s_idpool++;
-  
+
   if(send(g_pdnssocket, &outpacket[0], outpacket.size(), 0) < 0) {
     throw runtime_error("Unable to send notify to PowerDNS: "+stringerror());
   }
   nif.resentTime=time(0);
   g_nifs[nif.resentID] = nif;
 
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   syslogFmt(boost::format("Error parsing packet from external nameserver: %s") % e.what());
 }
@@ -132,9 +129,9 @@ try
   if(!len)
     return;
 
-  if(len < 0) 
+  if(len < 0)
     throw runtime_error("reading packet from remote: "+stringerror());
-    
+
   string packet(buffer, len);
   MOADNSParser mdp(packet);
 
@@ -144,7 +141,7 @@ try
     syslogFmt(boost::format("Response from inner PowerDNS with unknown ID %1%") % (uint16_t)mdp.d_header.id);
     return;
   }
-  
+
   nif=g_nifs[mdp.d_header.id];
 
   if(!pdns_iequals(nif.domain,mdp.d_qname)) {
@@ -153,17 +150,15 @@ try
     struct dnsheader dh;
     memcpy(&dh, buffer, sizeof(dh));
     dh.id = nif.origID;
-    
+
     if(sendto(nif.origSocket, buffer, len, 0, (sockaddr*) &nif.source, nif.source.getSocklen()) < 0) {
       syslogFmt(boost::format("Unable to send notification response to external nameserver %s - %s") % nif.source.toStringWithPort() % stringerror());
-    }
-    else
+    } else
       syslogFmt(boost::format("Sent notification response to external nameserver %s for domain '%s'") % nif.source.toStringWithPort() % nif.domain);
   }
   g_nifs.erase(mdp.d_header.id);
 
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   syslogFmt(boost::format("Error parsing packet from internal nameserver: %s") % e.what());
 }
@@ -175,8 +170,7 @@ void expireOldNotifications()
     if(iter->second.resentTime < limit) {
       syslogFmt(boost::format("Notification for domain '%s' was sent to inner nameserver, but no response within 10 seconds") % iter->second.domain);
       g_nifs.erase(iter++);
-    }
-    else
+    } else
       ++iter;
   }
 }
@@ -191,16 +185,16 @@ try
 
   po::options_description desc("Allowed options");
   desc.add_options()
-    ("help,h", "produce help message")
-    ("powerdns-address", po::value<string>(), "IP address of PowerDNS server")
-    ("chroot", po::value<string>(), "chroot to this directory for additional security")
-    ("setuid", po::value<int>(), "setuid to this numerical user id")
-    ("setgid", po::value<int>(), "setgid to this numerical user id")
-    ("origin-address", po::value<string>()->default_value("::"), "Source address for notifications to PowerDNS")
-    ("listen-address", po::value<vector<string> >(), "IP addresses to listen on")
-    ("listen-port", po::value<int>()->default_value(53), "Source port to listen on")
-    ("daemon,d", po::value<bool>()->default_value(true), "operate in the background")
-    ("verbose,v", "be verbose");
+  ("help,h", "produce help message")
+  ("powerdns-address", po::value<string>(), "IP address of PowerDNS server")
+  ("chroot", po::value<string>(), "chroot to this directory for additional security")
+  ("setuid", po::value<int>(), "setuid to this numerical user id")
+  ("setgid", po::value<int>(), "setgid to this numerical user id")
+  ("origin-address", po::value<string>()->default_value("::"), "Source address for notifications to PowerDNS")
+  ("listen-address", po::value<vector<string> >(), "IP addresses to listen on")
+  ("listen-port", po::value<int>()->default_value(53), "Source port to listen on")
+  ("daemon,d", po::value<bool>()->default_value(true), "operate in the background")
+  ("verbose,v", "be verbose");
 
   po::store(po::command_line_parser(argc, argv).options(desc).run(), g_vm);
   po::notify(g_vm);
@@ -218,7 +212,7 @@ try
   if(!g_vm.count("verbose")) {
     g_verbose=true;
   }
-  
+
   vector<string> addresses;
   if(g_vm.count("listen-address"))
     addresses=g_vm["listen-address"].as<vector<string> >();
@@ -226,7 +220,7 @@ try
     addresses.push_back("::");
 
   // create sockets to listen on
-  
+
   syslogFmt(boost::format("Starting up"));
   for(vector<string>::const_iterator address = addresses.begin(); address != addresses.end(); ++address) {
     ComboAddress local(*address, g_vm["listen-port"].as<int>());
@@ -247,13 +241,13 @@ try
   if(g_pdnssocket < 0)
     throw runtime_error("Creating socket for packets to PowerDNS: "+stringerror());
 
-  
+
   if(::bind(g_pdnssocket,(sockaddr*) &originAddress, originAddress.getSocklen()) < 0)
-      throw runtime_error("Binding local address of inward socket to '"+ originAddress.toStringWithPort()+"': "+stringerror());
-  
+    throw runtime_error("Binding local address of inward socket to '"+ originAddress.toStringWithPort()+"': "+stringerror());
+
 
   ComboAddress pdns(g_vm["powerdns-address"].as<string>(), 53);
-  if(connect(g_pdnssocket, (struct sockaddr*) &pdns, pdns.getSocklen()) < 0) 
+  if(connect(g_pdnssocket, (struct sockaddr*) &pdns, pdns.getSocklen()) < 0)
     throw runtime_error("Failed to connect PowerDNS socket to address "+pdns.toStringWithPort()+": "+stringerror());
 
   syslogFmt(boost::format("Sending notifications from %s to internal address %s") % originAddress.toString() % pdns.toStringWithPort());
@@ -300,16 +294,13 @@ try
     // check for notifications that have been outstanding for more than 10 seconds
     expireOldNotifications();
   }
-}
-catch(boost::program_options::error& e) 
+} catch(boost::program_options::error& e)
 {
   syslogFmt(boost::format("Error parsing command line options: %s") % e.what());
-}
-catch(std::exception& e)
+} catch(std::exception& e)
 {
   syslogFmt(boost::format("Fatal: %s") % e.what());
-}
-catch(PDNSException& e)
+} catch(PDNSException& e)
 {
   syslogFmt(boost::format("Fatal: %s") % e.reason);
 }

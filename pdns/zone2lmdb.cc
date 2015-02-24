@@ -53,7 +53,8 @@ MDB_env *env;
 MDB_dbi data_db, zone_db, data_extended_db, rrsig_db, nsecx_db;
 MDB_txn *txn, *txn_zone;
 
-void openDB(){
+void openDB()
+{
   mdb_env_create(&env);
   mdb_env_set_mapsize(env, 1*1024*1024*1024);
   mdb_env_set_maxdbs(env, 5);
@@ -68,7 +69,8 @@ void openDB(){
   mdb_dbi_open(txn, "nsecx", MDB_CREATE, &nsecx_db);
 }
 
-void closeDB(){
+void closeDB()
+{
   mdb_txn_commit(txn);
   mdb_dbi_close(env, data_db);
   mdb_dbi_close(env, zone_db);
@@ -78,11 +80,13 @@ void closeDB(){
   mdb_env_close(env);
 }
 
-string reverse(const string &name) {
+string reverse(const string &name)
+{
   return string(name.rbegin(), name.rend());
 }
 
-void emitData(string zone, ZoneParserTNG &zpt){
+void emitData(string zone, ZoneParserTNG &zpt)
+{
 
   bool hasSOA=false, isPresigned=false;
   int numRefs=g_numRefs;
@@ -206,7 +210,7 @@ try
   ::arg().set("zone","Zonefile to parse")="";
   ::arg().set("zone-name","Specify an $ORIGIN in case it is not present")="";
   ::arg().set("named-conf","Bind 8/9 named.conf to parse")="";
-  
+
   ::arg().set("soa-minimum-ttl","Do not change")="0";
   ::arg().set("soa-refresh-default","Do not change")="0";
   ::arg().set("soa-retry-default","Do not change")="0";
@@ -267,14 +271,12 @@ try
       try {
         ZoneParserTNG zpt(i->filename, i->name, BP.getDirectory());
         emitData(i->name, zpt);
-      }
-      catch(std::exception &ae) {
+      } catch(std::exception &ae) {
         if(!::arg().mustDo("on-error-resume-next"))
           throw;
         else
           cerr<<endl<<ae.what()<<endl;
-      }
-      catch(PDNSException &ae) {
+      } catch(PDNSException &ae) {
         if(!::arg().mustDo("on-error-resume-next"))
           throw;
         else
@@ -285,8 +287,7 @@ try
     }
     cout << "]\n";
     cerr<<"\r100% done\033\133\113"<<endl;
-  }
-  else {
+  } else {
     ZoneParserTNG zpt(zonefile, ::arg()["zone-name"]);
     cout << "{\"name\":\"" << ::arg()["zone-name"] << "\",\"records\":";
     emitData(::arg()["zone-name"], zpt);
@@ -296,16 +297,16 @@ try
   closeDB();
   return 0;
 
-}
-catch(PDNSException &ae) {
+} catch(PDNSException &ae)
+{
   cerr<<endl<<"Fatal error: "<<ae.reason<<endl;
   return 1;
-}
-catch(std::exception &e) {
+} catch(std::exception &e)
+{
   cerr<<endl<<"Died because of STL error: "<<e.what()<<endl;
   return 1;
-}
-catch(...) {
+} catch(...)
+{
   cerr<<endl<<"Died because of unknown exception"<<endl;
   return 1;
 }

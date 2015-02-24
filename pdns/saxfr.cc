@@ -40,7 +40,7 @@ try
 
 
   ComboAddress dest(argv[1] + (*argv[1]=='@'), atoi(argv[2]));
-  Socket sock(dest.sin4.sin_family, SOCK_STREAM);  
+  Socket sock(dest.sin4.sin_family, SOCK_STREAM);
   sock.connect(dest);
   uint16_t len;
   len = htons(packet.size());
@@ -73,30 +73,23 @@ try
 
     MOADNSParser mdp(string(creply, len));
     for(MOADNSParser::answers_t::const_iterator i=mdp.d_answers.begin(); i!=mdp.d_answers.end(); ++i) {
-      if(i->first.d_type == QType::SOA)
-      {
+      if(i->first.d_type == QType::SOA) {
         ++soacount;
-      }
-      else if (i->first.d_type == QType::NSEC3PARAM) {
-          ns3pr = NSEC3PARAMRecordContent(i->first.d_content->getZoneRepresentation());
-          isNSEC3 = true;
+      } else if (i->first.d_type == QType::NSEC3PARAM) {
+        ns3pr = NSEC3PARAMRecordContent(i->first.d_content->getZoneRepresentation());
+        isNSEC3 = true;
       }
 
       ostringstream o;
       o<<"\t"<<i->first.d_ttl<<"\tIN\t"<<DNSRecordContent::NumberToType(i->first.d_type);
-      if(showdetails)
-      {
+      if(showdetails) {
         o<<"\t"<<i->first.d_content->getZoneRepresentation();
-      }
-      else if(i->first.d_type == QType::RRSIG)
-      {
+      } else if(i->first.d_type == QType::RRSIG) {
         string zoneRep = i->first.d_content->getZoneRepresentation();
         vector<string> parts;
         stringtok(parts, zoneRep);
         o<<"\t"<<parts[0]<<" "<<parts[1]<<" "<<parts[2]<<" "<<parts[3]<<" [expiry] [inception] [keytag] "<<parts[7]<<" ...";
-      }
-      else if(i->first.d_type == QType::NSEC3)
-      {
+      } else if(i->first.d_type == QType::NSEC3) {
         string zoneRep = i->first.d_content->getZoneRepresentation();
         vector<string> parts;
         stringtok(parts, zoneRep);
@@ -108,16 +101,12 @@ try
         o<<" "<<parts[2]<<" "<<parts[3]<<" "<<"[next owner]";
         for(vector<string>::iterator iter = parts.begin()+5; iter != parts.end(); ++iter)
           o<<" "<<*iter;
-      }
-      else if(i->first.d_type == QType::DNSKEY)
-      {
+      } else if(i->first.d_type == QType::DNSKEY) {
         string zoneRep = i->first.d_content->getZoneRepresentation();
         vector<string> parts;
         stringtok(parts, zoneRep);
         o<<"\t"<<parts[0]<<" "<<parts[1]<<" "<<parts[2]<<" ...";
-      }
-      else
-      {
+      } else {
         o<<"\t"<<i->first.d_content->getZoneRepresentation();
       }
 
@@ -128,14 +117,13 @@ try
         labels.insert(shorter);
         if (pdns_iequals(shorter, argv[3]))
           break;
-      }while(chopOff(shorter));
+      } while(chopOff(shorter));
 
     }
     delete[] creply;
   }
 
-  if (isNSEC3 && unhash)
-  {
+  if (isNSEC3 && unhash) {
     string hashed;
     BOOST_FOREACH(const string &label, labels) {
       hashed=toBase32Hex(hashQNameWithSalt(ns3pr.d_iterations, ns3pr.d_salt, label));
@@ -146,8 +134,7 @@ try
   pair<string,string> record;
   BOOST_FOREACH(record, records) {
     string label=record.first;
-    if (isNSEC3 && unhash)
-    {
+    if (isNSEC3 && unhash) {
       map<string,string>::iterator i = hashes.find(makeRelative(label, argv[3]));
       if (i != hashes.end())
         label=i->second;
@@ -155,8 +142,7 @@ try
     cout<<label<<"."<<record.second<<endl;
   }
 
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

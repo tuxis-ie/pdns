@@ -39,9 +39,9 @@
 
 extern StatBag S;
 
-/** the Distributor template class enables you to multithread slow question/answer 
-    processes. 
-    
+/** the Distributor template class enables you to multithread slow question/answer
+    processes.
+
     Questions are posed to the Distributor, which returns the answer via a callback.
 
     The Distributor takes care that there are enough Backends alive at any one
@@ -52,8 +52,7 @@ extern StatBag S;
 
     If an exception escapes a Backend, the distributor retires it.
 */
-template<class Answer>struct AnswerData
-{
+template<class Answer>struct AnswerData {
   Answer *A;
 };
 
@@ -74,12 +73,13 @@ private:
 };
 
 template<class Answer, class Question, class Backend> class SingleThreadDistributor
-    : public Distributor<Answer, Question, Backend>
+  : public Distributor<Answer, Question, Backend>
 {
 public:
   SingleThreadDistributor();
   int question(Question *, void (*)(const AnswerData<Answer> &)); //!< Submit a question to the Distributor
-  void getQueueSizes(int &questions, int &answers) {
+  void getQueueSizes(int &questions, int &answers)
+  {
     questions = 0;
     answers = 0;
   }
@@ -99,15 +99,16 @@ private:
 };
 
 template<class Answer, class Question, class Backend> class MultiThreadDistributor
-    : public Distributor<Answer, Question, Backend>
+  : public Distributor<Answer, Question, Backend>
 {
 public:
   MultiThreadDistributor(int n=1);
   int question(Question *, void (*)(const AnswerData<Answer> &)); //!< Submit a question to the Distributor
   static void* makeThread(void *); //!< helper function to create our n threads
-  void getQueueSizes(int &questions, int &answers) {
-      numquestions.getValue( &questions );
-      answers = 0;
+  void getQueueSizes(int &questions, int &answers)
+  {
+    numquestions.getValue( &questions );
+    answers = 0;
   }
 
   int getNumBusy()
@@ -115,8 +116,7 @@ public:
     return d_num_threads-d_idle_threads;
   }
 
-  struct QuestionData
-  {
+  struct QuestionData {
     Question *Q;
     void (*callback)(const AnswerData<Answer> &);
     int id;
@@ -126,7 +126,7 @@ public:
   {
     return d_overloaded;
   }
-  
+
 private:
   bool d_overloaded;
   std::queue<QuestionData> questions;
@@ -146,10 +146,10 @@ private:
 //template<class Answer, class Question, class Backend>::nextid;
 template<class Answer, class Question, class Backend>Distributor<Answer,Question,Backend>* Distributor<Answer,Question,Backend>::Create(int n)
 {
-    if( n == 1 )
-        return new SingleThreadDistributor<Answer,Question,Backend>();
-    else
-        return new MultiThreadDistributor<Answer,Question,Backend>( n );
+  if( n == 1 )
+    return new SingleThreadDistributor<Answer,Question,Backend>();
+  else
+    return new MultiThreadDistributor<Answer,Question,Backend>( n );
 }
 
 template<class Answer, class Question, class Backend>SingleThreadDistributor<Answer,Question,Backend>::SingleThreadDistributor()
@@ -173,9 +173,9 @@ template<class Answer, class Question, class Backend>MultiThreadDistributor<Answ
   pthread_cond_init(&to_cond,0);
 
   pthread_t tid;
-  
+
   L<<Logger::Warning<<"About to create "<<n<<" backend threads for UDP"<<endl;
-  for(int i=0;i<n;i++) {
+  for(int i=0; i<n; i++) {
     pthread_create(&tid,0,&makeThread,static_cast<void *>(this));
     Utility::usleep(50000); // we've overloaded mysql in the past :-)
   }
@@ -184,7 +184,7 @@ template<class Answer, class Question, class Backend>MultiThreadDistributor<Answ
 
 template<class Answer, class Question, class Backend>void Distributor<Answer,Question,Backend>::cleanup()
 {
-    L<<Logger::Error<< "Cleaning up distributor" <<endl;
+  L<<Logger::Error<< "Cleaning up distributor" <<endl;
 }
 
 // start of a new thread
@@ -197,9 +197,9 @@ template<class Answer, class Question, class Backend>void *MultiThreadDistributo
     int qcount;
 
     // this is so gross
-#ifndef SMTPREDIR 
-    int queuetimeout=::arg().asNum("queue-limit"); 
-#endif 
+#ifndef SMTPREDIR
+    int queuetimeout=::arg().asNum("queue-limit");
+#endif
     // ick ick ick!
     static int overloadQueueLength=::arg().asNum("overload-queue-length");
     for(;;) {
@@ -218,32 +218,30 @@ template<class Answer, class Question, class Backend>void *MultiThreadDistributo
       pthread_mutex_unlock(&us->q_lock);
 
       Question *q=QD.Q;
-      
+
 
       if(us->d_overloaded && qcount <= overloadQueueLength/10) {
         us->d_overloaded=false;
       }
-      
-      Answer *a;      
+
+      Answer *a;
 
 #ifndef SMTPREDIR
       if(queuetimeout && q->d_dt.udiff()>queuetimeout*1000) {
         delete q;
         S.inc("timedout-packets");
         continue;
-      }        
-#endif  
+      }
+#endif
       // this is the only point where we interact with the backend (synchronous)
       try {
         a=b->question(q); // a can be NULL!
         delete q;
-      }
-      catch(const PDNSException &e) {
+      } catch(const PDNSException &e) {
         L<<Logger::Error<<"Backend error: "<<e.reason<<endl;
         delete b;
         return 0;
-      }
-      catch(...) {
+      } catch(...) {
         L<<Logger::Error<<Logger::NTLog<<"Caught unknown exception in Distributor thread "<<(unsigned long)pthread_self()<<endl;
         delete b;
         return 0;
@@ -254,13 +252,11 @@ template<class Answer, class Question, class Backend>void *MultiThreadDistributo
 
       QD.callback(AD);
     }
-    
+
     delete b;
-  }
-  catch(const PDNSException &AE) {
+  } catch(const PDNSException &AE) {
     L<<Logger::Error<<Logger::NTLog<<"Distributor caught fatal exception: "<<AE.reason<<endl;
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<Logger::NTLog<<"Caught an unknown exception when creating backend, probably"<<endl;
   }
   return 0;
@@ -271,14 +267,12 @@ template<class Answer, class Question, class Backend>int SingleThreadDistributor
   Answer *a;
   try {
     a=b->question(q); // a can be NULL!
-  }
-  catch(const PDNSException &e) {
+  } catch(const PDNSException &e) {
     L<<Logger::Error<<"Backend error: "<<e.reason<<endl;
     delete b;
     b=new Backend;
     return 0;
-  }
-  catch(...) {
+  } catch(...) {
     L<<Logger::Error<<Logger::NTLog<<"Caught unknown exception in Distributor thread "<<(unsigned long)pthread_self()<<endl;
     delete b;
     b=new Backend;
@@ -306,10 +300,10 @@ template<class Answer, class Question, class Backend>int MultiThreadDistributor<
      The solutionis to add '+2' below, but it is not a pretty solution. Better solution is
      to only account the number of threads within the Distributor, and not in the backend.
 
-     XXX FIXME 
+     XXX FIXME
   */
 
-  if(Backend::numRunning() < d_num_threads+2 && time(0)-d_last_started>5) { 
+  if(Backend::numRunning() < d_num_threads+2 && time(0)-d_last_started>5) {
     d_last_started=time(0);
     L<<"Distributor misses a thread ("<<Backend::numRunning()<<"<"<<d_num_threads + 2<<"), spawning new one"<<endl;
     pthread_t tid;
@@ -326,13 +320,13 @@ template<class Answer, class Question, class Backend>int MultiThreadDistributor<
   pthread_mutex_unlock(&q_lock);
 
   numquestions.post();
-  
+
   static int overloadQueueLength=::arg().asNum("overload-queue-length");
 
   if(!(nextid%50)) {
     int val;
     numquestions.getValue( &val );
-    
+
     if(!d_overloaded)
       d_overloaded = overloadQueueLength && (val > overloadQueueLength);
 

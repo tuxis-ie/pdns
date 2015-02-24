@@ -33,16 +33,17 @@
 class RandomBackend : public DNSBackend
 {
 public:
-  RandomBackend(const string &suffix="") 
+  RandomBackend(const string &suffix="")
   {
     setArgPrefix("random"+suffix);
     d_ourname=getArg("hostname");
   }
 
-  bool list(const string &target, int id, bool include_disabled) {
+  bool list(const string &target, int id, bool include_disabled)
+  {
     return false; // we don't support AXFR
   }
-    
+
   void lookup(const QType &type, const string &qdomain, DNSPacket *p, int zoneId)
   {
     if((type.getCode()!=QType::ANY && type.getCode()!=QType::A) || !pdns_iequals(qdomain, d_ourname))  // we only know about random.example.com A by default
@@ -65,12 +66,12 @@ public:
       rr.content=d_answer;
 
       d_answer="";                                                  // this was the last answer
-      
+
       return true;
     }
     return false;                                                   // no more data
   }
-  
+
 private:
   string d_answer;
   string d_ourname;
@@ -101,7 +102,7 @@ public:
   {
     BackendMakers().report(new RandomFactory);
     L << Logger::Info << "[randombackend] This is the random backend version " VERSION " (" __DATE__ ", " __TIME__ ") reporting" << endl;
-  }  
+  }
 };
 
 static RandomLoader randomLoader;

@@ -70,8 +70,8 @@ void declareArguments()
   ::arg().setCmd("config","Provide configuration file on standard output");
   ::arg().setCmd("list-modules","Lists all modules available");
   ::arg().setCmd("no-config","Don't parse configuration file");
-  
-  ::arg().set("version-string","PowerDNS version in packets - full, anonymous, powerdns or custom")="full"; 
+
+  ::arg().set("version-string","PowerDNS version in packets - full, anonymous, powerdns or custom")="full";
   ::arg().set("control-console","Debugging switch - don't use")="no"; // but I know you will!
   ::arg().set("loglevel","Amount of logging. Higher is more. Do not set below 3")="4";
   ::arg().set("default-soa-name","name to insert in the SOA record if none set in the backend")="a.misconfigured.powerdns.server";
@@ -79,13 +79,13 @@ void declareArguments()
   ::arg().set("distributor-threads","Default number of Distributor (backend) threads to start")="3";
   ::arg().set("signing-threads","Default number of signer threads to start")="3";
   ::arg().set("receiver-threads","Default number of receiver threads to start")="1";
-  ::arg().set("queue-limit","Maximum number of milliseconds to queue a query")="1500"; 
-  ::arg().set("recursor","If recursion is desired, IP address of a recursing nameserver")="no"; 
+  ::arg().set("queue-limit","Maximum number of milliseconds to queue a query")="1500";
+  ::arg().set("recursor","If recursion is desired, IP address of a recursing nameserver")="no";
   ::arg().set("allow-recursion","List of subnets that are allowed to recurse")="0.0.0.0/0";
   ::arg().set("pipebackend-abi-version","Version of the pipe backend ABI")="1";
   ::arg().set("udp-truncation-threshold", "Maximum UDP response size before we truncate")="1680";
   ::arg().set("disable-tcp","Do not listen to TCP queries")="no";
-  
+
   ::arg().set("config-name","Name of this virtual configuration - will rename the binary image")="";
 
   ::arg().set("load-modules","Load this module - supply absolute or relative path")="";
@@ -100,17 +100,17 @@ void declareArguments()
   ::arg().set("tcp-control-port","If set, PowerDNS can be controlled over TCP on this address")="53000";
   ::arg().set("tcp-control-secret","If set, PowerDNS can be controlled over TCP after passing this secret")="";
   ::arg().set("tcp-control-range","If set, remote control of PowerDNS is possible over these networks only")="127.0.0.0/8, 10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12, ::1/128, fe80::/10";
-  
+
   ::arg().setSwitch("slave","Act as a slave")="no";
   ::arg().setSwitch("master","Act as a master")="no";
   ::arg().setSwitch("disable-axfr-rectify","Disable the rectify step during an outgoing AXFR. Only required for regression testing.")="no";
   ::arg().setSwitch("guardian","Run within a guardian process")="no";
   ::arg().setSwitch("send-root-referral","Send out old-fashioned root-referral instead of ServFail in case of no authority")="no";
   ::arg().setSwitch("prevent-self-notification","Don't send notifications to what we think is ourself")="yes";
-  ::arg().setSwitch("webserver","Start a webserver for monitoring")="no"; 
-  ::arg().setSwitch("webserver-print-arguments","If the webserver should print arguments")="no"; 
-  ::arg().setSwitch("edns-subnet-processing","If we should act on EDNS Subnet options")="no"; 
-  ::arg().setSwitch("any-to-tcp","Answer ANY queries with tc=1, shunting to TCP")="no"; 
+  ::arg().setSwitch("webserver","Start a webserver for monitoring")="no";
+  ::arg().setSwitch("webserver-print-arguments","If the webserver should print arguments")="no";
+  ::arg().setSwitch("edns-subnet-processing","If we should act on EDNS Subnet options")="no";
+  ::arg().setSwitch("any-to-tcp","Answer ANY queries with tc=1, shunting to TCP")="no";
   ::arg().set("webserver-address","IP Address of webserver to listen on")="127.0.0.1";
   ::arg().set("webserver-port","Port of webserver to listen on")="8081";
   ::arg().set("webserver-password","Password required for accessing the webserver")="";
@@ -226,13 +226,13 @@ void sendout(const AnswerData<DNSPacket> &AD)
 {
   if(!AD.A)
     return;
-  
+
   N->send(AD.A);
 
   int diff=AD.A->d_dt.udiff();
   avg_latency=(int)(1023*avg_latency/1024+diff/1024);
 
-  delete AD.A;  
+  delete AD.A;
 }
 
 //! The qthread receives questions over the internet via the Nameserver class, and hands them to the Distributor for further processing
@@ -272,7 +272,7 @@ void *qthread(void *number)
   for(;;) {
     if (skipfirst)
       skipfirst=false;
-    else  
+    else
       numreceived++;
 
     if(number==0) { // only run on main thread
@@ -296,19 +296,19 @@ void *qthread(void *number)
     if(P->d_dnssecOk)
       numreceiveddo++;
 
-     if(P->d.qr)
-       continue;
+    if(P->d.qr)
+      continue;
 
     S.ringAccount("queries", P->qdomain+"/"+P->qtype.getName());
     S.ringAccount("remotes",P->getRemote());
     if(logDNSQueries) {
       string remote;
-      if(P->hasEDNSSubnet()) 
+      if(P->hasEDNSSubnet())
         remote = P->getRemote() + "<-" + P->getRealRemote().toString();
       else
         remote = P->getRemote();
-      L << Logger::Notice<<"Remote "<< remote <<" wants '" << P->qdomain<<"|"<<P->qtype.getName() << 
-            "', do = " <<P->d_dnssecOk <<", bufsize = "<< P->getMaxReplyLen()<<": ";
+      L << Logger::Notice<<"Remote "<< remote <<" wants '" << P->qdomain<<"|"<<P->qtype.getName() <<
+        "', do = " <<P->d_dnssecOk <<", bufsize = "<< P->getMaxReplyLen()<<": ";
     }
 
     if((P->d.opcode != Opcode::Notify && P->d.opcode != Opcode::Update) && P->couldBeCached()) {
@@ -335,14 +335,14 @@ void *qthread(void *number)
         continue;
       }
     }
-    
+
     if(distributor->isOverloaded()) {
-      if(logDNSQueries) 
+      if(logDNSQueries)
         L<<"Dropped query, db is overloaded"<<endl;
       continue;
     }
-        
-    if(logDNSQueries) 
+
+    if(logDNSQueries)
       L<<"packetcache MISS"<<endl;
 
     distributor->question(P, &sendout); // otherwise, give to the distributor
@@ -354,38 +354,37 @@ void mainthread()
 {
   Utility::srandom(time(0));
 
-   int newgid=0;      
-   if(!::arg()["setgid"].empty()) 
-     newgid=Utility::makeGidNumeric(::arg()["setgid"]);      
-   int newuid=0;      
-   if(!::arg()["setuid"].empty())        
-     newuid=Utility::makeUidNumeric(::arg()["setuid"]); 
-   
-   g_anyToTcp = ::arg().mustDo("any-to-tcp");
+  int newgid=0;
+  if(!::arg()["setgid"].empty())
+    newgid=Utility::makeGidNumeric(::arg()["setgid"]);
+  int newuid=0;
+  if(!::arg()["setuid"].empty())
+    newuid=Utility::makeUidNumeric(::arg()["setuid"]);
 
-   DNSPacket::s_udpTruncationThreshold = std::max(512, ::arg().asNum("udp-truncation-threshold"));
-   DNSPacket::s_doEDNSSubnetProcessing = ::arg().mustDo("edns-subnet-processing");
+  g_anyToTcp = ::arg().mustDo("any-to-tcp");
 
-   doSecPoll(true); // this must be BEFORE chroot
+  DNSPacket::s_udpTruncationThreshold = std::max(512, ::arg().asNum("udp-truncation-threshold"));
+  DNSPacket::s_doEDNSSubnetProcessing = ::arg().mustDo("edns-subnet-processing");
 
-   if(!::arg()["chroot"].empty()) {  
-     if(::arg().mustDo("master") || ::arg().mustDo("slave"))
-        gethostbyname("a.root-servers.net"); // this forces all lookup libraries to be loaded
-     Utility::dropGroupPrivs(newuid, newgid);
-     if(chroot(::arg()["chroot"].c_str())<0 || chdir("/")<0) {
-       L<<Logger::Error<<"Unable to chroot to '"+::arg()["chroot"]+"': "<<strerror(errno)<<", exiting"<<endl; 
-       exit(1);
-     }   
-     else
-       L<<Logger::Error<<"Chrooted to '"<<::arg()["chroot"]<<"'"<<endl;      
-   } else {
-     Utility::dropGroupPrivs(newuid, newgid);
-   }
+  doSecPoll(true); // this must be BEFORE chroot
+
+  if(!::arg()["chroot"].empty()) {
+    if(::arg().mustDo("master") || ::arg().mustDo("slave"))
+      gethostbyname("a.root-servers.net"); // this forces all lookup libraries to be loaded
+    Utility::dropGroupPrivs(newuid, newgid);
+    if(chroot(::arg()["chroot"].c_str())<0 || chdir("/")<0) {
+      L<<Logger::Error<<"Unable to chroot to '"+::arg()["chroot"]+"': "<<strerror(errno)<<", exiting"<<endl;
+      exit(1);
+    } else
+      L<<Logger::Error<<"Chrooted to '"<<::arg()["chroot"]<<"'"<<endl;
+  } else {
+    Utility::dropGroupPrivs(newuid, newgid);
+  }
 
   AuthWebServer webserver;
   Utility::dropUserPrivs(newuid);
 
-  if(::arg().mustDo("recursor")){
+  if(::arg().mustDo("recursor")) {
     DP=new DNSProxy(::arg()["recursor"]);
     DP->onlyFrom(::arg()["allow-recursion"]);
     DP->go();
@@ -399,12 +398,12 @@ void mainthread()
     webserver.go();
 
   if(::arg().mustDo("slave") || ::arg().mustDo("master"))
-    Communicator.go(); 
+    Communicator.go();
 
   if(TN)
     TN->go(); // tcp nameserver launch
 
-  pthread_create(&qtid,0,carbonDumpThread, 0); // runs even w/o carbon, might change @ runtime    
+  pthread_create(&qtid,0,carbonDumpThread, 0); // runs even w/o carbon, might change @ runtime
 
   //  fork(); (this worked :-))
   unsigned int max_rthreads= ::arg().asNum("receiver-threads", 1);
@@ -415,10 +414,9 @@ void mainthread()
     sleep(1800);
     try {
       doSecPoll(false);
-    }
-    catch(...){}
+    } catch(...) {}
   }
-  
+
   L<<Logger::Error<<"Mainthread exiting - should never happen"<<endl;
 }
 

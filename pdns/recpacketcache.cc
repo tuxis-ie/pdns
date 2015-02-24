@@ -29,37 +29,36 @@ int RecursorPacketCache::doWipePacketCache(const string& name, uint16_t qtype)
       break;
     uint16_t t;
     string found=questionExpand(iter->d_packet.c_str(), iter->d_packet.length(), t);
-    if(!pdns_iequals(found, name)) {  
+    if(!pdns_iequals(found, name)) {
       break;
     }
     if(t==qtype || qtype==0xffff) {
       iter=d_packetCache.erase(iter);
       count++;
-    }
-    else
+    } else
       ++iter;
   }
   return count;
 }
 
-bool RecursorPacketCache::getResponsePacket(const std::string& queryPacket, time_t now, 
-  std::string* responsePacket, uint32_t* age)
+bool RecursorPacketCache::getResponsePacket(const std::string& queryPacket, time_t now,
+    std::string* responsePacket, uint32_t* age)
 {
   struct Entry e;
   e.d_packet=queryPacket;
-  
+
   packetCache_t::const_iterator iter = d_packetCache.find(e);
-  
+
   if(iter == d_packetCache.end()) {
     d_misses++;
     return false;
   }
-    
+
   if((uint32_t)now < iter->d_ttd) { // it is fresh!
 //    cerr<<"Fresh for another "<<iter->d_ttd - now<<" seconds!"<<endl;
     *age = now - iter->d_creation;
     uint16_t id;
-    memcpy(&id, queryPacket.c_str(), 2); 
+    memcpy(&id, queryPacket.c_str(), 2);
     *responsePacket = iter->d_packet;
     responsePacket->replace(0, 2, (char*)&id, 2);
     d_hits++;
@@ -79,13 +78,12 @@ void RecursorPacketCache::insertResponsePacket(const std::string& responsePacket
   e.d_ttd = now+ttl;
   e.d_creation = now;
   packetCache_t::iterator iter = d_packetCache.find(e);
-  
+
   if(iter != d_packetCache.end()) {
     iter->d_packet = responsePacket;
     iter->d_ttd = now + ttl;
     iter->d_creation = now;
-  }
-  else 
+  } else
     d_packetCache.insert(e);
 }
 

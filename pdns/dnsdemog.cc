@@ -15,13 +15,12 @@
 
 StatBag S;
 
-struct Entry
-{
+struct Entry {
   uint32_t ip;
   uint16_t port;
   uint16_t id;
 
-  bool operator<(const struct Entry& rhs) const 
+  bool operator<(const struct Entry& rhs) const
   {
     return tie(ip, port, id) < tie(rhs.ip, rhs.port, rhs.id);
   }
@@ -37,7 +36,7 @@ try
   cout << "begin;";
   for(int n=1 ; n < argc; ++n) {
     PcapPacketReader pr(argv[n]);
-    
+
     Entry entry;
     while(pr.getUDPPacket()) {
       if(ntohs(pr.d_udp->uh_dport)==53 &&  pr.d_len > 12) {
@@ -66,12 +65,10 @@ try
             cout <<", "<< ntohs(dh->arcount) <<");\n";
           }
 
-        }
-        catch(MOADNSException& mde) {
+        } catch(MOADNSException& mde) {
           //        cerr<<"error parsing packet: "<<mde.what()<<endl;
           continue;
-        }
-        catch(std::exception& e) {
+        } catch(std::exception& e) {
           cerr << e.what() << endl;
           continue;
         }
@@ -80,14 +77,13 @@ try
   }
   cout <<"commit;";
   /*
-  for(emap_t::const_iterator i = ecount.begin(); i != ecount.end(); ++i) {
+    for(emap_t::const_iterator i = ecount.begin(); i != ecount.end(); ++i) {
     if(i->second > 1)
       cout << U32ToIP(ntohl(i->first.ip)) <<":"<<ntohs(i->first.port)<<" -> "<<i->second <<endl;
-  }
+    }
   */
 
-}
-catch(std::exception& e)
+} catch(std::exception& e)
 {
   cerr<<"Fatal: "<<e.what()<<endl;
 }

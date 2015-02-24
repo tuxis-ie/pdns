@@ -39,6 +39,7 @@ bool boolFromJson(const rapidjson::Value& container, const char* key, const bool
 class JsonException : public std::runtime_error
 {
 public:
-  JsonException(const std::string& what) : std::runtime_error(what) {
+  JsonException(const std::string& what) : std::runtime_error(what)
+  {
   }
 };

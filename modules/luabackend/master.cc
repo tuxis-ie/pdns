@@ -2,7 +2,7 @@
     Copyright (C) 2011 Fredrik Danerklint
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as published 
+    it under the terms of the GNU General Public License version 2 as published
     by the Free Software Foundation
 
     This program is distributed in the hope that it will be useful,
@@ -21,63 +21,65 @@
 #include "pdns/logger.hh"
 #include "pdns/arguments.hh"
 
-/* 
+/*
     virtual void getUpdatedMasters(vector<DomainInfo>* domains);
     virtual void setNotifed(int id, u_int32_t serial);
 */
 
-void LUABackend::getUpdatedMasters(vector<DomainInfo>* domains) {
-	
-    if (f_lua_getupdatedmasters == 0)
-	return;
+void LUABackend::getUpdatedMasters(vector<DomainInfo>* domains)
+{
 
-    if (logging)
-	L << Logger::Info << backend_name << "(getUpdatedMasters) BEGIN" << endl;
+  if (f_lua_getupdatedmasters == 0)
+    return;
 
-    lua_rawgeti(lua, LUA_REGISTRYINDEX, f_lua_getupdatedmasters);
+  if (logging)
+    L << Logger::Info << backend_name << "(getUpdatedMasters) BEGIN" << endl;
 
-    if(lua_pcall(lua, 0, 1, f_lua_exec_error) != 0) {
-        string e = backend_name + lua_tostring(lua, -1);
-        lua_pop(lua, 1);
+  lua_rawgeti(lua, LUA_REGISTRYINDEX, f_lua_getupdatedmasters);
 
-        throw runtime_error(e);
-        return;
-    }
+  if(lua_pcall(lua, 0, 1, f_lua_exec_error) != 0) {
+    string e = backend_name + lua_tostring(lua, -1);
+    lua_pop(lua, 1);
 
-    size_t returnedwhat = lua_type(lua, -1);
-    if (returnedwhat != LUA_TTABLE) {
-        lua_pop(lua, 1 );
-        return;
-    }
-    
-    domains_from_table(domains, "getUpdatedMasters");
-    
-    if (logging)
-	L << Logger::Info << backend_name << "(getUpdatedMasters) END" << endl;
+    throw runtime_error(e);
+    return;
+  }
+
+  size_t returnedwhat = lua_type(lua, -1);
+  if (returnedwhat != LUA_TTABLE) {
+    lua_pop(lua, 1 );
+    return;
+  }
+
+  domains_from_table(domains, "getUpdatedMasters");
+
+  if (logging)
+    L << Logger::Info << backend_name << "(getUpdatedMasters) END" << endl;
 }
 
-void LUABackend::setNotifed(int id, u_int32_t serial) {
-	
-    if (f_lua_setnotifed == 0)
-	return;
+void LUABackend::setNotifed(int id, u_int32_t serial)
+{
 
-    if (logging)
-	L << Logger::Info << backend_name << "(setNotifed) BEGIN" << endl;
+  if (f_lua_setnotifed == 0)
+    return;
 
-    lua_rawgeti(lua, LUA_REGISTRYINDEX, f_lua_setnotifed);
+  if (logging)
+    L << Logger::Info << backend_name << "(setNotifed) BEGIN" << endl;
 
-    lua_pushnumber(lua, id);
-    lua_pushnumber(lua, serial);
+  lua_rawgeti(lua, LUA_REGISTRYINDEX, f_lua_setnotifed);
 
-    if(lua_pcall(lua, 2, 0, f_lua_exec_error) != 0) {
-        string e = backend_name + lua_tostring(lua, -1);
-        lua_pop(lua, 1);
+  lua_pushnumber(lua, id);
+  lua_pushnumber(lua, serial);
 
-        throw runtime_error(e);
-        return;
-    }
+  if(lua_pcall(lua, 2, 0, f_lua_exec_error) != 0) {
+    string e = backend_name + lua_tostring(lua, -1);
+    lua_pop(lua, 1);
 
-    if (logging)
-	L << Logger::Info << backend_name << "(setNotifed) END" << endl;
+    throw runtime_error(e);
+    return;
+  }
+
+  if (logging)
+    L << Logger::Info << backend_name << "(setNotifed) END" << endl;
 }
 

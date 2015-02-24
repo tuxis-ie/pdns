@@ -24,9 +24,8 @@
 // Connects to the database.
 gSQLite3Backend::gSQLite3Backend( const std::string & mode, const std::string & suffix ) : GSQLBackend( mode, suffix )
 {
-  try 
-  {
-    SSQLite3 *ptr = new SSQLite3( getArg( "database" ));    
+  try {
+    SSQLite3 *ptr = new SSQLite3( getArg( "database" ));
     setDB( ptr);
     if(!getArg("pragma-synchronous").empty()) {
       SSQLite3::result_t res;
@@ -34,9 +33,7 @@ gSQLite3Backend::gSQLite3Backend( const std::string & mode, const std::string & 
     }
     SSQLite3::result_t res;
     ptr->doQuery("PRAGMA foreign_keys = 1", res);
-  }  
-  catch( SSqlException & e ) 
-  {
+  } catch( SSqlException & e ) {
     L << Logger::Error << mode << ": connection failed: " << e.txtReason() << std::endl;
     throw PDNSException( "Unable to launch " + mode + " connection: " + e.txtReason());
   }
@@ -53,7 +50,7 @@ public:
   gSQLite3Factory( const std::string & mode ) : BackendFactory( mode ), d_mode( mode )
   {
   }
-  
+
   //! Declares all needed arguments.
   void declareArguments( const std::string & suffix = "" )
   {
@@ -75,7 +72,7 @@ public:
     declare(suffix, "remove-empty-non-terminals-from-zone-query", "remove all empty non-terminals from zone", "delete from records where domain_id='%d' and type is null");
     declare(suffix, "insert-empty-non-terminal-query", "insert empty non-terminal in zone", "insert into records (domain_id,name,type,disabled,auth) values ('%d','%s',null,0,'1')");
     declare(suffix, "delete-empty-non-terminal-query", "delete empty non-terminal from zone", "delete from records where domain_id='%d' and name='%s' and type is null");
-    
+
     declare( suffix, "master-zone-query", "Data", "select master from domains where name='%s' and type='SLAVE'");
 
     declare( suffix, "info-zone-query", "","select id,name,master,last_check,notified_serial,type from domains where name='%s'");

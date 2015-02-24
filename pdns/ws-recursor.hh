@@ -3,7 +3,7 @@
     Copyright (C) 2003 - 2014  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 
+    it under the terms of the GNU General Public License version 2
     as published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -19,7 +19,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include <boost/utility.hpp> 
+#include <boost/utility.hpp>
 #include "namespaces.hh"
 #include "mplexer.hh"
 #include "webserver.hh"
@@ -27,7 +27,8 @@
 class HttpRequest;
 class HttpResponse;
 
-class AsyncServer : public Server {
+class AsyncServer : public Server
+{
 public:
   AsyncServer(const string &localaddress, int port) : Server(localaddress, port) { };
 
@@ -54,7 +55,8 @@ private:
   void serveConnection(Socket *socket);
 
 protected:
-  virtual Server* createServer() {
+  virtual Server* createServer()
+  {
     return new AsyncServer(d_listenaddress, d_port);
   };
 };

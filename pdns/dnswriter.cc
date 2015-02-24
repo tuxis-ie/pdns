@@ -9,28 +9,28 @@ DNSPacketWriter::DNSPacketWriter(vector<uint8_t>& content, const string& qname, 
 {
   d_content.clear();
   dnsheader dnsheader;
-  
+
   memset(&dnsheader, 0, sizeof(dnsheader));
   dnsheader.id=0;
   dnsheader.qdcount=htons(1);
   dnsheader.opcode=opcode;
-  
+
   const uint8_t* ptr=(const uint8_t*)&dnsheader;
   uint32_t len=d_content.size();
   d_content.resize(len + sizeof(dnsheader));
   uint8_t* dptr=(&*d_content.begin()) + len;
-  
+
   memcpy(dptr, ptr, sizeof(dnsheader));
   d_stuff=0;
 
   xfrLabel(qname, false);
-  
+
   len=d_content.size();
   d_content.resize(len + d_record.size() + 4);
 
   ptr=&*d_record.begin();
   dptr=(&*d_content.begin()) + len;
-  
+
   memcpy(dptr, ptr, d_record.size());
 
   len+=d_record.size();
@@ -56,7 +56,7 @@ dnsheader* DNSPacketWriter::getHeader()
 
 void DNSPacketWriter::startRecord(const string& name, uint16_t qtype, uint32_t ttl, uint16_t qclass, Place place, bool compress)
 {
-  if(!d_record.empty()) 
+  if(!d_record.empty())
     commit();
 
   d_recordqname=name;
@@ -69,17 +69,16 @@ void DNSPacketWriter::startRecord(const string& name, uint16_t qtype, uint32_t t
   d_rollbackmarker=d_content.size();
 
   if(compress && !d_recordqname.empty() && pdns_iequals(d_qname, d_recordqname)) {  // don't do the whole label compression thing if we *know* we can get away with "see question" - except when compressing the root
-    static unsigned char marker[2]={0xc0, 0x0c};
+    static unsigned char marker[2]= {0xc0, 0x0c};
     d_content.insert(d_content.end(), (const char *) &marker[0], (const char *) &marker[2]);
-  }
-  else {
+  } else {
     xfrLabel(d_recordqname, compress);
     d_content.insert(d_content.end(), d_record.begin(), d_record.end());
     d_record.clear();
   }
 
   d_stuff = sizeof(dnsrecordheader); // this is needed to get compressed label offsets right, the dnsrecordheader will be interspersed
-  d_sor=d_content.size() + d_stuff; // start of real record 
+  d_sor=d_content.size() + d_stuff; // start of real record
 }
 
 void DNSPacketWriter::addOpt(int udpsize, int extRCode, int Z, const vector<pair<uint16_t,string> >& options)
@@ -95,13 +94,13 @@ void DNSPacketWriter::addOpt(int udpsize, int extRCode, int Z, const vector<pair
   memcpy(&ttl, &stuff, sizeof(stuff));
 
   ttl=ntohl(ttl); // will be reversed later on
-  
+
   startRecord("", QType::OPT, ttl, udpsize, ADDITIONAL, false);
   for(optvect_t::const_iterator iter = options.begin(); iter != options.end(); ++iter) {
     xfr16BitInt(iter->first);
     xfr16BitInt(iter->second.length());
     xfrBlob(iter->second);
-  } 
+  }
 }
 
 void DNSPacketWriter::xfr48BitInt(uint64_t val)
@@ -136,14 +135,14 @@ void DNSPacketWriter::xfr8BitInt(uint8_t val)
 }
 
 
-/* input: 
+/* input:
   "" -> 0
   "blah" -> 4blah
   "blah" "blah" -> output 4blah4blah
   "verylongstringlongerthan256....characters" \xffverylongstring\x23characters (autosplit)
   "blah\"blah" -> 9blah"blah
   "blah\97" -> 5blahb
-  */
+*/
 void DNSPacketWriter::xfrText(const string& text, bool)
 {
   if(text.empty()) {
@@ -186,13 +185,13 @@ bool labeltokUnescape(labelparts_t& parts, const string& label)
       lpos=pos+1;
     }
   }
-  
+
   if(lpos < pos)
     parts.push_back(make_pair(lpos, pos));
   return unescapedSomething;
 }
 
-// this is the absolute hottest function in the pdns recursor 
+// this is the absolute hottest function in the pdns recursor
 void DNSPacketWriter::xfrLabel(const string& Label, bool compress)
 {
   string label = d_lowerCase ? toLower(Label) : Label;
@@ -206,10 +205,10 @@ void DNSPacketWriter::xfrLabel(const string& Label, bool compress)
     d_record.push_back(0);
     return;
   }
-  bool unescaped=labeltokUnescape(parts, label); 
-  
+  bool unescaped=labeltokUnescape(parts, label);
+
   // d_stuff is amount of stuff that is yet to be written out - the dnsrecordheader for example
-  unsigned int pos=d_content.size() + d_record.size() + d_stuff; 
+  unsigned int pos=d_content.size() + d_record.size() + d_stuff;
   string chopped;
   bool deDot = labellen && (label[labellen-1]=='.'); // make sure we don't store trailing dots in the labelmap
 
@@ -222,7 +221,7 @@ void DNSPacketWriter::xfrLabel(const string& Label, bool compress)
     lmap_t::iterator li=d_labelmap.end();
     // see if we've written out this domain before
     //    cerr<<"Searching for compression pointer to '"<<chopped<<"', "<<d_labelmap.size()<<" cmp-records"<<endl;
-    if(compress && (li=find(d_labelmap, chopped))!=d_labelmap.end()) {   
+    if(compress && (li=find(d_labelmap, chopped))!=d_labelmap.end()) {
       //      cerr<<"\tFound a compression pointer to '"<<chopped<<"': "<<li->second<<endl;
       uint16_t offset=li->second;
       offset|=0xc000;
@@ -241,17 +240,16 @@ void DNSPacketWriter::xfrLabel(const string& Label, bool compress)
       // FIXME: this relies on the semi-canonical escaped output from getLabelFromContent
       boost::replace_all(part, "\\.", ".");
       boost::replace_all(part, "\\032", " ");
-      boost::replace_all(part, "\\\\", "\\"); 
+      boost::replace_all(part, "\\\\", "\\");
       if(part.size() > 255)
-          throw MOADNSException("DNSPacketWriter::xfrLabel() tried to write an overly large label");
+        throw MOADNSException("DNSPacketWriter::xfrLabel() tried to write an overly large label");
       d_record.push_back(part.size());
       unsigned int len=d_record.size();
       d_record.resize(len + part.size());
 
       memcpy(((&*d_record.begin()) + len), part.c_str(), part.size());
-      pos+=(part.size())+1;                         
-    }
-    else {
+      pos+=(part.size())+1;
+    } else {
       char labelsize=(char)(i->second - i->first);
       if(!labelsize) // empty label in the middle of name
         throw MOADNSException("DNSPacketWriter::xfrLabel() found empty label in the middle of name");
@@ -264,7 +262,7 @@ void DNSPacketWriter::xfrLabel(const string& Label, bool compress)
   }
   d_record.push_back(0);
 
- out:;
+out:;
 }
 
 void DNSPacketWriter::xfrBlob(const string& blob, int  )
@@ -314,7 +312,7 @@ void DNSPacketWriter::commit()
   drh.d_class=htons(d_recordqclass);
   drh.d_ttl=htonl(d_recordttl);
   drh.d_clen=htons(d_record.size());
-  
+
   // and write out the header
   const uint8_t* ptr=(const uint8_t*)&drh;
   d_content.insert(d_content.end(), ptr, ptr+sizeof(drh));

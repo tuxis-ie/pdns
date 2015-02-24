@@ -7,7 +7,7 @@
 #include "iputils.hh"
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-#include "dnssecinfra.hh" 
+#include "dnssecinfra.hh"
 #include "dnsseckeeper.hh"
 #include <polarssl/md5.h>
 #include <polarssl/sha1.h>
@@ -29,7 +29,7 @@ DNSCryptoKeyEngine* DNSCryptoKeyEngine::makeFromISCFile(DNSKEYRecordContent& drc
   if(!fp) {
     throw runtime_error("Unable to read file '"+string(fname)+"' for generating DNS Private Key");
   }
-  
+
   while(stringfgets(fp, sline)) {
     isc += sline;
   }
@@ -66,8 +66,7 @@ DNSCryptoKeyEngine* DNSCryptoKeyEngine::makeFromISCString(DNSKEYRecordContent& d
     }  else if (pdns_iequals(key,"label")) {
       stormap["label"]=value;
       continue;
-    }
-    else if(pdns_iequals(key, "Private-key-format"))
+    } else if(pdns_iequals(key, "Private-key-format"))
       continue;
     raw.clear();
     B64Decode(value, raw);
@@ -77,7 +76,7 @@ DNSCryptoKeyEngine* DNSCryptoKeyEngine::makeFromISCString(DNSKEYRecordContent& d
 
   if (pkcs11) {
 #ifdef HAVE_P11KIT1
-    dpk = PKCS11DNSCryptoKeyEngine::maker(algorithm); 
+    dpk = PKCS11DNSCryptoKeyEngine::maker(algorithm);
 #else
     throw PDNSException("Cannot load PKCS#11 key without support for it");
 #endif
@@ -95,9 +94,9 @@ std::string DNSCryptoKeyEngine::convertToISC() const
   ostringstream ret;
   ret<<"Private-key-format: v1.2\n";
   BOOST_FOREACH(const stormap_t::value_type& value, stormap) {
-    if(value.first != "Algorithm" && value.first != "PIN" && 
-       value.first != "Slot" && value.first != "Engine" &&
-       value.first != "Label") 
+    if(value.first != "Algorithm" && value.first != "PIN" &&
+        value.first != "Slot" && value.first != "Engine" &&
+        value.first != "Label")
       ret<<value.first<<": "<<Base64Encode(value.second)<<"\n";
     else
       ret<<value.first<<": "<<value.second<<"\n";
@@ -127,19 +126,16 @@ void DNSCryptoKeyEngine::report(unsigned int algo, maker_t* maker, bool fallback
 
 void DNSCryptoKeyEngine::testAll()
 {
-  BOOST_FOREACH(const allmakers_t::value_type& value, getAllMakers())
-  {
+  BOOST_FOREACH(const allmakers_t::value_type& value, getAllMakers()) {
     BOOST_FOREACH(maker_t* creator, value.second) {
 
       BOOST_FOREACH(maker_t* signer, value.second) {
         // multi_map<unsigned int, maker_t*> bestSigner, bestVerifier;
-        
+
         BOOST_FOREACH(maker_t* verifier, value.second) {
           try {
             /* pair<unsigned int, unsigned int> res=*/ testMakers(value.first, creator, signer, verifier);
-          }
-          catch(std::exception& e)
-          {
+          } catch(std::exception& e) {
             cerr<<e.what()<<endl;
           }
         }
@@ -158,9 +154,7 @@ void DNSCryptoKeyEngine::testOne(int algo)
       BOOST_FOREACH(maker_t* verifier, getAllMakers()[algo]) {
         try {
           /* pair<unsigned int, unsigned int> res=*/testMakers(algo, creator, signer, verifier);
-        }
-        catch(std::exception& e)
-        {
+        } catch(std::exception& e) {
           cerr<<e.what()<<endl;
         }
       }
@@ -180,12 +174,13 @@ pair<unsigned int, unsigned int> DNSCryptoKeyEngine::testMakers(unsigned int alg
     bits=1024;
   else if(algo == 12 || algo == 13 || algo == 250) // GOST or nistp256 or ED25519
     bits=256;
-  else 
+  else
     bits=384;
-    
+
   dckeCreate->create(bits);
 
-  { // FIXME: this block copy/pasted from makeFromISCString
+  {
+    // FIXME: this block copy/pasted from makeFromISCString
     DNSKEYRecordContent dkrc;
     int algorithm = 0;
     string sline, key, value, raw;
@@ -212,8 +207,7 @@ pair<unsigned int, unsigned int> DNSCryptoKeyEngine::testMakers(unsigned int alg
       }  else if (pdns_iequals(key,"label")) {
         stormap["label"]=value;
         continue;
-      }
-      else if(pdns_iequals(key, "Private-key-format"))
+      } else if(pdns_iequals(key, "Private-key-format"))
         continue;
       raw.clear();
       B64Decode(value, raw);
@@ -223,21 +217,20 @@ pair<unsigned int, unsigned int> DNSCryptoKeyEngine::testMakers(unsigned int alg
   }
 
   string message("Hi! How is life?");
-  
+
   string signature;
   DTime dt; dt.set();
   for(unsigned int n = 0; n < 100; ++n)
     signature = dckeSign->sign(message);
   unsigned int udiffSign= dt.udiff()/100, udiffVerify;
-  
+
   dckeVerify->fromPublicKeyString(dckeSign->getPublicKeyString());
-  
+
   dt.set();
   if(dckeVerify->verify(message, signature)) {
     udiffVerify = dt.udiff();
     cerr<<"Signature & verify ok, signature "<<udiffSign<<"usec, verify "<<udiffVerify<<"usec"<<endl;
-  }
-  else {
+  } else {
     throw runtime_error("Verification of creator "+dckeCreate->getName()+" with signer "+dckeSign->getName()+" and verifier "+dckeVerify->getName()+" failed");
   }
   return make_pair(udiffSign, udiffVerify);
@@ -253,17 +246,14 @@ DNSCryptoKeyEngine* DNSCryptoKeyEngine::makeFromPublicKeyString(unsigned int alg
 
 DNSCryptoKeyEngine* DNSCryptoKeyEngine::makeFromPEMString(DNSKEYRecordContent& drc, const std::string& raw)
 {
-  
-  BOOST_FOREACH(makers_t::value_type& val, getMakers())
-  {
+
+  BOOST_FOREACH(makers_t::value_type& val, getMakers()) {
     DNSCryptoKeyEngine* ret=0;
     try {
       ret = val.second(val.first);
       ret->fromPEMString(drc, raw);
       return ret;
-    }
-    catch(...)
-    {
+    } catch(...) {
       delete ret; // fine if 0
     }
   }
@@ -276,7 +266,7 @@ bool sharedDNSSECCompare(const shared_ptr<DNSRecordContent>& a, const shared_ptr
   return a->serialize("", true, true) < b->serialize("", true, true);
 }
 
-string getMessageForRRSET(const std::string& qname, const RRSIGRecordContent& rrc, vector<shared_ptr<DNSRecordContent> >& signRecords) 
+string getMessageForRRSET(const std::string& qname, const RRSIGRecordContent& rrc, vector<shared_ptr<DNSRecordContent> >& signRecords)
 {
   sort(signRecords.begin(), signRecords.end(), sharedDNSSECCompare);
 
@@ -292,12 +282,12 @@ string getMessageForRRSET(const std::string& qname, const RRSIGRecordContent& rr
     toHash.append((char*)&tmp, 2);
     uint32_t ttl=htonl(rrc.d_originalttl);
     toHash.append((char*)&ttl, 4);
-    string rdata=add->serialize("", true, true); 
+    string rdata=add->serialize("", true, true);
     tmp=htons(rdata.length());
     toHash.append((char*)&tmp, 2);
     toHash.append(rdata);
   }
-  
+
   return toHash;
 }
 
@@ -306,27 +296,23 @@ DSRecordContent makeDSFromDNSKey(const std::string& qname, const DNSKEYRecordCon
   string toHash;
   toHash.assign(toLower(simpleCompress(qname)));
   toHash.append(const_cast<DNSKEYRecordContent&>(drc).serialize("", true, true));
-  
+
   DSRecordContent dsrc;
   if(digest==1) {
     shared_ptr<DNSCryptoKeyEngine> dpk(DNSCryptoKeyEngine::make(5)); // gives us SHA1
     dsrc.d_digest = dpk->hash(toHash);
-  }
-  else if(digest == 2) {
+  } else if(digest == 2) {
     shared_ptr<DNSCryptoKeyEngine> dpk(DNSCryptoKeyEngine::make(8)); // gives us SHA256
     dsrc.d_digest = dpk->hash(toHash);
-  }
-  else if(digest == 3) {
+  } else if(digest == 3) {
     shared_ptr<DNSCryptoKeyEngine> dpk(DNSCryptoKeyEngine::make(12)); // gives us GOST
     dsrc.d_digest = dpk->hash(toHash);
-  }
-  else if(digest == 4) {
+  } else if(digest == 4) {
     shared_ptr<DNSCryptoKeyEngine> dpk(DNSCryptoKeyEngine::make(14)); // gives us ECDSAP384
     dsrc.d_digest = dpk->hash(toHash);
-  }
-  else 
+  } else
     throw std::runtime_error("Asked to a DS of unknown digest type " + lexical_cast<string>(digest)+"\n");
-  
+
   dsrc.d_algorithm= drc.d_algorithm;
   dsrc.d_digesttype=digest;
   dsrc.d_tag=const_cast<DNSKEYRecordContent&>(drc).getTag();
@@ -380,7 +366,7 @@ std::string hashQNameWithSalt(unsigned int times, const std::string& salt, const
   unsigned char hash[20];
   for(;;) {
     sha1((unsigned char*)toHash.c_str(), toHash.length(), hash);
-    if(!times--) 
+    if(!times--)
       break;
     toHash.assign((char*)hash, sizeof(hash));
     toHash.append(salt);
@@ -397,9 +383,9 @@ class DEREater
 public:
   DEREater(const std::string& str) : d_str(str), d_pos(0)
   {}
-  
-  struct eof{};
-  
+
+  struct eof {};
+
   uint8_t getByte()
   {
     if(d_pos >= d_str.length()) {
@@ -407,7 +393,7 @@ public:
     }
     return (uint8_t) d_str[d_pos++];
   }
-  
+
   uint32_t getLength()
   {
     uint8_t first = getByte();
@@ -415,7 +401,7 @@ public:
       return first;
     }
     first &= ~0x80;
-    
+
     uint32_t len=0;
     for(int n=0; n < first; ++n) {
       len *= 0x100;
@@ -423,7 +409,7 @@ public:
     }
     return len;
   }
-  
+
   std::string getBytes(unsigned int len)
   {
     std::string ret;
@@ -431,8 +417,8 @@ public:
       ret.append(1, (char)getByte());
     return ret;
   }
-  
-  std::string::size_type getOffset() 
+
+  std::string::size_type getOffset()
   {
     return d_pos;
   }
@@ -445,28 +431,26 @@ void decodeDERIntegerSequence(const std::string& input, vector<string>& output)
 {
   output.clear();
   DEREater de(input);
-  if(de.getByte() != 0x30) 
+  if(de.getByte() != 0x30)
     throw runtime_error("Not a DER sequence");
-  
-  unsigned int seqlen=de.getLength(); 
+
+  unsigned int seqlen=de.getLength();
   unsigned int startseq=de.getOffset();
   unsigned int len;
   string ret;
   try {
     for(;;) {
       uint8_t kind = de.getByte();
-      if(kind != 0x02) 
+      if(kind != 0x02)
         throw runtime_error("DER Sequence contained non-INTEGER component: "+lexical_cast<string>((unsigned int)kind) );
       len = de.getLength();
       ret = de.getBytes(len);
       output.push_back(ret);
     }
-  }
-  catch(DEREater::eof& eof)
-  {
+  } catch(DEREater::eof& eof) {
     if(de.getOffset() - startseq != seqlen)
       throw runtime_error("DER Sequence ended before end of data");
-  }  
+  }
 }
 
 string calculateMD5HMAC(const std::string& key, const std::string& text)
@@ -486,35 +470,30 @@ string calculateSHAHMAC(const std::string& key, const std::string& text, TSIGHas
   unsigned char hash[64];
 
   switch(hasher) {
-  case TSIG_SHA1:
-  {
-      sha1_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash);
-      res.assign(reinterpret_cast<const char*>(hash), 20);
-      break;
+  case TSIG_SHA1: {
+    sha1_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash);
+    res.assign(reinterpret_cast<const char*>(hash), 20);
+    break;
   };
-  case TSIG_SHA224:
-  {
-      sha2_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 1);
-      res.assign(reinterpret_cast<const char*>(hash), 28);
-      break;
+  case TSIG_SHA224: {
+    sha2_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 1);
+    res.assign(reinterpret_cast<const char*>(hash), 28);
+    break;
   };
-  case TSIG_SHA256:
-  {
-      sha2_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 0);
-      res.assign(reinterpret_cast<const char*>(hash), 32);
-      break;
+  case TSIG_SHA256: {
+    sha2_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 0);
+    res.assign(reinterpret_cast<const char*>(hash), 32);
+    break;
   };
-  case TSIG_SHA384:
-  {
-      sha4_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 1);
-      res.assign(reinterpret_cast<const char*>(hash), 48);
-      break;
+  case TSIG_SHA384: {
+    sha4_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 1);
+    res.assign(reinterpret_cast<const char*>(hash), 48);
+    break;
   };
-  case TSIG_SHA512:
-  {
-      sha4_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 0);
-      res.assign(reinterpret_cast<const char*>(hash), 64);
-      break;
+  case TSIG_SHA512: {
+    sha4_hmac(reinterpret_cast<const unsigned char*>(key.c_str()), key.size(), reinterpret_cast<const unsigned char*>(text.c_str()), text.size(), hash, 0);
+    res.assign(reinterpret_cast<const char*>(hash), 64);
+    break;
   };
   default:
     throw new PDNSException("Unknown hash algorithm requested for SHA");
@@ -523,7 +502,8 @@ string calculateSHAHMAC(const std::string& key, const std::string& text, TSIGHas
   return res;
 }
 
-string calculateHMAC(const std::string& key, const std::string& text, TSIGHashEnum hash) {
+string calculateHMAC(const std::string& key, const std::string& text, TSIGHashEnum hash)
+{
   if (hash == TSIG_MD5) return calculateMD5HMAC(key, text);
 
   // add other algorithms here
@@ -538,7 +518,7 @@ string makeTSIGMessageFromTSIGPacket(const string& opacket, unsigned int tsigOff
 
   packet.resize(tsigOffset); // remove the TSIG record at the end as per RFC2845 3.4.1
   packet[(dnsHeaderOffset + sizeof(struct dnsheader))-1]--; // Decrease ARCOUNT because we removed the TSIG RR in the previous line.
-  
+
 
   // Replace the message ID with the original message ID from the TSIG record.
   // This is needed for forwarded DNS Update as they get a new ID when forwarding (section 6.1 of RFC2136). The TSIG record stores the original ID and the
@@ -552,7 +532,7 @@ string makeTSIGMessageFromTSIGPacket(const string& opacket, unsigned int tsigOff
     message.append((char*)&len, 2);
     message.append(previous);
   }
-  
+
   message.append(packet);
 
   vector<uint8_t> signVect;
@@ -563,8 +543,8 @@ string makeTSIGMessageFromTSIGPacket(const string& opacket, unsigned int tsigOff
     dw.xfr32BitInt(0);    // TTL
     dw.xfrLabel(toLower(trc.d_algoName), false);
   }
-  
-  uint32_t now = trc.d_time; 
+
+  uint32_t now = trc.d_time;
   dw.xfr48BitInt(now);
   dw.xfr16BitInt(trc.d_fudge); // fudge
   if(!timersonly) {
@@ -595,7 +575,7 @@ bool getTSIGHashEnum(const string &algoName, TSIGHashEnum& algoEnum)
   else if (normalizedName == "hmac-sha512")
     algoEnum = TSIG_SHA512;
   else {
-     return false;
+    return false;
   }
   return true;
 }
@@ -605,19 +585,19 @@ void addTSIG(DNSPacketWriter& pw, TSIGRecordContent* trc, const string& tsigkeyn
 {
   TSIGHashEnum algo;
   if (!getTSIGHashEnum(trc->d_algoName, algo)) {
-     L<<Logger::Error<<"Unsupported TSIG HMAC algorithm " << trc->d_algoName << endl;
-     return;
+    L<<Logger::Error<<"Unsupported TSIG HMAC algorithm " << trc->d_algoName << endl;
+    return;
   }
 
   string toSign;
   if(!tsigprevious.empty()) {
     uint16_t len = htons(tsigprevious.length());
     toSign.append((char*)&len, 2);
-    
+
     toSign.append(tsigprevious);
   }
   toSign.append(&*pw.getContent().begin(), &*pw.getContent().end());
-  
+
   // now add something that looks a lot like a TSIG record, but isn't
   vector<uint8_t> signVect;
   DNSPacketWriter dw(signVect, "", 0);
@@ -626,17 +606,17 @@ void addTSIG(DNSPacketWriter& pw, TSIGRecordContent* trc, const string& tsigkeyn
     dw.xfr16BitInt(QClass::ANY); // class
     dw.xfr32BitInt(0);    // TTL
     dw.xfrLabel(trc->d_algoName, false);
-  }  
-  uint32_t now = trc->d_time; 
+  }
+  uint32_t now = trc->d_time;
   dw.xfr48BitInt(now);
   dw.xfr16BitInt(trc->d_fudge); // fudge
-  
+
   if(!timersonly) {
     dw.xfr16BitInt(trc->d_eRcode); // extended rcode
     dw.xfr16BitInt(trc->d_otherData.length()); // length of 'other' data
     //    dw.xfrBlob(trc->d_otherData);
   }
-  
+
   const vector<uint8_t>& signRecord=dw.getRecordBeingWritten();
   toSign.append(&*signRecord.begin(), &*signRecord.end());
 

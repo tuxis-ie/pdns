@@ -40,12 +40,12 @@ void addGetStat(const string& name, const uint64_t* place)
 {
   d_get64bitpointers[name]=place;
 }
-void addGetStat(const string& name, function<uint32_t ()> f ) 
+void addGetStat(const string& name, function<uint32_t ()> f )
 {
   d_get32bitmembers[name]=f;
 }
 
-optional<uint64_t> get(const string& name) 
+optional<uint64_t> get(const string& name)
 {
   optional<uint64_t> ret;
 
@@ -62,18 +62,18 @@ optional<uint64_t> get(const string& name)
 map<string,string> getAllStatsMap()
 {
   map<string,string> ret;
-  
+
   pair<string, const uint32_t*> the32bits;
   pair<string, const uint64_t*> the64bits;
   pair<string, function< uint32_t() > >  the32bitmembers;
-  
+
   BOOST_FOREACH(the32bits, d_get32bitpointers) {
     ret.insert(make_pair(the32bits.first, lexical_cast<string>(*the32bits.second)));
   }
   BOOST_FOREACH(the64bits, d_get64bitpointers) {
     ret.insert(make_pair(the64bits.first, lexical_cast<string>(*the64bits.second)));
   }
-  BOOST_FOREACH(the32bitmembers, d_get32bitmembers) { 
+  BOOST_FOREACH(the32bitmembers, d_get32bitmembers) {
     if(the32bitmembers.first == "cache-bytes" || the32bitmembers.first=="packetcache-bytes")
       continue; // too slow for 'get-all'
     ret.insert(make_pair(the32bitmembers.first, lexical_cast<string>(the32bitmembers.second())));
@@ -120,8 +120,7 @@ string doGetParameter(T begin, T end)
       replace_all(parm, "\"", "\\\"");
       replace_all(parm, "\n", "\\n");
       ret += *i +"=\""+ parm +"\"\n";
-    }
-    else
+    } else
       ret += *i +" not known\n";
   }
   return ret;
@@ -136,13 +135,12 @@ static uint64_t dumpNegCache(SyncRes::negcache_t& negcache, int fd)
   }
   fprintf(fp, "; negcache dump from thread follows\n;\n");
   time_t now = time(0);
-  
+
   typedef SyncRes::negcache_t::nth_index<1>::type sequence_t;
   sequence_t& sidx=negcache.get<1>();
 
   uint64_t count=0;
-  BOOST_FOREACH(const NegCacheEntry& neg, sidx)
-  {
+  BOOST_FOREACH(const NegCacheEntry& neg, sidx) {
     ++count;
     fprintf(fp, "%s IN %s %d VIA %s\n", neg.d_name.c_str(), neg.d_qtype.getName().c_str(), (unsigned int) (neg.d_ttd - now), neg.d_qname.c_str());
   }
@@ -175,8 +173,7 @@ string doDumpNSSpeeds(T begin, T end)
   uint64_t total = 0;
   try {
     total = broadcastAccFunction<uint64_t>(boost::bind(pleaseDumpNSSpeeds, fd));
-  }
-  catch(...){}
+  } catch(...) {}
 
   close(fd);
   return "dumped "+lexical_cast<string>(total)+" records\n";
@@ -188,18 +185,17 @@ string doDumpCache(T begin, T end)
   T i=begin;
   string fname;
 
-  if(i!=end) 
+  if(i!=end)
     fname=*i;
 
   int fd=open(fname.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0660);
-  if(fd < 0) 
+  if(fd < 0)
     return "Error opening dump file for writing: "+string(strerror(errno))+"\n";
   uint64_t total = 0;
   try {
     total = broadcastAccFunction<uint64_t>(boost::bind(pleaseDump, fd));
-  }
-  catch(...){}
-  
+  } catch(...) {}
+
   close(fd);
   return "dumped "+lexical_cast<string>(total)+" records\n";
 }
@@ -210,11 +206,11 @@ string doDumpEDNSStatus(T begin, T end)
   T i=begin;
   string fname;
 
-  if(i!=end) 
+  if(i!=end)
     fname=*i;
 
   int fd=open(fname.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0660);
-  if(fd < 0) 
+  if(fd < 0)
     return "Error opening dump file for writing: "+string(strerror(errno))+"\n";
 
   SyncRes::doEDNSDumpAndClose(fd);
@@ -273,7 +269,7 @@ string doSetCarbonServer(T begin, T end)
 template<typename T>
 string setMinimumTTL(T begin, T end)
 {
-  if(end-begin != 1) 
+  if(end-begin != 1)
     return "Need to supply new minimum TTL number\n";
   SyncRes::s_minimumTTL = atoi(begin->c_str());
   return "New minimum TTL: " + lexical_cast<string>(SyncRes::s_minimumTTL) + "\n";
@@ -311,11 +307,11 @@ static string* pleaseGetCurrentQueries()
   int n=0;
   for(MT_t::waiters_t::iterator mthread=MT->d_waiters.begin(); mthread!=MT->d_waiters.end() && n < 100; ++mthread, ++n) {
     const PacketID& pident = mthread->key;
-    ostr << (fmt 
-             % pident.domain % DNSRecordContent::NumberToType(pident.type) 
+    ostr << (fmt
+             % pident.domain % DNSRecordContent::NumberToType(pident.type)
              % pident.remote.toString() % (pident.sock ? 'Y' : 'n')
              % (pident.fd == -1 ? 'Y' : 'n')
-             );
+            );
   }
   ostr <<" - done\n";
   return new string(ostr.str());
@@ -369,7 +365,7 @@ uint64_t getNsSpeedsSize()
 
 uint64_t* pleaseGetConcurrentQueries()
 {
-  return new uint64_t(MT->numProcesses()); 
+  return new uint64_t(MT->numProcesses());
 }
 
 static uint64_t getConcurrentQueries()
@@ -470,8 +466,8 @@ uint64_t doGetPacketCacheMisses()
 uint64_t doGetMallocated()
 {
   // this turned out to be broken
-/*  struct mallinfo mi = mallinfo();
-  return mi.uordblks; */
+  /*  struct mallinfo mi = mallinfo();
+    return mi.uordblks; */
   return 0;
 }
 
@@ -489,17 +485,17 @@ RecursorControlParser::RecursorControlParser()
   addGetStat("tcp-questions", &g_stats.tcpqcounter);
 
   addGetStat("cache-hits", doGetCacheHits);
-  addGetStat("cache-misses", doGetCacheMisses); 
-  addGetStat("cache-entries", doGetCacheSize); 
-  addGetStat("cache-bytes", doGetCacheBytes); 
-  
+  addGetStat("cache-misses", doGetCacheMisses);
+  addGetStat("cache-entries", doGetCacheSize);
+  addGetStat("cache-bytes", doGetCacheBytes);
+
   addGetStat("packetcache-hits", doGetPacketCacheHits);
-  addGetStat("packetcache-misses", doGetPacketCacheMisses); 
-  addGetStat("packetcache-entries", doGetPacketCacheSize); 
-  addGetStat("packetcache-bytes", doGetPacketCacheBytes); 
-  
+  addGetStat("packetcache-misses", doGetPacketCacheMisses);
+  addGetStat("packetcache-entries", doGetPacketCacheSize);
+  addGetStat("packetcache-bytes", doGetPacketCacheBytes);
+
   addGetStat("malloc-bytes", doGetMallocated);
-  
+
   addGetStat("servfail-answers", &g_stats.servFails);
   addGetStat("nxdomain-answers", &g_stats.nxDomains);
   addGetStat("noerror-answers", &g_stats.noErrors);
@@ -530,14 +526,14 @@ RecursorControlParser::RecursorControlParser()
   addGetStat("no-packet-error", &g_stats.noPacketError);
   addGetStat("dlg-only-drops", &SyncRes::s_nodelegated);
   addGetStat("max-mthread-stack", &g_stats.maxMThreadStackUsage);
-  
+
   addGetStat("negcache-entries", boost::bind(getNegCacheSize));
-  addGetStat("throttle-entries", boost::bind(getThrottleSize)); 
+  addGetStat("throttle-entries", boost::bind(getThrottleSize));
 
   addGetStat("nsspeeds-entries", boost::bind(getNsSpeedsSize));
   addGetStat("failed-host-entries", boost::bind(getFailedHostsSize));
 
-  addGetStat("concurrent-queries", boost::bind(getConcurrentQueries)); 
+  addGetStat("concurrent-queries", boost::bind(getConcurrentQueries));
   addGetStat("security-status", &g_security_status);
   addGetStat("outgoing-timeouts", &SyncRes::s_outgoingtimeouts);
   addGetStat("tcp-outqueries", &SyncRes::s_tcpoutqueries);
@@ -567,10 +563,10 @@ static void doExitGeneric(bool nicely)
 {
   L<<Logger::Error<<"Exiting on user request"<<endl;
   extern RecursorControlChannel s_rcc;
-  s_rcc.~RecursorControlChannel(); 
+  s_rcc.~RecursorControlChannel();
 
   extern string s_pidfname;
-  if(!s_pidfname.empty()) 
+  if(!s_pidfname.empty())
     unlink(s_pidfname.c_str()); // we can at least try..
   if(nicely)
     exit(1);
@@ -601,7 +597,7 @@ string doTopRemotes()
   counts_t counts;
 
   vector<ComboAddress> remotes=broadcastAccFunction<vector<ComboAddress> >(pleaseGetRemotes);
-    
+
   unsigned int total=0;
   for(RemoteKeeper::remotes_t::const_iterator i = remotes.begin(); i != remotes.end(); ++i)
     if(i->sin4.sin_family) {
@@ -611,7 +607,7 @@ string doTopRemotes()
 
   typedef std::multimap<int, ComboAddress> rcounts_t;
   rcounts_t rcounts;
-  
+
   for(counts_t::const_iterator i=counts.begin(); i != counts.end(); ++i)
     rcounts.insert(make_pair(-i->second, i->first));
 
@@ -646,37 +642,37 @@ string RecursorControlParser::getAnswer(const string& question, RecursorControlP
   // should probably have a smart dispatcher here, like auth has
   if(cmd=="help")
     return
-"current-queries                  show currently active queries\n"
-"dump-cache <filename>            dump cache contents to the named file\n"
-"dump-edns[status] <filename>     dump EDNS status to the named file\n"
-"dump-nsspeeds <filename>         dump nsspeeds statistics to the named file\n"
-"get [key1] [key2] ..             get specific statistics\n"
-"get-all                          get all statistics\n"
-"get-parameter [key1] [key2] ..   get configuration parameters\n"
-"get-qtypelist                    get QType statistics\n"
-"                                 notice: queries from cache aren't being counted yet\n"
-"help                             get this list\n"
-"ping                             check that all threads are alive\n"
-"quit                             stop the recursor daemon\n"
-"quit-nicely                      stop the recursor daemon nicely\n"
-"reload-acls                      reload ACLS\n"
-"reload-lua-script [filename]     (re)load Lua script\n"
-"reload-zones                     reload all auth and forward zones\n"
-"set-minimum-ttl value            set mininum-ttl-override\n"
-"set-carbon-server                set a carbon server for telemetry\n"
-"trace-regex [regex]              emit resolution trace for matching queries (empty regex to clear trace)\n"
-"top-remotes                      show top remotes\n"
-"unload-lua-script                unload Lua script\n"
-"version                          return Recursor version number\n"
-"wipe-cache domain0 [domain1] ..  wipe domain data from cache\n";
+      "current-queries                  show currently active queries\n"
+      "dump-cache <filename>            dump cache contents to the named file\n"
+      "dump-edns[status] <filename>     dump EDNS status to the named file\n"
+      "dump-nsspeeds <filename>         dump nsspeeds statistics to the named file\n"
+      "get [key1] [key2] ..             get specific statistics\n"
+      "get-all                          get all statistics\n"
+      "get-parameter [key1] [key2] ..   get configuration parameters\n"
+      "get-qtypelist                    get QType statistics\n"
+      "                                 notice: queries from cache aren't being counted yet\n"
+      "help                             get this list\n"
+      "ping                             check that all threads are alive\n"
+      "quit                             stop the recursor daemon\n"
+      "quit-nicely                      stop the recursor daemon nicely\n"
+      "reload-acls                      reload ACLS\n"
+      "reload-lua-script [filename]     (re)load Lua script\n"
+      "reload-zones                     reload all auth and forward zones\n"
+      "set-minimum-ttl value            set mininum-ttl-override\n"
+      "set-carbon-server                set a carbon server for telemetry\n"
+      "trace-regex [regex]              emit resolution trace for matching queries (empty regex to clear trace)\n"
+      "top-remotes                      show top remotes\n"
+      "unload-lua-script                unload Lua script\n"
+      "version                          return Recursor version number\n"
+      "wipe-cache domain0 [domain1] ..  wipe domain data from cache\n";
 
   if(cmd=="get-all")
     return getAllStats();
 
-  if(cmd=="get") 
+  if(cmd=="get")
     return doGet(begin, end);
-  
-  if(cmd=="get-parameter") 
+
+  if(cmd=="get-parameter")
     return doGetParameter(begin, end);
 
   if(cmd=="quit") {
@@ -687,31 +683,31 @@ string RecursorControlParser::getAnswer(const string& question, RecursorControlP
   if(cmd=="version") {
     return string(PDNS_VERSION)+"\n";
   }
-  
+
   if(cmd=="quit-nicely") {
     *command=&doExitNicely;
     return "bye nicely\n";
-  }  
+  }
 
-  if(cmd=="dump-cache") 
+  if(cmd=="dump-cache")
     return doDumpCache(begin, end);
 
-  if(cmd=="dump-ednsstatus" || cmd=="dump-edns") 
+  if(cmd=="dump-ednsstatus" || cmd=="dump-edns")
     return doDumpEDNSStatus(begin, end);
 
   if(cmd=="dump-nsspeeds")
     return doDumpNSSpeeds(begin, end);
 
-  if(cmd=="wipe-cache" || cmd=="flushname") 
+  if(cmd=="wipe-cache" || cmd=="flushname")
     return doWipeCache(begin, end);
 
-  if(cmd=="reload-lua-script") 
+  if(cmd=="reload-lua-script")
     return doQueueReloadLuaScript(begin, end);
 
-  if(cmd=="set-carbon-server") 
+  if(cmd=="set-carbon-server")
     return doSetCarbonServer(begin, end);
 
-  if(cmd=="trace-regex") 
+  if(cmd=="trace-regex")
     return doTraceRegex(begin, end);
 
   if(cmd=="unload-lua-script") {
@@ -723,14 +719,10 @@ string RecursorControlParser::getAnswer(const string& question, RecursorControlP
   if(cmd=="reload-acls") {
     try {
       parseACLs();
-    } 
-    catch(std::exception& e) 
-    {
+    } catch(std::exception& e) {
       L<<Logger::Error<<"reloading ACLs failed (Exception: "<<e.what()<<")"<<endl;
       return e.what() + string("\n");
-    }
-    catch(PDNSException& ae)
-    {
+    } catch(PDNSException& ae) {
       L<<Logger::Error<<"reloading ACLs failed (PDNSException: "<<ae.reason<<")"<<endl;
       return ae.reason + string("\n");
     }
@@ -743,7 +735,7 @@ string RecursorControlParser::getAnswer(const string& question, RecursorControlP
 
   if(cmd=="current-queries")
     return doCurrentQueries();
-  
+
   if(cmd=="ping") {
     return broadcastAccFunction<string>(nopFunction);
   }
@@ -755,10 +747,10 @@ string RecursorControlParser::getAnswer(const string& question, RecursorControlP
   if(cmd=="set-minimum-ttl") {
     return setMinimumTTL(begin, end);
   }
-  
+
   if(cmd=="get-qtypelist") {
     return g_rs.getQTypeReport();
   }
-  
+
   return "Unknown command '"+cmd+"', try 'help'\n";
 }

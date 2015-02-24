@@ -36,7 +36,7 @@ using namespace ::boost::multi_index;
 
 struct KeyTag {};
 
-//! The main MTasker class    
+//! The main MTasker class
 /** The main MTasker class. See the main page for more information.
     \tparam EventKey Type of the key with which events are to be identified. Defaults to int.
     \tparam EventVal Type of the content or value of an event. Defaults to int. Cannot be set to void.
@@ -45,15 +45,14 @@ struct KeyTag {};
 template<class EventKey=int, class EventVal=int> class MTasker
 {
 private:
-  ucontext_t d_kernel;     
+  ucontext_t d_kernel;
   std::queue<int> d_runQueue;
   std::queue<int> d_zombiesQueue;
 
-  struct ThreadInfo
-  {
-	ucontext_t* context;
-	char* startOfStack;
-	char* highestStackSeen;
+  struct ThreadInfo {
+    ucontext_t* context;
+    char* startOfStack;
+    char* highestStackSeen;
   };
 
   typedef std::map<int, ThreadInfo> mthreads_t;
@@ -66,35 +65,34 @@ private:
   enum waitstatusenum {Error=-1,TimeOut=0,Answer} d_waitstatus;
 
 public:
-  struct Waiter
-  {
+  struct Waiter {
     EventKey key;
     ucontext_t *context;
     struct timeval ttd;
-    int tid;    
+    int tid;
   };
 
   typedef multi_index_container<
-    Waiter,
-    indexed_by <
-                ordered_unique<member<Waiter,EventKey,&Waiter::key> >,
-                ordered_non_unique<tag<KeyTag>, member<Waiter,struct timeval,&Waiter::ttd> >
-               >
-  > waiters_t;
+  Waiter,
+  indexed_by <
+  ordered_unique<member<Waiter,EventKey,&Waiter::key> >,
+  ordered_non_unique<tag<KeyTag>, member<Waiter,struct timeval,&Waiter::ttd> >
+      >
+      > waiters_t;
 
   waiters_t d_waiters;
 
   //! Constructor
-  /** Constructor with a small default stacksize. If any of your threads exceeds this stack, your application will crash. 
+  /** Constructor with a small default stacksize. If any of your threads exceeds this stack, your application will crash.
       This limit applies solely to the stack, the heap is not limited in any way. If threads need to allocate a lot of data,
-      the use of new/delete is suggested. 
-   */
+      the use of new/delete is suggested.
+  */
   MTasker(size_t stacksize=8192) : d_stacksize(stacksize)
   {
     d_maxtid=0;
   }
 
-  typedef void tfunc_t(void *); //!< type of the pointer that starts a thread 
+  typedef void tfunc_t(void *); //!< type of the pointer that starts a thread
   int waitEvent(EventKey &key, EventVal *val=0, unsigned int timeoutMsec=0, struct timeval* now=0);
   void yield();
   int sendEvent(const EventKey& key, const EventVal* val=0);
@@ -103,7 +101,7 @@ public:
   bool schedule(struct timeval* now=0);
   bool noProcesses();
   unsigned int numProcesses();
-  int getTid(); 
+  int getTid();
   unsigned int getMaxStackUsage();
 
 private:

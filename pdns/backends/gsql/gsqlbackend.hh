@@ -7,8 +7,8 @@
 
 bool isDnssecDomainMetadata (const string& name);
 
-/* 
-GSQLBackend is a generic backend used by other sql backends
+/*
+  GSQLBackend is a generic backend used by other sql backends
 */
 class GSQLBackend : public DNSBackend
 {
@@ -19,7 +19,7 @@ public:
     if(d_db)
       delete d_db;
   }
-  
+
   void setDB(SSql *db)
   {
     d_db=db;
@@ -27,7 +27,7 @@ public:
       d_db->setLog(::arg().mustDo("query-logging"));
     }
   }
-  
+
   virtual string sqlEscape(const string &name);
   void lookup(const QType &, const string &qdomain, DNSPacket *p=0, int zoneId=-1);
   bool list(const string &target, int domain_id, bool include_disabled=false);
@@ -72,11 +72,11 @@ public:
   bool getDomainMetadata(const string& name, const std::string& kind, std::vector<std::string>& meta);
   bool setDomainMetadata(const string& name, const std::string& kind, const std::vector<std::string>& meta);
   bool clearDomainAllMetadata(const string& domain);
-  
+
   bool removeDomainKey(const string& name, unsigned int id);
   bool activateDomainKey(const string& name, unsigned int id);
   bool deactivateDomainKey(const string& name, unsigned int id);
-  
+
   bool getTSIGKey(const string& name, string* algorithm, string* content);
   bool setTSIGKey(const string& name, const string& algorithm, const string& content);
   bool deleteTSIGKey(const string& name);

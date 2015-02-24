@@ -5,7 +5,7 @@
     Copyright (C) 2002-2011  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -40,14 +40,13 @@ using namespace ::boost::multi_index;
 class DNSSECKeeper : public boost::noncopyable
 {
 public:
-  struct KeyMetaData
-  {
+  struct KeyMetaData {
     unsigned int id;
     bool active;
     bool keyOrZone;
     string fname;
   };
-  typedef std::pair<DNSSECPrivateKey, KeyMetaData> keymeta_t; 
+  typedef std::pair<DNSSECPrivateKey, KeyMetaData> keymeta_t;
   typedef std::vector<keymeta_t > keyset_t;
 
 private:
@@ -57,20 +56,20 @@ private:
 public:
   DNSSECKeeper() : d_keymetadb( new UeberBackend("key-only")), d_ourDB(true)
   {
-    
+
   }
-  
+
   DNSSECKeeper(UeberBackend* db) : d_keymetadb(db), d_ourDB(false)
   {
   }
-  
+
   ~DNSSECKeeper()
   {
     if(d_ourDB)
       delete d_keymetadb;
   }
   bool isSecuredZone(const std::string& zone);
-  
+
   keyset_t getKeys(const std::string& zone, boost::tribool allOrKeyOrZone = boost::indeterminate, bool useCache = true);
   DNSSECPrivateKey getKeyById(const std::string& zone, unsigned int id);
   bool addKey(const std::string& zname, bool keyOrZone, int algorithm=5, int bits=0, bool active=true);
@@ -93,67 +92,65 @@ public:
 
   bool TSIGGrantsAccess(const string& zone, const string& keyname);
   bool getTSIGForAccess(const string& zone, const string& master, string* keyname);
-  
+
   void startTransaction()
   {
     (*d_keymetadb->backends.begin())->startTransaction("", -1);
   }
-  
+
   void commitTransaction()
   {
     (*d_keymetadb->backends.begin())->commitTransaction();
   }
-  
+
   void getFromMeta(const std::string& zname, const std::string& key, std::string& value);
 private:
 
-  
-  struct KeyCacheEntry
-  {
+
+  struct KeyCacheEntry {
     typedef vector<DNSSECKeeper::keymeta_t> keys_t;
-  
+
     uint32_t getTTD() const
     {
       return d_ttd;
     }
-  
+
     string d_domain;
     unsigned int d_ttd;
     mutable keys_t d_keys;
   };
-  
-  struct METACacheEntry
-  {
+
+  struct METACacheEntry {
     uint32_t getTTD() const
     {
       return d_ttd;
     }
-  
+
     string d_domain;
     unsigned int d_ttd;
-  
+
     mutable std::string d_key, d_value;
   };
-  
-  
+
+
   typedef multi_index_container<
-    KeyCacheEntry,
-    indexed_by<
-      ordered_unique<member<KeyCacheEntry, std::string, &KeyCacheEntry::d_domain>, CIStringCompare >,
-      sequenced<>
-    >
+  KeyCacheEntry,
+  indexed_by<
+  ordered_unique<member<KeyCacheEntry, std::string, &KeyCacheEntry::d_domain>, CIStringCompare >,
+  sequenced<>
+  >
   > keycache_t;
   typedef multi_index_container<
-    METACacheEntry,
-    indexed_by<
-      ordered_unique<
-        composite_key< 
-          METACacheEntry, 
-          member<METACacheEntry, std::string, &METACacheEntry::d_domain> ,
-          member<METACacheEntry, std::string, &METACacheEntry::d_key>
-        >, composite_key_compare<CIStringCompare, CIStringCompare> >,
-      sequenced<>
-    >
+  METACacheEntry,
+  indexed_by<
+  ordered_unique<
+  composite_key<
+  METACacheEntry,
+  member<METACacheEntry, std::string, &METACacheEntry::d_domain> ,
+  member<METACacheEntry, std::string, &METACacheEntry::d_key>
+  >, composite_key_compare<CIStringCompare, CIStringCompare> >,
+  sequenced<>
+  >
   > metacache_t;
 
   void cleanup();

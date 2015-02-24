@@ -3,7 +3,7 @@
     Copyright (C) 2006 - 2011 PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -48,7 +48,7 @@ static void initArguments(int argc, char** argv)
   arg().set("config-name","Name of this virtual configuration - will rename the binary image")="";
   arg().setCmd("help","Provide this helpful message");
 
-  arg().laxParse(argc,argv);  
+  arg().laxParse(argc,argv);
   if(arg().mustDo("help")) {
     cout<<"syntax: rec_control [options] command, options as below: "<<endl<<endl;
     cout<<arg().helpstring(arg()["help"])<<endl;
@@ -64,10 +64,10 @@ static void initArguments(int argc, char** argv)
   string configname=::arg()["config-dir"]+"/recursor.conf";
   if (::arg()["config-name"] != "")
     configname=::arg()["config-dir"]+"/recursor-"+::arg()["config-name"]+".conf";
-  
+
   cleanSlashes(configname);
 
-  if(!::arg().preParseFile(configname.c_str(), "socket-dir", LOCALSTATEDIR)) 
+  if(!::arg().preParseFile(configname.c_str(), "socket-dir", LOCALSTATEDIR))
     cerr<<"Warning: unable to parse configuration file '"<<configname<<"'"<<endl;
   arg().laxParse(argc,argv);   // make sure the commandline wins
 }
@@ -100,8 +100,7 @@ try
   string receive=rccS.recv(0, arg().asNum("timeout"));
   cout<<receive;
   return 0;
-}
-catch(PDNSException& ae)
+} catch(PDNSException& ae)
 {
   cerr<<"Fatal: "<<ae.reason<<"\n";
   return 1;

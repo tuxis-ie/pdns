@@ -3,7 +3,7 @@
     Copyright (C) 2011  Netherlabs Computer Consulting BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -23,13 +23,13 @@
 #include "ednssubnet.hh"
 #include "dns.hh"
 
-namespace {
-        struct EDNSSubnetOptsWire
-        {
-                uint16_t family;
-                uint8_t sourceMask;
-                uint8_t scopeMask;
-        } GCCPACKATTRIBUTE;
+namespace
+{
+struct EDNSSubnetOptsWire {
+  uint16_t family;
+  uint8_t sourceMask;
+  uint8_t scopeMask;
+} GCCPACKATTRIBUTE;
 
 }
 
@@ -38,7 +38,7 @@ bool getEDNSSubnetOptsFromString(const string& options, EDNSSubnetOpts* eso)
 {
   //cerr<<"options.size:"<<options.size()<<endl;
   if(options.size() <= 4)
-    return false;  
+    return false;
   EDNSSubnetOptsWire esow;
   memcpy(&esow, options.c_str(), sizeof(esow));
   esow.family = ntohs(esow.family);
@@ -62,10 +62,9 @@ bool getEDNSSubnetOptsFromString(const string& options, EDNSSubnetOpts* eso)
     memset(&address, 0, sizeof(address));
     address.sin4.sin_family = AF_INET6;
     memcpy(&address.sin6.sin6_addr.s6_addr, options.c_str()+4, octetsin);
-  }
-  else
+  } else
     return false;
- // cerr<<"Source address: "<<address.toString()<<", mask: "<<(int)esow.sourceMask<<endl;
+// cerr<<"Source address: "<<address.toString()<<", mask: "<<(int)esow.sourceMask<<endl;
   eso->source = Netmask(address, esow.sourceMask);
   eso->scope = Netmask(address, esow.scopeMask);
   return true;
@@ -82,7 +81,7 @@ string makeEDNSSubnetOptsString(const EDNSSubnetOpts& eso)
   ret.assign((const char*)&esow, sizeof(esow));
   int octetsout = ((esow.sourceMask - 1)>> 3)+1;
 
-  if(family == htons(1)) 
+  if(family == htons(1))
     ret.append((const char*) &eso.source.getNetwork().sin4.sin_addr.s_addr, octetsout);
   else
     ret.append((const char*) &eso.source.getNetwork().sin6.sin6_addr.s6_addr, octetsout);

@@ -34,18 +34,18 @@
 
 /**
 
-how will this work.
+  how will this work.
 
-This is a thread that just throws packets around. Should handle ~1000 packets/second.
+  This is a thread that just throws packets around. Should handle ~1000 packets/second.
 
-Consists of a thread receiving packets back from the backend and retransmitting them to the original client.
+  Consists of a thread receiving packets back from the backend and retransmitting them to the original client.
 
-Furthermore, it provides a member function that reports the packet to the connection tracker and actually sends it out. 
+  Furthermore, it provides a member function that reports the packet to the connection tracker and actually sends it out.
 
-The sending happens from a source port that is determined by the constructor, but IS random. Furthermore, the ID is XOR-ed with a random value
-to make sure outside parties can't spoof us.
+  The sending happens from a source port that is determined by the constructor, but IS random. Furthermore, the ID is XOR-ed with a random value
+  to make sure outside parties can't spoof us.
 
-To fix: how to remove the stale entries that will surely accumulate
+  To fix: how to remove the stale entries that will surely accumulate
 */
 
 class DNSProxy
@@ -73,8 +73,7 @@ private:
   pthread_mutex_t d_lock;
   uint16_t d_xor;
   int getID_locked();
-  struct ConntrackEntry
-  {
+  struct ConntrackEntry {
     uint16_t id;
     ComboAddress remote;
     int outsock;

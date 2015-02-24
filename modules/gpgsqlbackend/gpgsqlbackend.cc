@@ -16,10 +16,10 @@ gPgSQLBackend::gPgSQLBackend(const string &mode, const string &suffix)  : GSQLBa
 {
   try {
     setDB(new SPgSQL(getArg("dbname"),
-        	  getArg("host"),
-        	  getArg("port"),
-        	  getArg("user"),
-        	  getArg("password")));
+                     getArg("host"),
+                     getArg("port"),
+                     getArg("user"),
+                     getArg("password")));
   }
 
   catch(SSqlException &e) {
@@ -104,7 +104,7 @@ public:
     declare(suffix,"set-domain-metadata-query","", "insert into domainmetadata (domain_id, kind, content) select id, '%s', '%s' from domains where name=E'%s'");
     declare(suffix,"activate-domain-key-query","", "update cryptokeys set active=true where domain_id=(select id from domains where name=E'%s') and  cryptokeys.id=%d");
     declare(suffix,"deactivate-domain-key-query","", "update cryptokeys set active=false where domain_id=(select id from domains where name=E'%s') and  cryptokeys.id=%d");
-    declare(suffix,"remove-domain-key-query","", "delete from cryptokeys where domain_id=(select id from domains where name=E'%s') and cryptokeys.id=%d");    
+    declare(suffix,"remove-domain-key-query","", "delete from cryptokeys where domain_id=(select id from domains where name=E'%s') and cryptokeys.id=%d");
     declare(suffix,"clear-domain-all-keys-query","", "delete from cryptokeys where domain_id=(select id from domains where name=E'%s')");
     declare(suffix,"get-tsig-key-query","", "select algorithm, secret from tsigkeys where name=E'%s'");
     declare(suffix,"set-tsig-key-query","", "insert into tsigkeys (name,algorithm,secret) values('%s','%s','%s')");

@@ -3,7 +3,7 @@
     Copyright (C) 2002-2011  PowerDNS.COM BV
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation
 
     Additionally, the license of this program contains a special
@@ -36,7 +36,8 @@
 #include <boost/format.hpp>
 
 
-boost::format GSQLformat(const string &query) {
+boost::format GSQLformat(const string &query)
+{
   boost::format format(query);
   format.exceptions(boost::io::no_error_bits);
   return format;
@@ -46,13 +47,12 @@ void GSQLBackend::setNotified(uint32_t domain_id, uint32_t serial)
 {
   char output[1024];
   snprintf(output,sizeof(output)-1,
-	   d_UpdateSerialOfZoneQuery.c_str(),
-	   serial, domain_id);
+           d_UpdateSerialOfZoneQuery.c_str(),
+           serial, domain_id);
 
   try {
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to refresh domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
 }
@@ -61,13 +61,12 @@ void GSQLBackend::setFresh(uint32_t domain_id)
 {
   char output[1024];
   snprintf(output,sizeof(output)-1,d_UpdateLastCheckofZoneQuery.c_str(),
-	   time(0),
-	   domain_id);
+           time(0),
+           domain_id);
 
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to refresh domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
 }
@@ -78,8 +77,7 @@ bool GSQLBackend::isMaster(const string &domain, const string &ip)
 
   try {
     d_db->doQuery(query, d_result);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve list of master domains: "+e.txtReason());
   }
 
@@ -106,8 +104,7 @@ bool GSQLBackend::setMaster(const string &domain, const string &ip)
 
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to set master of domain \""+domain+"\": "+e.txtReason());
   }
   return true;
@@ -120,8 +117,7 @@ bool GSQLBackend::setKind(const string &domain, const DomainInfo::DomainKind kin
 
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to set kind of domain \""+domain+"\": "+e.txtReason());
   }
   return true;
@@ -133,18 +129,17 @@ bool GSQLBackend::getDomainInfo(const string &domain, DomainInfo &di)
      id,name,master IP(s),last_check,notified_serial,type */
   char output[1024];
   snprintf(output,sizeof(output)-1,d_InfoOfDomainsZoneQuery.c_str(),
-	   sqlEscape(domain).c_str());
+           sqlEscape(domain).c_str());
   try {
     d_db->doQuery(output,d_result);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve information about a domain: "+e.txtReason());
   }
 
   int numanswers=d_result.size();
   if(!numanswers)
     return false;
-  
+
   di.id=atol(d_result[0][0].c_str());
   di.zone=d_result[0][1];
   stringtok(di.masters, d_result[0][2], " ,\t");
@@ -160,8 +155,7 @@ bool GSQLBackend::getDomainInfo(const string &domain, DomainInfo &di)
       L<<Logger::Notice<<"No serial for '"<<domain<<"' found - zone is missing?"<<endl;
     else
       di.serial = sd.serial;
-  }
-  catch(PDNSException &ae){
+  } catch(PDNSException &ae) {
     L<<Logger::Error<<"Error retrieving serial for '"<<domain<<"': "<<ae.reason<<endl;
   }
 
@@ -176,14 +170,13 @@ void GSQLBackend::getUnfreshSlaveInfos(vector<DomainInfo> *unfreshDomains)
      id,name,master IP,serial */
   try {
     d_db->doQuery(d_InfoOfAllSlaveDomainsQuery, d_result);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve list of slave domains: "+e.txtReason());
   }
 
   vector<DomainInfo> allSlaves;
   int numanswers=d_result.size();
-  for(int n=0;n<numanswers;++n) { // id,name,master,last_check
+  for(int n=0; n<numanswers; ++n) { // id,name,master,last_check
     DomainInfo sd;
     sd.id=atol(d_result[n][0].c_str());
     sd.zone=d_result[n][1];
@@ -194,7 +187,7 @@ void GSQLBackend::getUnfreshSlaveInfos(vector<DomainInfo> *unfreshDomains)
     allSlaves.push_back(sd);
   }
 
-  for(vector<DomainInfo>::iterator i=allSlaves.begin();i!=allSlaves.end();++i) {
+  for(vector<DomainInfo>::iterator i=allSlaves.begin(); i!=allSlaves.end(); ++i) {
     SOAData sdata;
     sdata.serial=0;
     sdata.refresh=0;
@@ -212,14 +205,13 @@ void GSQLBackend::getUpdatedMasters(vector<DomainInfo> *updatedDomains)
      id,name,master IP,serial */
   try {
     d_db->doQuery(d_InfoOfAllMasterDomainsQuery,d_result);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve list of master domains: "+e.txtReason());
   }
 
   vector<DomainInfo> allMasters;
   int numanswers=d_result.size();
-  for(int n=0;n<numanswers;++n) { // id,name,master,last_check
+  for(int n=0; n<numanswers; ++n) { // id,name,master,last_check
     DomainInfo sd;
     sd.id=atol(d_result[n][0].c_str());
     sd.zone=d_result[n][1];
@@ -230,7 +222,7 @@ void GSQLBackend::getUpdatedMasters(vector<DomainInfo> *updatedDomains)
     allMasters.push_back(sd);
   }
 
-  for(vector<DomainInfo>::iterator i=allMasters.begin();i!=allMasters.end();++i) {
+  for(vector<DomainInfo>::iterator i=allMasters.begin(); i!=allMasters.end(); ++i) {
     SOAData sdata;
     sdata.serial=0;
     sdata.refresh=0;
@@ -247,12 +239,11 @@ string GSQLBackend::sqlEscape(const string &name)
 {
   string a;
 
-  for(string::const_iterator i=name.begin();i!=name.end();++i)
-    if(*i=='\'' || *i=='\\'){
+  for(string::const_iterator i=name.begin(); i!=name.end(); ++i)
+    if(*i=='\'' || *i=='\\') {
       a+='\\';
       a+=*i;
-    }
-    else
+    } else
       a+=*i;
   return a;
 }
@@ -263,13 +254,10 @@ GSQLBackend::GSQLBackend(const string &mode, const string &suffix)
   setArgPrefix(mode+suffix);
   d_db=0;
   d_logprefix="["+mode+"Backend"+suffix+"] ";
-	
-  try
-  {
+
+  try {
     d_dnssecQueries = mustDo("dnssec");
-  }
-  catch (ArgException e)
-  {
+  } catch (ArgException e) {
     d_dnssecQueries = false;
   }
 
@@ -326,7 +314,7 @@ GSQLBackend::GSQLBackend(const string &mode, const string &suffix)
   d_AddDomainKeyQuery = getArg("add-domain-key-query");
   d_ListDomainKeysQuery = getArg("list-domain-keys-query");
 
-  d_GetAllDomainMetadataQuery = getArg("get-all-domain-metadata-query");  
+  d_GetAllDomainMetadataQuery = getArg("get-all-domain-metadata-query");
   d_GetDomainMetadataQuery = getArg("get-domain-metadata-query");
   d_ClearDomainMetadataQuery = getArg("clear-domain-metadata-query");
   d_ClearDomainAllMetadataQuery = getArg("clear-domain-all-metadata-query");
@@ -360,8 +348,7 @@ bool GSQLBackend::updateDNSSECOrderAndAuthAbsolute(uint32_t domain_id, const std
   snprintf(output, sizeof(output)-1, d_setOrderAuthQuery.c_str(), sqlEscape(ordername).c_str(), auth, sqlEscape(qname).c_str(), domain_id);
   try {
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to update ordername/auth for domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
   return true;
@@ -376,8 +363,7 @@ bool GSQLBackend::nullifyDNSSECOrderNameAndUpdateAuth(uint32_t domain_id, const 
   snprintf(output, sizeof(output)-1, d_nullifyOrderNameAndUpdateAuthQuery.c_str(), auth, domain_id, sqlEscape(qname).c_str());
   try {
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to nullify ordername and update auth for domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
   return true;
@@ -392,8 +378,7 @@ bool GSQLBackend::nullifyDNSSECOrderNameAndAuth(uint32_t domain_id, const std::s
   snprintf(output, sizeof(output)-1, d_nullifyOrderNameAndAuthQuery.c_str(), sqlEscape(qname).c_str(), sqlEscape(type).c_str(), domain_id);
   try {
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to nullify ordername/auth for domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
   return true;
@@ -408,8 +393,7 @@ bool GSQLBackend::setDNSSECAuthOnDsRecord(uint32_t domain_id, const std::string&
   snprintf(output, sizeof(output)-1, d_setAuthOnDsRecordQuery.c_str(), domain_id, sqlEscape(qname).c_str());
   try {
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to set auth on DS record "+qname+" for domain_id "+itoa(domain_id)+": "+e.txtReason());
   }
   return true;
@@ -423,20 +407,16 @@ bool GSQLBackend::updateEmptyNonTerminals(uint32_t domain_id, const std::string&
     snprintf(output,sizeof(output)-1,d_removeEmptyNonTerminalsFromZoneQuery.c_str(), domain_id);
     try {
       d_db->doCommand(output);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to delete empty non-terminal records from domain_id "+itoa(domain_id)+": "+e.txtReason());
       return false;
     }
-  }
-  else
-  {
+  } else {
     BOOST_FOREACH(const string qname, erase) {
       snprintf(output,sizeof(output)-1,d_deleteEmptyNonTerminalQuery.c_str(), domain_id, sqlEscape(qname).c_str());
       try {
         d_db->doCommand(output);
-      }
-      catch (SSqlException &e) {
+      } catch (SSqlException &e) {
         throw PDNSException("GSQLBackend unable to delete empty non-terminal rr "+qname+" from domain_id "+itoa(domain_id)+": "+e.txtReason());
         return false;
       }
@@ -447,8 +427,7 @@ bool GSQLBackend::updateEmptyNonTerminals(uint32_t domain_id, const std::string&
     snprintf(output,sizeof(output)-1,d_insertEmptyNonTerminalQuery.c_str(), domain_id, sqlEscape(qname).c_str());
     try {
       d_db->doCommand(output);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to insert empty non-terminal rr "+qname+" in domain_id "+itoa(domain_id)+": "+e.txtReason());
       return false;
     }
@@ -459,7 +438,7 @@ bool GSQLBackend::updateEmptyNonTerminals(uint32_t domain_id, const std::string&
 
 bool GSQLBackend::doesDNSSEC()
 {
-    return d_dnssecQueries;
+  return d_dnssecQueries;
 }
 
 bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string& qname, std::string& unhashed, std::string& before, std::string& after)
@@ -477,8 +456,7 @@ bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string&
   snprintf(output, sizeof(output)-1, d_afterOrderQuery.c_str(), sqlEscape(lcqname).c_str(), id);
   try {
     d_db->doQuery(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend unable to find before/after (after) for domain_id "+itoa(id)+": "+e.txtReason());
   }
   while(d_db->getRow(row)) {
@@ -489,8 +467,7 @@ bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string&
     snprintf(output, sizeof(output)-1, d_firstOrderQuery.c_str(), id);
     try {
       d_db->doQuery(output);
-    }
-    catch(SSqlException &e) {
+    } catch(SSqlException &e) {
       throw PDNSException("GSQLBackend unable to find before/after (first) for domain_id "+itoa(id)+": "+e.txtReason());
     }
     while(d_db->getRow(row)) {
@@ -504,8 +481,7 @@ bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string&
     snprintf(output, sizeof(output)-1, d_beforeOrderQuery.c_str(), sqlEscape(lcqname).c_str(), id);
     try {
       d_db->doQuery(output);
-    }
-    catch(SSqlException &e) {
+    } catch(SSqlException &e) {
       throw PDNSException("GSQLBackend unable to find before/after (before) for domain_id "+itoa(id)+": "+e.txtReason());
     }
     while(d_db->getRow(row)) {
@@ -513,8 +489,7 @@ bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string&
       unhashed=row[1];
     }
 
-    if(! unhashed.empty())
-    {
+    if(! unhashed.empty()) {
       // cerr<<"unhashed="<<unhashed<<",before="<<before<<", after="<<after<<endl;
       return true;
     }
@@ -522,8 +497,7 @@ bool GSQLBackend::getBeforeAndAfterNamesAbsolute(uint32_t id, const std::string&
     snprintf(output, sizeof(output)-1, d_lastOrderQuery.c_str(), id);
     try {
       d_db->doQuery(output);
-    }
-    catch(SSqlException &e) {
+    } catch(SSqlException &e) {
       throw PDNSException("GSQLBackend unable to find before/after (last) for domain_id "+itoa(id)+": "+e.txtReason());
     }
     while(d_db->getRow(row)) {
@@ -541,14 +515,13 @@ int GSQLBackend::addDomainKey(const string& name, const KeyData& key)
 {
   if(!d_dnssecQueries)
     return -1;
-  char output[16384];  
+  char output[16384];
   snprintf(output,sizeof(output)-1,d_AddDomainKeyQuery.c_str(),
-	   key.flags, (int)key.active, sqlEscape(key.content).c_str(), sqlEscape(toLower(name)).c_str());
+           key.flags, (int)key.active, sqlEscape(key.content).c_str(), sqlEscape(toLower(name)).c_str());
 
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to store key: "+e.txtReason());
   }
   return 1; // XXX FIXME, no idea how to get the id
@@ -563,8 +536,7 @@ bool GSQLBackend::activateDomainKey(const string& name, unsigned int id)
 
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to activate key: "+e.txtReason());
   }
   return true;
@@ -579,8 +551,7 @@ bool GSQLBackend::deactivateDomainKey(const string& name, unsigned int id)
 
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to deactivate key: "+e.txtReason());
   }
   return true;
@@ -595,8 +566,7 @@ bool GSQLBackend::removeDomainKey(const string& name, unsigned int id)
 
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to remove key: "+e.txtReason());
   }
   return true;
@@ -604,16 +574,15 @@ bool GSQLBackend::removeDomainKey(const string& name, unsigned int id)
 
 bool GSQLBackend::getTSIGKey(const string& name, string* algorithm, string* content)
 {
-  char output[1024];  
+  char output[1024];
   snprintf(output,sizeof(output)-1,d_getTSIGKeyQuery.c_str(), sqlEscape(toLower(name)).c_str());
 
   try {
     d_db->doQuery(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve named TSIG key: "+e.txtReason());
   }
-  
+
   SSql::row_t row;
 
   content->clear();
@@ -633,8 +602,7 @@ bool GSQLBackend::setTSIGKey(const string& name, const string& algorithm, const 
   snprintf(output,sizeof(output)-1,d_setTSIGKeyQuery.c_str(), sqlEscape(toLower(name)).c_str(), sqlEscape(toLower(algorithm)).c_str(), sqlEscape(content).c_str());
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to store named TSIG key: "+e.txtReason());
   }
   return true;
@@ -646,8 +614,7 @@ bool GSQLBackend::deleteTSIGKey(const string& name)
   snprintf(output,sizeof(output)-1,d_deleteTSIGKeyQuery.c_str(), sqlEscape(toLower(name)).c_str());
   try {
     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to store named TSIG key: "+e.txtReason());
   }
   return true;
@@ -660,19 +627,18 @@ bool GSQLBackend::getTSIGKeys(std::vector< struct TSIGKey > &keys)
 
   try {
     d_db->doQuery(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to retrieve TSIG keys: "+e.txtReason());
   }
 
   SSql::row_t row;
 
   while(d_db->getRow(row)) {
-     struct TSIGKey key;
-     key.name = row[0];
-     key.algorithm = row[1];
-     key.key = row[2];
-     keys.push_back(key);
+    struct TSIGKey key;
+    key.name = row[0];
+    key.algorithm = row[1];
+    key.key = row[2];
+    keys.push_back(key);
   }
 
   return keys.empty();
@@ -682,22 +648,21 @@ bool GSQLBackend::getDomainKeys(const string& name, unsigned int kind, std::vect
 {
   if(!d_dnssecQueries)
     return false;
-  char output[1024];  
+  char output[1024];
   snprintf(output,sizeof(output)-1,d_ListDomainKeysQuery.c_str(), sqlEscape(toLower(name)).c_str());
 
   try {
     d_db->doQuery(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to list keys: "+e.txtReason());
   }
-  
+
   SSql::row_t row;
   //  "select id, kind, active, content from domains, cryptokeys where domain_id=domains.id and name='%s'";
   KeyData kd;
   while(d_db->getRow(row)) {
     //~ BOOST_FOREACH(const std::string& val, row) {
-      //~ cerr<<"'"<<val<<"'"<<endl;
+    //~ cerr<<"'"<<val<<"'"<<endl;
     //~ }
     kd.id = atoi(row[0].c_str());
     kd.flags = atoi(row[1].c_str());
@@ -725,8 +690,7 @@ bool GSQLBackend::getAllDomainMetadata(const string& name, std::map<std::string,
 
   try {
     d_db->doQuery(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to list metadata: "+e.txtReason());
   }
 
@@ -751,13 +715,12 @@ bool GSQLBackend::getDomainMetadata(const string& name, const std::string& kind,
 
   try {
     d_db->doQuery(output);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to list metadata: "+e.txtReason());
   }
-  
+
   SSql::row_t row;
-  
+
   while(d_db->getRow(row)) {
     meta.push_back(row[0]);
   }
@@ -769,23 +732,22 @@ bool GSQLBackend::setDomainMetadata(const string& name, const std::string& kind,
   if(!d_dnssecQueries && isDnssecDomainMetadata(kind))
     return false;
 
-  char output[16384];  
+  char output[16384];
   string clearQuery = (GSQLformat(d_ClearDomainMetadataQuery) % sqlEscape(toLower(name)) % sqlEscape(kind)).str();
 
   try {
     d_db->doCommand(clearQuery);
     if(!meta.empty()) {
       BOOST_FOREACH(const std::string & value, meta) {
-         snprintf(output,sizeof(output)-1,d_SetDomainMetadataQuery.c_str(),
-            sqlEscape(kind).c_str(), sqlEscape(value).c_str(), sqlEscape(toLower(name)).c_str());
-         d_db->doCommand(output);
+        snprintf(output,sizeof(output)-1,d_SetDomainMetadataQuery.c_str(),
+                 sqlEscape(kind).c_str(), sqlEscape(value).c_str(), sqlEscape(toLower(name)).c_str());
+        d_db->doCommand(output);
       }
     }
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to store metadata key: "+e.txtReason());
   }
-  
+
   return true;
 }
 
@@ -799,32 +761,31 @@ void GSQLBackend::lookup(const QType &qtype,const string &qname, DNSPacket *pkt_
       query = (GSQLformat(d_NoIdQuery)
                % sqlEscape(qtype.getName())
                % sqlEscape(lcqname)
-        ).str();
+              ).str();
     } else {
       query = (GSQLformat(d_IdQuery)
                % sqlEscape(qtype.getName())
                % sqlEscape(lcqname)
                % domain_id
-        ).str();
+              ).str();
     }
   } else {
     // qtype==ANY
     if(domain_id < 0) {
       query = (GSQLformat(d_ANYNoIdQuery)
                % sqlEscape(lcqname)
-        ).str();
+              ).str();
     } else {
       query = (GSQLformat(d_ANYIdQuery)
                % sqlEscape(lcqname)
                % domain_id
-        ).str();
+              ).str();
     }
   }
 
   try {
     d_db->doQuery(query);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend lookup query:"+e.txtReason());
   }
 
@@ -838,12 +799,11 @@ bool GSQLBackend::list(const string &target, int domain_id, bool include_disable
   string query = (GSQLformat(d_listQuery)
                   % (int)include_disabled
                   % domain_id
-    ).str();
+                 ).str();
 
   try {
     d_db->doQuery(query);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend list query: "+e.txtReason());
   }
 
@@ -851,17 +811,17 @@ bool GSQLBackend::list(const string &target, int domain_id, bool include_disable
   return true;
 }
 
-bool GSQLBackend::listSubZone(const string &zone, int domain_id) {
+bool GSQLBackend::listSubZone(const string &zone, int domain_id)
+{
   string wildzone = "%." + zone;
   string query = (GSQLformat(d_listSubZoneQuery)
                   % sqlEscape(zone)
                   % sqlEscape(wildzone)
                   % domain_id
-    ).str();
+                 ).str();
   try {
     d_db->doQuery(query);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend listSubZone query: "+e.txtReason());
   }
   d_qname="";
@@ -876,12 +836,11 @@ bool GSQLBackend::superMasterBackend(const string &ip, const string &domain, con
   char output[1024];
   format = d_SuperMasterInfoQuery;
   // check if we know the ip/ns couple in the database
-  for(vector<DNSResourceRecord>::const_iterator i=nsset.begin();i!=nsset.end();++i) {
+  for(vector<DNSResourceRecord>::const_iterator i=nsset.begin(); i!=nsset.end(); ++i) {
     try {
       snprintf(output,sizeof(output)-1,format.c_str(),sqlEscape(ip).c_str(),sqlEscape(i->content).c_str());
       d_db->doQuery(output, d_result);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to search for a domain: "+e.txtReason());
     }
 
@@ -900,8 +859,7 @@ bool GSQLBackend::createDomain(const string &domain)
   string query = (GSQLformat(d_InsertZoneQuery) % toLower(sqlEscape(domain))).str();
   try {
     d_db->doCommand(query);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("Database error trying to insert new domain '"+domain+"': "+ e.txtReason());
   }
   return true;
@@ -934,8 +892,7 @@ bool GSQLBackend::createSlaveDomain(const string &ip, const string &domain, cons
     format = d_InsertSlaveZoneQuery;
     snprintf(output,sizeof(output)-1,format.c_str(),sqlEscape(domain).c_str(),sqlEscape(masters).c_str(),sqlEscape(account).c_str());
     d_db->doCommand(output);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("Database error trying to insert new slave domain '"+domain+"': "+ e.txtReason());
   }
   return true;
@@ -965,8 +922,7 @@ bool GSQLBackend::deleteDomain(const string &domain)
     d_db->doCommand(keysQuery);
     d_db->doCommand(commentsQuery);
     d_db->doCommand(domainQuery);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("Database error trying to delete domain '"+domain+"': "+ e.txtReason());
   }
   return true;
@@ -979,8 +935,7 @@ void GSQLBackend::getAllDomains(vector<DomainInfo> *domains, bool include_disabl
 
   try {
     d_db->doQuery(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("Database error trying to retrieve all domains:" + e.txtReason());
   }
 
@@ -1002,7 +957,7 @@ void GSQLBackend::getAllDomains(vector<DomainInfo> *domains, bool include_disabl
     if (!row[5].empty()) {
       di.notified_serial = atol(row[5].c_str());
     }
-    
+
     if (pdns_iequals(row[3], "MASTER"))
       di.kind = DomainInfo::Master;
     else if (pdns_iequals(row[3], "SLAVE"))
@@ -1022,9 +977,9 @@ bool GSQLBackend::get(DNSResourceRecord &r)
   SSql::row_t row;
   if(d_db->getRow(row)) {
     if (row[1].empty())
-        r.ttl = ::arg().asNum( "default-ttl" );
+      r.ttl = ::arg().asNum( "default-ttl" );
     else
-        r.ttl=atol(row[1].c_str());
+      r.ttl=atol(row[1].c_str());
     if(!d_qname.empty())
       r.qname=d_qname;
     else
@@ -1041,14 +996,14 @@ bool GSQLBackend::get(DNSResourceRecord &r)
     if(d_dnssecQueries)
       r.auth = !row[7].empty() && row[7][0]=='1';
     else
-      r.auth = 1; 
+      r.auth = 1;
 
     r.disabled = !row[5].empty() && row[5][0]=='1';
 
     r.domain_id=atoi(row[4].c_str());
     return true;
   }
-  
+
   return false;
 }
 
@@ -1060,17 +1015,16 @@ bool GSQLBackend::replaceRRSet(uint32_t domain_id, const string& qname, const QT
              % domain_id
              % sqlEscape(qname)
              % sqlEscape(qt.getName())
-      ).str();
+            ).str();
   } else {
     query = (GSQLformat(d_DeleteNamesQuery)
              % domain_id
              % sqlEscape(qname)
-      ).str();
+            ).str();
   }
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to delete RRSet: "+e.txtReason());
   }
 
@@ -1080,18 +1034,17 @@ bool GSQLBackend::replaceRRSet(uint32_t domain_id, const string& qname, const QT
              % domain_id
              % sqlEscape(qname)
              % sqlEscape(qt.getName())
-      ).str();
+            ).str();
     try {
       d_db->doCommand(query);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to delete comment: "+e.txtReason());
     }
   }
   BOOST_FOREACH(const DNSResourceRecord& rr, rrset) {
     feedRecord(rr);
   }
-  
+
   return true;
 }
 
@@ -1107,7 +1060,7 @@ bool GSQLBackend::feedRecord(const DNSResourceRecord &r, string *ordername)
     if(pos != string::npos)
       boost::erase_head(content, pos);
     trim_left(content);
- }
+  }
 
   string query;
 
@@ -1122,7 +1075,7 @@ bool GSQLBackend::feedRecord(const DNSResourceRecord &r, string *ordername)
              % toLower(sqlEscape(r.qname))
              % sqlEscape(*ordername)
              % (int)(r.auth)
-      ).str();
+            ).str();
   else
     query = (GSQLformat(d_InsertRecordQuery)
              % sqlEscape(content)
@@ -1133,15 +1086,14 @@ bool GSQLBackend::feedRecord(const DNSResourceRecord &r, string *ordername)
              % (int)r.disabled
              % toLower(sqlEscape(r.qname))
              % (int)(r.auth || !d_dnssecQueries)
-      ).str();
+            ).str();
 
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to feed record: "+e.txtReason());
   }
-  return true; // XXX FIXME this API should not return 'true' I think -ahu 
+  return true; // XXX FIXME this API should not return 'true' I think -ahu
 }
 
 bool GSQLBackend::feedEnts(int domain_id, map<string,bool>& nonterm)
@@ -1155,12 +1107,11 @@ bool GSQLBackend::feedEnts(int domain_id, map<string,bool>& nonterm)
              % domain_id
              % toLower(sqlEscape(nt.first))
              % (int)(nt.second || !d_dnssecQueries)
-      ).str();
+            ).str();
 
     try {
       d_db->doCommand(query);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to feed empty non-terminal: "+e.txtReason());
     }
   }
@@ -1170,7 +1121,7 @@ bool GSQLBackend::feedEnts(int domain_id, map<string,bool>& nonterm)
 bool GSQLBackend::feedEnts3(int domain_id, const string &domain, map<string,bool> &nonterm, unsigned int times, const string &salt, bool narrow)
 {
   if(!d_dnssecQueries)
-      return false;
+    return false;
 
   string ordername, query;
   pair<string,bool> nt;
@@ -1182,7 +1133,7 @@ bool GSQLBackend::feedEnts3(int domain_id, const string &domain, map<string,bool
                % domain_id
                % toLower(sqlEscape(nt.first))
                % nt.second
-       ).str();
+              ).str();
     } else {
       ordername=toBase32Hex(hashQNameWithSalt(times, salt, nt.first));
       query = (GSQLformat(d_InsertEntOrderQuery)
@@ -1190,13 +1141,12 @@ bool GSQLBackend::feedEnts3(int domain_id, const string &domain, map<string,bool
                % toLower(sqlEscape(nt.first))
                % toLower(sqlEscape(ordername))
                % nt.second
-       ).str();
+              ).str();
     }
 
     try {
       d_db->doCommand(query);
-    }
-    catch (SSqlException &e) {
+    } catch (SSqlException &e) {
       throw PDNSException("GSQLBackend unable to feed empty non-terminal: "+e.txtReason());
     }
   }
@@ -1206,14 +1156,13 @@ bool GSQLBackend::feedEnts3(int domain_id, const string &domain, map<string,bool
 bool GSQLBackend::startTransaction(const string &domain, int domain_id)
 {
   char output[1024];
-  if(domain_id >= 0) 
-   snprintf(output,sizeof(output)-1,d_DeleteZoneQuery.c_str(),domain_id);
+  if(domain_id >= 0)
+    snprintf(output,sizeof(output)-1,d_DeleteZoneQuery.c_str(),domain_id);
   try {
     d_db->doCommand("begin");
     if(domain_id >= 0)
-     d_db->doCommand(output);
-  }
-  catch (SSqlException &e) {
+      d_db->doCommand(output);
+  } catch (SSqlException &e) {
     throw PDNSException("Database failed to start transaction: "+e.txtReason());
   }
 
@@ -1224,8 +1173,7 @@ bool GSQLBackend::commitTransaction()
 {
   try {
     d_db->doCommand("commit");
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("Database failed to commit transaction: "+e.txtReason());
   }
   return true;
@@ -1235,8 +1183,7 @@ bool GSQLBackend::abortTransaction()
 {
   try {
     d_db->doCommand("rollback");
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("Database failed to abort transaction: "+string(e.txtReason()));
   }
   return true;
@@ -1248,17 +1195,16 @@ bool GSQLBackend::calculateSOASerial(const string& domain, const SOAData& sd, ti
     // query not set => fall back to default impl
     return DNSBackend::calculateSOASerial(domain, sd, serial);
   }
-  
+
   char output[1024];
-  
+
   snprintf(output, sizeof(output)-1,
            d_ZoneLastChangeQuery.c_str(),
            sd.domain_id);
 
   try {
     d_db->doQuery(output, d_result);
-  }
-  catch (const SSqlException& e) {
+  } catch (const SSqlException& e) {
     //DLOG(L<<"GSQLBackend unable to calculate SOA serial: " << e.txtReason()<<endl);
     return false;
   }
@@ -1275,12 +1221,11 @@ bool GSQLBackend::listComments(const uint32_t domain_id)
 {
   string query = (GSQLformat(d_ListCommentsQuery)
                   % domain_id
-    ).str();
+                 ).str();
 
   try {
     d_db->doQuery(query);
-  }
-  catch(SSqlException &e) {
+  } catch(SSqlException &e) {
     throw PDNSException("GSQLBackend list comments query: "+e.txtReason());
   }
 
@@ -1315,12 +1260,11 @@ void GSQLBackend::feedComment(const Comment& comment)
                   % comment.modified_at
                   % sqlEscape(comment.account)
                   % sqlEscape(comment.content)
-    ).str();
+                 ).str();
 
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to feed comment: "+e.txtReason());
   }
 }
@@ -1328,16 +1272,15 @@ void GSQLBackend::feedComment(const Comment& comment)
 bool GSQLBackend::replaceComments(const uint32_t domain_id, const string& qname, const QType& qt, const vector<Comment>& comments)
 {
   string query;
-    query = (GSQLformat(d_DeleteCommentRRsetQuery)
-             % domain_id
-             % toLower(sqlEscape(qname))
-             % sqlEscape(qt.getName())
-      ).str();
+  query = (GSQLformat(d_DeleteCommentRRsetQuery)
+           % domain_id
+           % toLower(sqlEscape(qname))
+           % sqlEscape(qt.getName())
+          ).str();
 
   try {
     d_db->doCommand(query);
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     throw PDNSException("GSQLBackend unable to delete comment: "+e.txtReason());
   }
 

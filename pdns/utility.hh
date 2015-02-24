@@ -5,7 +5,7 @@
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2
     as published by the Free Software Foundation
-    
+
     Additionally, the license of this program contains a special
     exception which allows to distribute the program in binary form when
     it is linked against OpenSSL.
@@ -101,10 +101,10 @@ public:
   //    -1 on error
   //    0 on timeout
   static int timed_connect(sock_t sock,
-    const sockaddr *addr,
-    socklen_t sockaddr_size,
-    int timeout_sec,
-    int timeout_usec);
+                           const sockaddr *addr,
+                           socklen_t sockaddr_size,
+                           int timeout_sec,
+                           int timeout_usec);
 
   //! Returns the process id of the current process.
   static pid_t getpid( void );
@@ -123,7 +123,7 @@ public:
 
   //! Retrieves a gid using a groupname.
   static int makeGidNumeric( const string & group );
-  
+
   //! Retrieves an uid using an username.
   static int makeUidNumeric( const string & username );
 
@@ -140,19 +140,19 @@ public:
 
   //! Drops the program's user privileges.
   static void dropUserPrivs( int uid );
-  
+
   //! Sets the socket into blocking mode.
   static bool setBlocking( Utility::sock_t socket );
 
   //! Sets the socket into non-blocking mode.
   static bool setNonBlocking( Utility::sock_t socket );
-  
+
   //! Marks the socket to be closed on exec().
   static bool setCloseOnExec ( Utility::sock_t socket );
-  
+
   //! Sleeps for a number of seconds.
   static unsigned int sleep( unsigned int seconds );
-  
+
   //! Sleeps for a number of microseconds.
   static void usleep( unsigned long usec );
 

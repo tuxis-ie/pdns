@@ -29,81 +29,86 @@
 #define JSON_GET(obj,val,def) (obj.HasMember(val)?obj["" val ""]:def)
 #define JSON_ADD_MEMBER(obj, name, val, alloc) { rapidjson::Value __xval; __xval = val; obj.AddMember(name, __xval, alloc); }
 
-class Connector {
-   public:
-    virtual ~Connector() {};
-    bool send(rapidjson::Document &value);
-    bool recv(rapidjson::Document &value);
-    virtual int send_message(const rapidjson::Document &input) = 0;
-    virtual int recv_message(rapidjson::Document &output) = 0;
-   protected:
-    bool getBool(rapidjson::Value &value);
-    std::string getString(rapidjson::Value &value);
+class Connector
+{
+public:
+  virtual ~Connector() {};
+  bool send(rapidjson::Document &value);
+  bool recv(rapidjson::Document &value);
+  virtual int send_message(const rapidjson::Document &input) = 0;
+  virtual int recv_message(rapidjson::Document &output) = 0;
+protected:
+  bool getBool(rapidjson::Value &value);
+  std::string getString(rapidjson::Value &value);
 };
 
 // fwd declarations
-class UnixsocketConnector: public Connector {
-  public:
-    UnixsocketConnector(std::map<std::string,std::string> options);
-    virtual ~UnixsocketConnector();
-    virtual int send_message(const rapidjson::Document &input);
-    virtual int recv_message(rapidjson::Document &output);
-  private:
-    ssize_t read(std::string &data);
-    ssize_t write(const std::string &data);
-    void reconnect();
-    std::map<std::string,std::string> options;
-    int fd;
-    std::string path;
-    bool connected;
-    int timeout;
+class UnixsocketConnector: public Connector
+{
+public:
+  UnixsocketConnector(std::map<std::string,std::string> options);
+  virtual ~UnixsocketConnector();
+  virtual int send_message(const rapidjson::Document &input);
+  virtual int recv_message(rapidjson::Document &output);
+private:
+  ssize_t read(std::string &data);
+  ssize_t write(const std::string &data);
+  void reconnect();
+  std::map<std::string,std::string> options;
+  int fd;
+  std::string path;
+  bool connected;
+  int timeout;
 };
 
-class HTTPConnector: public Connector {
-  public:
+class HTTPConnector: public Connector
+{
+public:
 
   HTTPConnector(std::map<std::string,std::string> options);
   ~HTTPConnector();
 
   virtual int send_message(const rapidjson::Document &input);
   virtual int recv_message(rapidjson::Document &output);
-  private:
-    std::string d_url;
-    std::string d_url_suffix;
-    std::string d_data;
-    int timeout;
-    bool d_post; 
-    bool d_post_json;
-    std::string d_capath;
-    std::string d_cafile;
-    bool json2string(const rapidjson::Value &input, std::string &output);
-    void restful_requestbuilder(const std::string &method, const rapidjson::Value &parameters, YaHTTP::Request& req);
-    void post_requestbuilder(const rapidjson::Document &input, YaHTTP::Request& req);
-    void addUrlComponent(const rapidjson::Value &parameters, const char *element, std::stringstream& ss);
-    Socket* d_socket;
-    ComboAddress d_addr;
+private:
+  std::string d_url;
+  std::string d_url_suffix;
+  std::string d_data;
+  int timeout;
+  bool d_post;
+  bool d_post_json;
+  std::string d_capath;
+  std::string d_cafile;
+  bool json2string(const rapidjson::Value &input, std::string &output);
+  void restful_requestbuilder(const std::string &method, const rapidjson::Value &parameters, YaHTTP::Request& req);
+  void post_requestbuilder(const rapidjson::Document &input, YaHTTP::Request& req);
+  void addUrlComponent(const rapidjson::Value &parameters, const char *element, std::stringstream& ss);
+  Socket* d_socket;
+  ComboAddress d_addr;
 };
 
 #ifdef REMOTEBACKEND_ZEROMQ
-class ZeroMQConnector: public Connector {
-   public:
-    ZeroMQConnector(std::map<std::string,std::string> options);
-    virtual ~ZeroMQConnector();
-    virtual int send_message(const rapidjson::Document &input);
-    virtual int recv_message(rapidjson::Document &output);
-   private:
-    void connect();
-    std::string d_endpoint;
-    int d_timeout;
-    int d_timespent;
-    std::map<std::string,std::string> d_options;
-    void *d_ctx;
-    void *d_sock; 
+class ZeroMQConnector: public Connector
+{
+public:
+  ZeroMQConnector(std::map<std::string,std::string> options);
+  virtual ~ZeroMQConnector();
+  virtual int send_message(const rapidjson::Document &input);
+  virtual int recv_message(rapidjson::Document &output);
+private:
+  void connect();
+  std::string d_endpoint;
+  int d_timeout;
+  int d_timespent;
+  std::map<std::string,std::string> d_options;
+  void *d_ctx;
+  void *d_sock;
 };
 #endif
 
-class PipeConnector: public Connector {
-  public:
+class PipeConnector: public Connector
+{
+public:
 
   PipeConnector(std::map<std::string,std::string> options);
   ~PipeConnector();
@@ -111,14 +116,14 @@ class PipeConnector: public Connector {
   virtual int send_message(const rapidjson::Document &input);
   virtual int recv_message(rapidjson::Document &output);
 
-  private:
+private:
 
   void launch();
   bool checkStatus();
 
   std::string command;
   std::map<std::string,std::string> options;
- 
+
   int d_fd1[2], d_fd2[2];
   int d_pid;
   int d_timeout;
@@ -127,7 +132,7 @@ class PipeConnector: public Connector {
 
 class RemoteBackend : public DNSBackend
 {
-  public:
+public:
   RemoteBackend(const std::string &suffix="");
   ~RemoteBackend();
 
@@ -165,23 +170,23 @@ class RemoteBackend : public DNSBackend
 
   static DNSBackend *maker();
 
-  private:
-    int build();
-    Connector *connector;
-    bool d_dnssec;
-    rapidjson::Document *d_result;
-    int d_index;
-    int64_t d_trxid;
-    std::string d_connstr;
+private:
+  int build();
+  Connector *connector;
+  bool d_dnssec;
+  rapidjson::Document *d_result;
+  int d_index;
+  int64_t d_trxid;
+  std::string d_connstr;
 
-    bool getBool(rapidjson::Value &value);
-    int getInt(rapidjson::Value &value);
-    unsigned int getUInt(rapidjson::Value &value);
-    int64_t getInt64(rapidjson::Value &value);
-    std::string getString(rapidjson::Value &value);
-    double getDouble(rapidjson::Value &value);
+  bool getBool(rapidjson::Value &value);
+  int getInt(rapidjson::Value &value);
+  unsigned int getUInt(rapidjson::Value &value);
+  int64_t getInt64(rapidjson::Value &value);
+  std::string getString(rapidjson::Value &value);
+  double getDouble(rapidjson::Value &value);
 
-    bool send(rapidjson::Document &value);
-    bool recv(rapidjson::Document &value);
+  bool send(rapidjson::Document &value);
+  bool recv(rapidjson::Document &value);
 };
 #endif

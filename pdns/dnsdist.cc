@@ -35,7 +35,7 @@
    Listening on [::]:53
 
    And you are in business!
- */
+*/
 
 StatBag S;
 namespace po = boost::program_options;
@@ -54,7 +54,7 @@ bool g_console;
     if(g_console) cout << boost::format((X)) %Y << endl; }do{}while(0)
 
 /* UDP: the grand design. Per socket we listen on for incoming queries there is one thread.
-   Then we have a bunch of connected sockets for talking to downstream servers. 
+   Then we have a bunch of connected sockets for talking to downstream servers.
    We send directly to those sockets.
 
    For the return path, per downstream server we have a thread that listens to responses.
@@ -62,14 +62,13 @@ bool g_console;
    Per socket there is an array of 2^16 states, when we send out a packet downstream, we note
    there the original requestor and the original id. The new ID is the offset in the array.
 
-   When an answer comes in on a socket, we look up the offset by the id, and lob it to the 
+   When an answer comes in on a socket, we look up the offset by the id, and lob it to the
    original requestor.
 
    IDs are assigned by atomic increments of the socket offset.
- */
+*/
 
-struct IDState
-{
+struct IDState {
   IDState() : origFD(-1) {}
 
   int origFD;  // set to <0 to indicate this state is empty
@@ -78,9 +77,8 @@ struct IDState
   AtomicCounter age;
 };
 
-struct DownstreamState
-{
-  int fd;            
+struct DownstreamState {
+  int fd;
   pthread_t tid;
   ComboAddress remote;
 
@@ -126,8 +124,7 @@ void* responderThread(void *p)
   return 0;
 }
 
-struct ClientState
-{
+struct ClientState {
   ComboAddress local;
   int udpFD;
   int tcpFD;
@@ -142,7 +139,7 @@ DownstreamState& getBestDownstream()
       chosen = n;
       lowest=g_dstates[n].outstanding;
     }
-  }      
+  }
   return g_dstates[chosen];
 }
 
@@ -150,11 +147,11 @@ static void daemonize(void)
 {
   if(fork())
     _exit(0); // bye bye
-  
-  setsid(); 
+
+  setsid();
 
   int i=open("/dev/null",O_RDWR); /* open stdin */
-  if(i < 0) 
+  if(i < 0)
     ; // L<<Logger::Critical<<"Unable to open /dev/null: "<<stringerror()<<endl;
   else {
     dup2(i,0); /* stdin */
@@ -165,7 +162,7 @@ static void daemonize(void)
 }
 
 
-// listens to incoming queries, sends out to downstream servers, noting the intended return path 
+// listens to incoming queries, sends out to downstream servers, noting the intended return path
 void* udpClientThread(void* p)
 {
   ClientState* cs = (ClientState*) p;
@@ -173,14 +170,14 @@ void* udpClientThread(void* p)
   ComboAddress remote;
   remote.sin4.sin_family = cs->local.sin4.sin_family;
   socklen_t socklen = cs->local.getSocklen();
-  
+
   char packet[1500];
   struct dnsheader* dh = (struct dnsheader*) packet;
   int len;
 
   for(;;) {
     len = recvfrom(cs->udpFD, packet, sizeof(packet), 0, (struct sockaddr*) &remote, &socklen);
-    if(len < 0) 
+    if(len < 0)
       continue;
 
     /* right now, this is our simple round robin downstream selector */
@@ -201,9 +198,9 @@ void* udpClientThread(void* p)
     ids->origRemote = remote;
 
     dh->id = idOffset;
-    
+
     len = send(ss.fd, packet, len, 0);
-    if(len < 0) 
+    if(len < 0)
       ss.sendErrors++;
 
     infolog("Got query from %s, relayed to %s", remote.toStringWithPort() % ss.remote.toStringWithPort());
@@ -211,9 +208,9 @@ void* udpClientThread(void* p)
   return 0;
 }
 
-/* TCP: the grand design. 
-   We forward 'messages' between clients and downstream servers. Messages are 65k bytes large, tops. 
-   An answer might theoretically consist of multiple messages (for example, in the case of AXFR), initially 
+/* TCP: the grand design.
+   We forward 'messages' between clients and downstream servers. Messages are 65k bytes large, tops.
+   An answer might theoretically consist of multiple messages (for example, in the case of AXFR), initially
    we will not go there.
 
    In a sense there is a strong symmetry between UDP and TCP, once a connection to a downstream has been setup.
@@ -244,9 +241,9 @@ try
     return false;
   *len = ntohs(raw);
   return true;
-}
-catch(...) {
-   return false;
+} catch(...)
+{
+  return false;
 }
 
 bool putMsgLen(int fd, uint16_t len)
@@ -255,19 +252,19 @@ try
   uint16_t raw = htons(len);
   int ret = writen2(fd, &raw, 2);
   return ret==2;
-}
-catch(...) {
+} catch(...)
+{
   return false;
 }
 
-struct ConnectionInfo
-{
+struct ConnectionInfo {
   int fd;
   ComboAddress remote;
 };
 
 void* tcpClientThread(void* p);
-class TCPClientCollection {
+class TCPClientCollection
+{
   vector<int> d_tcpclientthreads;
   AtomicCounter d_pos;
 public:
@@ -278,7 +275,7 @@ public:
     d_tcpclientthreads.reserve(1024);
   }
 
-  int getThread() 
+  int getThread()
   {
     int pos = d_pos++;
     ++d_queued;
@@ -287,14 +284,14 @@ public:
 
   // Should not be called simultaneously!
   void addTCPClientThread()
-  {  
+  {
     infolog("Adding TCP Client threa%c", 'd');
     int pipefds[2];
     if(pipe(pipefds) < 0)
       unixDie("Creating pipe");
     int *fd = new int(pipefds[0]);
     d_tcpclientthreads.push_back(pipefds[1]);
-    
+
     pthread_t tid;
     pthread_create(&tid, 0, tcpClientThread, (void*)fd);
     ++d_numthreads;
@@ -311,14 +308,14 @@ void* tcpClientThread(void* p)
 
   int dsock = -1;
   DownstreamState *ds=0;
-  
+
   for(;;) {
     ConnectionInfo* citmp, ci;
     readn2(pipefd, &citmp, sizeof(citmp));
     --g_tcpclientthreads.d_queued;
     ci=*citmp;
     delete citmp;
-     
+
     if(dsock == -1)
       dsock = getTCPDownstream(&ds);
     else {
@@ -327,25 +324,25 @@ void* tcpClientThread(void* p)
 
     uint16_t qlen, rlen;
     try {
-      for(;;) {      
+      for(;;) {
         if(!getMsgLen(ci.fd, &qlen))
           break;
-        
+
         ds->queries++;
         ds->outstanding++;
         char query[qlen];
         readn2(ci.fd, query, qlen);
         // FIXME: drop AXFR queries here, they confuse us
-      retry:; 
+retry:;
         if(!putMsgLen(dsock, qlen)) {
           infolog("Downstream connection to %s died on us, getting a new one!", ds->remote.toStringWithPort());
           close(dsock);
           dsock=getTCPDownstream(&ds);
           goto retry;
         }
-      
+
         writen2(dsock, query, qlen);
-      
+
         if(!getMsgLen(dsock, &rlen)) {
           infolog("Downstream connection to %s died on us phase 2, getting a new one!", ds->remote.toStringWithPort());
           close(dsock);
@@ -355,14 +352,13 @@ void* tcpClientThread(void* p)
 
         char answerbuffer[rlen];
         readn2(dsock, answerbuffer, rlen);
-      
+
         putMsgLen(ci.fd, rlen);
         writen2(ci.fd, answerbuffer, rlen);
       }
-    }
-    catch(...){}
+    } catch(...) {}
     infolog("Closing client connection with %s", ci.remote.toStringWithPort());
-    close(ci.fd); 
+    close(ci.fd);
     ci.fd=-1;
     --ds->outstanding;
   }
@@ -370,7 +366,7 @@ void* tcpClientThread(void* p)
 }
 
 
-/* spawn as many of these as required, they call Accept on a socket on which they will accept queries, and 
+/* spawn as many of these as required, they call Accept on a socket on which they will accept queries, and
    they will hand off to worker threads & spawn more of them if required
 */
 void* tcpAcceptorThread(void* p)
@@ -379,19 +375,18 @@ void* tcpAcceptorThread(void* p)
 
   ComboAddress remote;
   remote.sin4.sin_family = cs->local.sin4.sin_family;
-  
+
   g_tcpclientthreads.addTCPClientThread();
 
   for(;;) {
     try {
-      ConnectionInfo* ci = new ConnectionInfo;      
+      ConnectionInfo* ci = new ConnectionInfo;
       ci->fd = SAccept(cs->tcpFD, remote);
       infolog("Got connection from %s", remote.toStringWithPort());
-      
+
       ci->remote = remote;
       writen2(g_tcpclientthreads.getThread(), &ci, sizeof(ci));
-    }
-    catch(...){}
+    } catch(...) {}
   }
 
   return 0;
@@ -409,7 +404,7 @@ void* statThread(void*)
 
   for(;;) {
     sleep(interval);
-    
+
     if(g_tcpclientthreads.d_queued > 1 && g_tcpclientthreads.d_numthreads < 10)
       g_tcpclientthreads.addTCPClientThread();
 
@@ -429,7 +424,7 @@ void* statThread(void*)
           ids.origFD = -1;
           dss.reuseds++;
           --dss.outstanding;
-        }          
+        }
       }
     }
 
@@ -448,23 +443,23 @@ try
   openlog("dnsdist", LOG_PID, LOG_DAEMON);
   po::options_description desc("Allowed options"), hidden, alloptions;
   desc.add_options()
-    ("help,h", "produce help message")
-    ("daemon", po::value<bool>()->default_value(true), "run in background")
-    ("local", po::value<vector<string> >(), "Listen on which address")
-    ("max-outstanding", po::value<uint16_t>()->default_value(65535), "maximum outstanding queries per downstream")
-    ("verbose,v", "be verbose");
-    
-  hidden.add_options()
-    ("remotes", po::value<vector<string> >(), "remote-host");
+  ("help,h", "produce help message")
+  ("daemon", po::value<bool>()->default_value(true), "run in background")
+  ("local", po::value<vector<string> >(), "Listen on which address")
+  ("max-outstanding", po::value<uint16_t>()->default_value(65535), "maximum outstanding queries per downstream")
+  ("verbose,v", "be verbose");
 
-  alloptions.add(desc).add(hidden); 
+  hidden.add_options()
+  ("remotes", po::value<vector<string> >(), "remote-host");
+
+  alloptions.add(desc).add(hidden);
 
   po::positional_options_description p;
   p.add("remotes", -1);
 
   po::store(po::command_line_parser(argc, argv).options(alloptions).positional(p).run(), g_vm);
   po::notify(g_vm);
-  
+
   if(g_vm.count("help")) {
     cout << desc<<endl;
     exit(EXIT_SUCCESS);
@@ -472,14 +467,14 @@ try
 
   g_verbose=g_vm.count("verbose");
   g_maxOutstanding = g_vm["max-outstanding"].as<uint16_t>();
-  
+
   if(!g_vm.count("remotes")) {
     cerr<<"Need to specify at least one remote address"<<endl;
     cout<<desc<<endl;
     exit(EXIT_FAILURE);
   }
 
-  if(g_vm["daemon"].as<bool>()) 
+  if(g_vm["daemon"].as<bool>())
     daemonize();
   else {
     infolog("Running in the %s", "foreground");
@@ -493,9 +488,9 @@ try
   int pos=0;
   BOOST_FOREACH(const string& remote, remotes) {
     DownstreamState& dss = g_dstates[pos++];
- 
+
     dss.remote = ComboAddress(remote, 53);
-    
+
     dss.fd = SSocket(dss.remote.sin4.sin_family, SOCK_DGRAM, 0);
     SConnect(dss.fd, dss.remote);
 
@@ -521,7 +516,7 @@ try
     if(cs->local.sin4.sin_family == AF_INET6) {
       SSetsockopt(cs->udpFD, IPPROTO_IPV6, IPV6_V6ONLY, 1);
     }
-    SBind(cs->udpFD, cs->local);    
+    SBind(cs->udpFD, cs->local);
 
     pthread_create(&tid, 0, udpClientThread, (void*) cs);
   }
@@ -552,12 +547,10 @@ try
   void* status;
 
   pthread_join(tid, &status);
-}
-catch(std::exception &e)
+} catch(std::exception &e)
 {
   errlog("Fatal: %s", e.what());
-}
-catch(PDNSException &ae)
+} catch(PDNSException &ae)
 {
   errlog("Fatal: %s", ae.reason);
 }

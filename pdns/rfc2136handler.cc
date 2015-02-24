@@ -18,7 +18,8 @@ extern StatBag S;
 pthread_mutex_t PacketHandler::s_rfc2136lock=PTHREAD_MUTEX_INITIALIZER;
 
 // Implement section 3.2.1 and 3.2.2 of RFC2136
-int PacketHandler::checkUpdatePrerequisites(const DNSRecord *rr, DomainInfo *di) {
+int PacketHandler::checkUpdatePrerequisites(const DNSRecord *rr, DomainInfo *di)
+{
   if (rr->d_ttl != 0)
     return RCode::FormErr;
 
@@ -59,7 +60,8 @@ int PacketHandler::checkUpdatePrerequisites(const DNSRecord *rr, DomainInfo *di)
 
 
 // Method implements section 3.4.1 of RFC2136
-int PacketHandler::checkUpdatePrescan(const DNSRecord *rr) {
+int PacketHandler::checkUpdatePrescan(const DNSRecord *rr)
+{
   // The RFC stats that d_class != ZCLASS, but we only support the IN class.
   if (rr->d_class != QClass::IN && rr->d_class != QClass::NONE && rr->d_class != QClass::ANY)
     return RCode::FormErr;
@@ -76,7 +78,7 @@ int PacketHandler::checkUpdatePrescan(const DNSRecord *rr) {
     return RCode::FormErr;
 
   if (qtype.isMetadataType())
-      return RCode::FormErr;
+    return RCode::FormErr;
 
   if (rr->d_class != QClass::ANY && qtype.getCode() == QType::ANY)
     return RCode::FormErr;
@@ -86,7 +88,8 @@ int PacketHandler::checkUpdatePrescan(const DNSRecord *rr) {
 
 
 // Implements section 3.4.2 of RFC2136
-uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, DomainInfo *di, bool isPresigned, bool* narrow, bool* haveNSEC3, NSEC3PARAMRecordContent *ns3pr, bool *updatedSerial) {
+uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, DomainInfo *di, bool isPresigned, bool* narrow, bool* haveNSEC3, NSEC3PARAMRecordContent *ns3pr, bool *updatedSerial)
+{
 
   string rrLabel = stripDot(rr->d_label);
   rrLabel = toLower(rrLabel);
@@ -193,7 +196,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
           L<<Logger::Notice<<msgPrefix<<"Provided serial ("<<sdUpdate.serial<<") is older than the current serial ("<<sdOld.serial<<"), ignoring SOA update."<<endl;
         }
 
-      // It's not possible to have multiple CNAME's with the same NAME. So we always update.
+        // It's not possible to have multiple CNAME's with the same NAME. So we always update.
       } else if (rrType == QType::CNAME) {
         int changedCNames = 0;
         for (vector<DNSResourceRecord>::iterator i = rrset.begin(); i != rrset.end(); i++) {
@@ -211,7 +214,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
           L<<Logger::Notice<<msgPrefix<<"Replace for record "<<rrLabel<<"|"<<rrType.getName()<<" requested, but no changes made."<<endl;
         }
 
-      // In any other case, we must check if the TYPE and RDATA match to provide an update (which effectily means a update of TTL)
+        // In any other case, we must check if the TYPE and RDATA match to provide an update (which effectily means a update of TTL)
       } else {
         int updateTTL=0;
         foundRecord = false;
@@ -305,8 +308,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
         } while(chopOff(shorter));
       }
 
-      if(*haveNSEC3)
-      {
+      if(*haveNSEC3) {
         string hashed;
         if(! *narrow)
           hashed=toBase32Hex(hashQNameWithSalt(ns3pr->d_iterations, ns3pr->d_salt, rrLabel));
@@ -319,16 +321,13 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
         if (fixDS)
           di->backend->setDNSSECAuthOnDsRecord(di->id, rrLabel);
 
-        if(!auth)
-        {
+        if(!auth) {
           if (ns3pr->d_flags)
             di->backend->nullifyDNSSECOrderNameAndAuth(di->id, rrLabel, "NS");
           di->backend->nullifyDNSSECOrderNameAndAuth(di->id, rrLabel, "A");
           di->backend->nullifyDNSSECOrderNameAndAuth(di->id, rrLabel, "AAAA");
         }
-      }
-      else // NSEC
-      {
+      } else { // NSEC
         di->backend->updateDNSSECOrderAndAuth(di->id, di->zone, rrLabel, auth);
         if (fixDS) {
           di->backend->setDNSSECAuthOnDsRecord(di->id, rrLabel);
@@ -364,8 +363,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
 
             if (ns3pr->d_flags)
               di->backend->nullifyDNSSECOrderNameAndAuth(di->id, *qname, "NS");
-          }
-          else // NSEC
+          } else // NSEC
             di->backend->updateDNSSECOrderAndAuth(di->id, di->zone, *qname, auth);
 
           di->backend->nullifyDNSSECOrderNameAndAuth(di->id, *qname, "AAAA");
@@ -453,7 +451,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
           rrset.push_back(rec);
       }
     }
-  
+
     if (recordsToDelete.size()) {
       di->backend->replaceRRSet(di->id, rrLabel, rrType, rrset);
       L<<Logger::Notice<<msgPrefix<<"Deleting record "<<rrLabel<<"|"<<rrType.getName()<<endl;
@@ -461,7 +459,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
 
 
       // If we've removed a delegate, we need to reset ordername/auth for some records.
-      if (rrType == QType::NS && rrLabel != di->zone) { 
+      if (rrType == QType::NS && rrLabel != di->zone) {
         vector<string> belowOldDelegate, nsRecs, updateAuthFlag;
         di->backend->listSubZone(rrLabel, di->id);
         while (di->backend->get(rec)) {
@@ -471,8 +469,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
             nsRecs.push_back(rec.qname);
         }
 
-        for(vector<string>::const_iterator belowOldDel=belowOldDelegate.begin(); belowOldDel!= belowOldDelegate.end(); belowOldDel++)
-        {
+        for(vector<string>::const_iterator belowOldDel=belowOldDelegate.begin(); belowOldDel!= belowOldDelegate.end(); belowOldDel++) {
           bool isBelowDelegate = false;
           for(vector<string>::const_iterator ns=nsRecs.begin(); ns!= nsRecs.end(); ns++) {
             if (endsOn(*ns, *belowOldDel)) {
@@ -491,8 +488,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
               hashed=toBase32Hex(hashQNameWithSalt(ns3pr->d_iterations, ns3pr->d_salt, *changeRec));
 
             di->backend->updateDNSSECOrderAndAuthAbsolute(di->id, *changeRec, hashed, true);
-          }
-          else // NSEC
+          } else // NSEC
             di->backend->updateDNSSECOrderAndAuth(di->id, di->zone, *changeRec, true);
         }
       }
@@ -546,7 +542,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
       L<<Logger::Notice<<msgPrefix<<"Deletion for record "<<rrLabel<<"|"<<rrType.getName()<<" requested, but not found."<<endl;
     }
   } // (End of delete block d_class == ANY || d_class == NONE
-  
+
 
 
   //Insert and delete ENT's
@@ -555,8 +551,7 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
     di->backend->updateEmptyNonTerminals(di->id, di->zone, insnonterm, delnonterm, false);
     for (set<string>::const_iterator i=insnonterm.begin(); i!=insnonterm.end(); i++) {
       string hashed;
-      if(*haveNSEC3)
-      {
+      if(*haveNSEC3) {
         string hashed;
         if(! *narrow)
           hashed=toBase32Hex(hashQNameWithSalt(ns3pr->d_iterations, ns3pr->d_salt, *i));
@@ -568,7 +563,8 @@ uint PacketHandler::performUpdate(const string &msgPrefix, const DNSRecord *rr, 
   return changedRecords;
 }
 
-int PacketHandler::forwardPacket(const string &msgPrefix, DNSPacket *p, DomainInfo *di) {
+int PacketHandler::forwardPacket(const string &msgPrefix, DNSPacket *p, DomainInfo *di)
+{
   vector<string> forward;
   B.getDomainMetadata(p->qdomain, "FORWARD-DNSUPDATE", forward);
 
@@ -582,8 +578,7 @@ int PacketHandler::forwardPacket(const string &msgPrefix, DNSPacket *p, DomainIn
     ComboAddress remote;
     try {
       remote = ComboAddress(*master, 53);
-    }
-    catch (...) {
+    } catch (...) {
       L<<Logger::Error<<msgPrefix<<"Failed to parse "<<*master<<" as valid remote."<<endl;
       continue;
     }
@@ -651,8 +646,7 @@ int PacketHandler::forwardPacket(const string &msgPrefix, DNSPacket *p, DomainIn
       MOADNSParser mdp(buf, recvRes);
       L<<Logger::Info<<msgPrefix<<"Forward update message to "<<remote.toStringWithPort()<<", result was RCode "<<mdp.d_header.rcode<<endl;
       return mdp.d_header.rcode;
-    }
-    catch (...) {
+    } catch (...) {
       L<<Logger::Error<<msgPrefix<<"Failed to parse response packet from master at "<<remote.toStringWithPort()<<endl;
       continue;
     }
@@ -662,7 +656,8 @@ int PacketHandler::forwardPacket(const string &msgPrefix, DNSPacket *p, DomainIn
 
 }
 
-int PacketHandler::processUpdate(DNSPacket *p) {
+int PacketHandler::processUpdate(DNSPacket *p)
+{
   if (! ::arg().mustDo("experimental-dnsupdate"))
     return RCode::Refused;
 
@@ -887,7 +882,7 @@ int PacketHandler::processUpdate(DNSPacket *p) {
 
     if (changedRecords > 0) {
       if (!di.backend->commitTransaction()) {
-       L<<Logger::Error<<msgPrefix<<"Failed to commit updates!"<<endl;
+        L<<Logger::Error<<msgPrefix<<"Failed to commit updates!"<<endl;
         return RCode::ServFail;
       }
 
@@ -905,35 +900,31 @@ int PacketHandler::processUpdate(DNSPacket *p) {
       di.backend->abortTransaction();
     }
     return RCode::NoError; //rfc 2136 3.4.2.5
-  }
-  catch (SSqlException &e) {
+  } catch (SSqlException &e) {
     L<<Logger::Error<<msgPrefix<<"Caught SSqlException: "<<e.txtReason()<<"; Sending ServFail!"<<endl;
     di.backend->abortTransaction();
     return RCode::ServFail;
-  }
-  catch (DBException &e) {
+  } catch (DBException &e) {
     L<<Logger::Error<<msgPrefix<<"Caught DBException: "<<e.reason<<"; Sending ServFail!"<<endl;
     di.backend->abortTransaction();
     return RCode::ServFail;
-  }
-  catch (PDNSException &e) {
+  } catch (PDNSException &e) {
     L<<Logger::Error<<msgPrefix<<"Caught PDNSException: "<<e.reason<<"; Sending ServFail!"<<endl;
     di.backend->abortTransaction();
     return RCode::ServFail;
-  }
-  catch(std::exception &e) {
+  } catch(std::exception &e) {
     L<<Logger::Error<<msgPrefix<<"Caught std:exception: "<<e.what()<<"; Sending ServFail!"<<endl;
     di.backend->abortTransaction();
     return RCode::ServFail;
-  }
-  catch (...) {
+  } catch (...) {
     L<<Logger::Error<<msgPrefix<<"Caught unknown exception when performing update. Sending ServFail!"<<endl;
     di.backend->abortTransaction();
     return RCode::ServFail;
   }
 }
 
-void PacketHandler::increaseSerial(const string &msgPrefix, const DomainInfo *di, bool haveNSEC3, bool narrow, const NSEC3PARAMRecordContent *ns3pr) {
+void PacketHandler::increaseSerial(const string &msgPrefix, const DomainInfo *di, bool haveNSEC3, bool narrow, const NSEC3PARAMRecordContent *ns3pr)
+{
   DNSResourceRecord rec, newRec;
   di->backend->lookup(QType(QType::SOA), di->zone);
   bool foundSOA=false;
@@ -954,7 +945,7 @@ void PacketHandler::increaseSerial(const string &msgPrefix, const DomainInfo *di
   string soaEdit;
   if (!soaEdit2136Setting.empty()) {
     soaEdit2136 = soaEdit2136Setting[0];
-    if (pdns_iequals(soaEdit2136, "SOA-EDIT") || pdns_iequals(soaEdit2136,"SOA-EDIT-INCREASE") ){
+    if (pdns_iequals(soaEdit2136, "SOA-EDIT") || pdns_iequals(soaEdit2136,"SOA-EDIT-INCREASE") ) {
       vector<string> soaEditSetting;
       B.getDomainMetadata(di->zone, "SOA-EDIT", soaEditSetting);
       if (soaEditSetting.empty()) {
@@ -1007,7 +998,6 @@ void PacketHandler::increaseSerial(const string &msgPrefix, const DomainInfo *di
       hashed = toBase32Hex(hashQNameWithSalt(ns3pr->d_iterations, ns3pr->d_salt, newRec.qname));
 
     di->backend->updateDNSSECOrderAndAuthAbsolute(di->id, newRec.qname, hashed, true);
-  }
-  else // NSEC
+  } else // NSEC
     di->backend->updateDNSSECOrderAndAuth(di->id, di->zone, newRec.qname, true);
 }
