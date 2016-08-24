@@ -1113,6 +1113,7 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
 
   string q = req->getvars["q"];
   string sMax = req->getvars["max"];
+  string sZone = req->getvars["zone"];
   int maxEnts = 100;
   int ents = 0;
 
@@ -1122,6 +1123,8 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
     maxEnts = std::stoi(sMax);
   if (maxEnts < 1)
     throw ApiException("Maximum entries must be larger than 0");
+  if (!sZone.empty())
+    SimpleMatch zm(sZone,true);
 
   SimpleMatch sm(q,true);
   UeberBackend B;
@@ -1136,7 +1139,7 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
 
   for(const DomainInfo di: domains)
   {
-    if (ents < maxEnts && sm.match(di.zone)) {
+    if (ents < maxEnts && sm.match(di.zone) && sZone.empty()) {
       doc.push_back(Json::object {
         { "object_type", "zone" },
         { "zone_id", apiZoneNameToId(di.zone) },
@@ -1163,6 +1166,8 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
         object["zone_id"] = apiZoneNameToId(val->second.zone);
         object["zone"] = val->second.zone.toString();
       }
+      if (!sZone.empty() and !zm.match(object["zone"]))
+        continue;
       doc.push_back(object);
     }
   }
@@ -1180,6 +1185,8 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
         object["zone_id"] = apiZoneNameToId(val->second.zone);
         object["zone"] = val->second.zone.toString();
       }
+      if (!sZone.empty() and !zm.match(object["zone"]))
+        continue;
       doc.push_back(object);
     }
   }
