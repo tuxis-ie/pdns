@@ -1124,7 +1124,13 @@ static void apiServerSearchData(HttpRequest* req, HttpResponse* resp) {
   if (maxEnts < 1)
     throw ApiException("Maximum entries must be larger than 0");
   if (!sZone.empty())
+  {
     SimpleMatch zm(sZone,true);
+  }
+  else
+  {
+    SimpleMatch zm('*',true);
+  }
 
   SimpleMatch sm(q,true);
   UeberBackend B;
